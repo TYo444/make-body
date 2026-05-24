@@ -70,7 +70,7 @@ const T = {
     chatPhLimit:"Daily limit reached — upgrade for unlimited",
     send:"SEND",
     pro:"PRO",
-    freePrompts:["How am I doing today?","What should I eat next?","Motivate me! 🔥"],
+    freePrompts:["How am I doing today?","What should I eat next?","I'm tired today, help!","Motivate me! 🔥"],
     proPrompts:["Build me a 1-month meal plan","Give me a full workout program","Optimize my macros for fat loss","What should I eat next?","Motivate me! 🔥"],
     modalTitle:"GO PRO WITH REX",
     modalSub:"Unlock the full coaching experience",
@@ -135,7 +135,7 @@ const T = {
     chatPhLimit:"本日の上限 — アップグレードで無制限に",
     send:"送信",
     pro:"PRO",
-    freePrompts:["今日の調子はどう?","次は何を食べればいい?","やる気出して! 🔥"],
+    freePrompts:["今日の調子はどう?","次は何を食べればいい?","今日疲れてる、どうしたら?","やる気出して! 🔥"],
     proPrompts:["1ヶ月の食事プランを作って","筋トレプログラムを組んで","脂肪燃焼のためのマクロを最適化して","次は何を食べればいい?","やる気出して! 🔥"],
     modalTitle:"PROにアップグレード",
     modalSub:"フルコーチング体験を解放",
@@ -200,7 +200,7 @@ const T = {
     chatPhLimit:"今日已达上限 — 升级获取无限次数",
     send:"发送",
     pro:"PRO",
-    freePrompts:["今天状态怎么样?","接下来吃什么?","给我打打气! 🔥"],
+    freePrompts:["今天状态怎么样?","接下来吃什么?","今天太累了怎么办?","给我打打气! 🔥"],
     proPrompts:["制定1个月饮食计划","制定完整训练计划","优化我的减脂宏量","接下来吃什么?","给我打打气! 🔥"],
     modalTitle:"升级到PRO",
     modalSub:"解锁完整教练体验",
@@ -265,7 +265,7 @@ const T = {
     chatPhLimit:"오늘 한도 도달 — 업그레이드로 무제한",
     send:"전송",
     pro:"PRO",
-    freePrompts:["오늘 컨디션 어때?","다음에 뭐 먹을까?","동기부여 해줘! 🔥"],
+    freePrompts:["오늘 컨디션 어때?","다음에 뭐 먹을까?","오늘 너무 피곤해","동기부여 해줘! 🔥"],
     proPrompts:["1개월 식단 계획 짜줘","전체 운동 프로그램 만들어줘","체지방 감소를 위한 매크로 최적화","다음에 뭐 먹을까?","동기부여 해줘! 🔥"],
     modalTitle:"PRO로 업그레이드",
     modalSub:"풀 코칭 경험 잠금 해제",
@@ -330,7 +330,7 @@ const T = {
     chatPhLimit:"Límite diario — actualiza para ilimitado",
     send:"ENVIAR",
     pro:"PRO",
-    freePrompts:["¿Cómo voy hoy?","¿Qué como ahora?","¡Motívame! 🔥"],
+    freePrompts:["¿Cómo voy hoy?","¿Qué como ahora?","Hoy estoy agotado/a","¡Motívame! 🔥"],
     proPrompts:["Hazme un plan de comidas de 1 mes","Dame un programa de ejercicios completo","Optimiza mis macros para quemar grasa","¿Qué como ahora?","¡Motívame! 🔥"],
     modalTitle:"HAZTE PRO CON REX",
     modalSub:"Desbloquea la experiencia completa de coaching",
@@ -395,7 +395,7 @@ const T = {
     chatPhLimit:"Limite atteinte — passe à PRO pour illimité",
     send:"ENVOYER",
     pro:"PRO",
-    freePrompts:["Comment je m'en sors aujourd'hui ?","Que manger ensuite ?","Motive-moi ! 🔥"],
+    freePrompts:["Comment je m'en sors aujourd'hui ?","Que manger ensuite ?","Je suis épuisé(e) aujourd'hui","Motive-moi ! 🔥"],
     proPrompts:["Fais-moi un plan repas d'1 mois","Donne-moi un programme complet","Optimise mes macros pour perdre du gras","Que manger ensuite ?","Motive-moi ! 🔥"],
     modalTitle:"PASSE PRO AVEC REX",
     modalSub:"Débloque l'expérience coaching complète",
@@ -460,7 +460,7 @@ const T = {
     chatPhLimit:"Tageslimit erreicht — upgrade für unbegrenzt",
     send:"SENDEN",
     pro:"PRO",
-    freePrompts:["Wie läuft's heute?","Was soll ich als nächstes essen?","Motivier mich! 🔥"],
+    freePrompts:["Wie läuft's heute?","Was soll ich als nächstes essen?","Ich bin heute erschöpft","Motivier mich! 🔥"],
     proPrompts:["Erstell mir einen 1-Monats-Ernährungsplan","Gib mir ein vollständiges Trainingsprogramm","Optimiere meine Makros zur Fettverbrennung","Was soll ich als nächstes essen?","Motivier mich! 🔥"],
     modalTitle:"WERDE PRO MIT REX",
     modalSub:"Schalte das vollständige Coaching-Erlebnis frei",
@@ -484,11 +484,16 @@ const T = {
 };
 
 // ── Stripe ────────────────────────────────────────────────────────
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/YOUR_PAYMENT_LINK_HERE";
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/00w4gscClbob0UegMl2Fa01";
+const STRIPE_PORTAL_LINK = "https://billing.stripe.com/p/login/YOUR_PORTAL_LINK";
+
 const PRICE = "$7.99";
 
 function handleStripeCheckout() {
   window.open(STRIPE_PAYMENT_LINK, "_blank");
+}
+function handleStripePortal() {
+  window.open(STRIPE_PORTAL_LINK, "_blank");
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -573,7 +578,7 @@ function LangModal({ current, onSelect, onClose }) {
 
 function UpgradeModal({ t, onClose, onUpgrade }) {
   const [loading, setLoading] = useState(false);
-  const isSetup = STRIPE_PAYMENT_LINK === "https://buy.stripe.com/YOUR_PAYMENT_LINK_HERE";
+  const isSetup = false; // URL configured
   function handlePay() {
     if (isSetup) return;
     setLoading(true);
@@ -635,18 +640,344 @@ function UpgradeModal({ t, onClose, onUpgrade }) {
   );
 }
 
+
+// ── Body type goals data ──────────────────────────────────────────
+const BODY_GOALS = {
+  male: [
+    {
+      id:"lean",
+      emoji:"🏃",
+      title:"Lean & Toned",
+      celeb:"Ryan Reynolds style",
+      desc:"Slim, defined muscles, low body fat",
+      bodyFatRange:"10–15%",
+      muscleFocal:"Lean muscle, cardio base",
+      targetBf:12,
+      color:"#e0f2fe", border:"#7dd3fc", textColor:"#0369a1",
+      calAdjust: -300,
+      proteinMultiplier: 1.8,
+    },
+    {
+      id:"athletic",
+      emoji:"💪",
+      title:"Athletic",
+      celeb:"Chris Hemsworth style",
+      desc:"Strong, visible muscle definition",
+      bodyFatRange:"8–12%",
+      muscleFocal:"Strength + conditioning",
+      targetBf:10,
+      color:"#dcfce7", border:"#4ade80", textColor:"#15803d",
+      calAdjust: 0,
+      proteinMultiplier: 2.0,
+    },
+    {
+      id:"muscular",
+      emoji:"🦁",
+      title:"Muscular",
+      celeb:"Dwayne Johnson style",
+      desc:"Maximum muscle mass, powerful build",
+      bodyFatRange:"6–10%",
+      muscleFocal:"Heavy lifting, bulk & cut",
+      targetBf:8,
+      color:"#fef3c7", border:"#fbbf24", textColor:"#b45309",
+      calAdjust: +400,
+      proteinMultiplier: 2.2,
+    },
+  ],
+  female: [
+    {
+      id:"lean",
+      emoji:"🏃",
+      title:"Lean & Toned",
+      celeb:"Jennifer Aniston style",
+      desc:"Slim, toned, light muscle definition",
+      bodyFatRange:"18–22%",
+      muscleFocal:"Cardio + light toning",
+      targetBf:20,
+      color:"#e0f2fe", border:"#7dd3fc", textColor:"#0369a1",
+      calAdjust: -250,
+      proteinMultiplier: 1.6,
+    },
+    {
+      id:"athletic",
+      emoji:"💪",
+      title:"Athletic",
+      celeb:"Gal Gadot style",
+      desc:"Strong, fit, well-defined physique",
+      bodyFatRange:"15–20%",
+      muscleFocal:"Strength + functional fitness",
+      targetBf:17,
+      color:"#dcfce7", border:"#4ade80", textColor:"#15803d",
+      calAdjust: 0,
+      proteinMultiplier: 1.8,
+    },
+    {
+      id:"muscular",
+      emoji:"🦁",
+      title:"Muscular",
+      celeb:"Zoë Saldaña style",
+      desc:"Defined, powerful, athletic build",
+      bodyFatRange:"13–18%",
+      muscleFocal:"Resistance training, muscle gain",
+      targetBf:15,
+      color:"#fef3c7", border:"#fbbf24", textColor:"#b45309",
+      calAdjust: +300,
+      proteinMultiplier: 2.0,
+    },
+  ],
+};
+
+function getBMICategory(bmi, lang) {
+  if (bmi < 18.5) return { label: lang==="ja"?"痩せ型":lang==="zh"?"偏瘦":lang==="ko"?"저체중":"Underweight", color:"#3b82f6", emoji:"💧" };
+  if (bmi < 25)   return { label: lang==="ja"?"標準":lang==="zh"?"正常":lang==="ko"?"정상":"Normal", color:"#16a34a", emoji:"✅" };
+  if (bmi < 30)   return { label: lang==="ja"?"ぽっちゃり":lang==="zh"?"偏胖":lang==="ko"?"과체중":"Overweight", color:"#f97316", emoji:"🟠" };
+  return           { label: lang==="ja"?"肥満":lang==="zh"?"肥胖":lang==="ko"?"비만":"Obese", color:"#dc2626", emoji:"🔴" };
+}
+
+function calcIdealWeight(heightCm, gender, targetBf) {
+  // Uses Boer formula for LBM, then adds target body fat
+  const lbm = gender==="male"
+    ? (0.407 * heightCm) - 10.3  // simplified
+    : (0.252 * heightCm) - 4.3;
+  return Math.round(lbm / (1 - targetBf / 100));
+}
+
+// ── Onboarding component ──────────────────────────────────────────
+function Onboarding({ onComplete, lang }) {
+  const [step, setStep]       = useState(0); // 0=nick, 1=gender, 2=body, 3=goal
+  const [nickname, setNickname] = useState("");
+  const [gender, setGender]   = useState(null);
+  const [heightCm, setHeightCm] = useState("");
+  const [currentWeightVal, setCurrentWeightVal] = useState("");
+  const [selectedGoal, setSelectedGoal] = useState(null);
+
+  const useLbs = lang === "en";
+  const goals = gender ? BODY_GOALS[gender] : BODY_GOALS.male;
+
+  function calcBMI() {
+    const h = parseFloat(heightCm) / 100;
+    let w = parseFloat(currentWeightVal);
+    if (useLbs) w = w * 0.453592;
+    if (!h || !w) return null;
+    return w / (h * h);
+  }
+
+  const bmi = calcBMI();
+  const bmiCat = bmi ? getBMICategory(bmi, lang) : null;
+
+  function handleComplete() {
+    const h = parseFloat(heightCm);
+    let wKg = parseFloat(currentWeightVal);
+    if (useLbs) wKg = wKg * 0.453592;
+    const goal = goals.find(g=>g.id===selectedGoal);
+    const idealWkg = calcIdealWeight(h, gender, goal?.targetBf || 15);
+    onComplete({
+      nickname,
+      gender,
+      heightCm: h,
+      currentWeightKg: Math.round(wKg * 10) / 10,
+      selectedGoalId: selectedGoal,
+      goalData: goal,
+      idealWeightKg: idealWkg,
+      bmi: Math.round(bmi * 10) / 10,
+    });
+  }
+
+  const stepTitles = {
+    en: ["What's your name?", "Your gender", "Your measurements", "Your goal body"],
+    ja: ["ニックネームは？", "性別を選択", "現在の体型", "目標の体型"],
+    zh: ["你的昵称是？", "选择性别", "当前体型", "目标体型"],
+    ko: ["닉네임은？", "성별 선택", "현재 체형", "목표 체형"],
+    es: ["¿Cuál es tu nombre?", "Tu género", "Tu medidas", "Tu cuerpo ideal"],
+    fr: ["Ton prénom ?", "Ton genre", "Tes mesures", "Ton corps idéal"],
+    de: ["Wie heißt du?", "Dein Geschlecht", "Deine Maße", "Dein Zielkörper"],
+  };
+  const titles = stepTitles[lang] || stepTitles.en;
+
+  const btnLabel = {
+    en:"Continue →", ja:"次へ →", zh:"继续 →", ko:"다음 →",
+    es:"Continuar →", fr:"Continuer →", de:"Weiter →"
+  }[lang] || "Continue →";
+  const startLabel = {
+    en:"Start My Journey! 🚀", ja:"始めよう！🚀", zh:"开始我的旅程！🚀",
+    ko:"시작하자！🚀", es:"¡Empezar！🚀", fr:"C'est parti！🚀", de:"Los geht's！🚀"
+  }[lang] || "Start My Journey! 🚀";
+
+  return (
+    <div style={{ maxWidth:420, margin:"0 auto", minHeight:"100vh", background:`linear-gradient(160deg, #f0fdf4 0%, #dcfce7 100%)`, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px 20px", fontFamily:"DM Sans, sans-serif" }}>
+      <style>{fonts}</style>
+
+      {/* Logo */}
+      <div style={{ fontFamily:"Bebas Neue", fontSize:36, letterSpacing:3, color:C.green, marginBottom:4 }}>MAKE BODY</div>
+      <div style={{ fontSize:12, color:C.muted, marginBottom:32 }}>Build the body you want 💪</div>
+
+      {/* Step indicators */}
+      <div style={{ display:"flex", gap:8, marginBottom:28 }}>
+        {[0,1,2,3].map(i=>(
+          <div key={i} style={{ width: i===step?28:8, height:8, borderRadius:99, background: i<=step?C.green:C.border, transition:"all 0.3s" }}/>
+        ))}
+      </div>
+
+      <div style={{ width:"100%", background:"#fff", borderRadius:24, padding:28, boxShadow:"0 8px 32px rgba(22,163,74,0.12)", minHeight:340 }}>
+        <div style={{ fontFamily:"Bebas Neue", fontSize:22, letterSpacing:1, color:C.text, marginBottom:6 }}>{titles[step]}</div>
+
+        {/* Step 0 — Nickname */}
+        {step===0 && (
+          <div style={{ display:"flex", flexDirection:"column", gap:16, marginTop:20 }}>
+            <div style={{ fontSize:48, textAlign:"center" }}>👤</div>
+            <input
+              autoFocus
+              value={nickname}
+              onChange={e=>setNickname(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&nickname.trim()&&setStep(1)}
+              placeholder={lang==="ja"?"例：タロウ":lang==="zh"?"例如：小明":lang==="ko"?"예: 철수":"e.g. Alex"}
+              style={{ background:C.bg, border:`2px solid ${C.border}`, borderRadius:12, padding:"14px 16px", fontSize:18, fontWeight:700, color:C.text, outline:"none", textAlign:"center", fontFamily:"DM Sans" }}
+            />
+            <button disabled={!nickname.trim()} onClick={()=>setStep(1)} style={{ background:nickname.trim()?C.green:"#d1d5db", color:"#fff", border:"none", borderRadius:12, padding:"14px 0", fontFamily:"Bebas Neue", fontSize:18, letterSpacing:1, cursor:nickname.trim()?"pointer":"not-allowed" }}>{btnLabel}</button>
+          </div>
+        )}
+
+        {/* Step 1 — Gender */}
+        {step===1 && (
+          <div style={{ display:"flex", flexDirection:"column", gap:12, marginTop:20 }}>
+            {[
+              { id:"male",   emoji:"♂️", label:{en:"Male",ja:"男性",zh:"男性",ko:"남성",es:"Hombre",fr:"Homme",de:"Mann"} },
+              { id:"female", emoji:"♀️", label:{en:"Female",ja:"女性",zh:"女性",ko:"여성",es:"Mujer",fr:"Femme",de:"Frau"} },
+              { id:"other",  emoji:"⚧️", label:{en:"Other / Prefer not to say",ja:"その他・未回答",zh:"其他/不填",ko:"기타/무응답",es:"Otro/Prefiero no decir",fr:"Autre/Ne pas préciser",de:"Andere/Keine Angabe"} },
+            ].map(g=>(
+              <button key={g.id} onClick={()=>{ setGender(g.id==="other"?"male":g.id); setStep(2); }} style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 18px", background: gender===g.id?C.greenPale:C.bg, border:`2px solid ${gender===g.id?C.green:C.border}`, borderRadius:14, cursor:"pointer", transition:"all 0.2s" }}>
+                <span style={{ fontSize:28 }}>{g.emoji}</span>
+                <span style={{ fontSize:16, fontWeight:600, color:C.text }}>{g.label[lang]||g.label.en}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Step 2 — Height & Weight */}
+        {step===2 && (
+          <div style={{ display:"flex", flexDirection:"column", gap:14, marginTop:16 }}>
+            <div>
+              <div style={{ fontSize:12, color:C.muted, marginBottom:6 }}>{lang==="ja"?"身長 (cm)":lang==="zh"?"身高 (cm)":lang==="ko"?"키 (cm)":"Height (cm)"}</div>
+              <input type="number" value={heightCm} onChange={e=>setHeightCm(e.target.value)}
+                placeholder="170"
+                style={{ width:"100%", background:C.bg, border:`2px solid ${C.border}`, borderRadius:12, padding:"12px 16px", fontSize:16, color:C.text, outline:"none", fontFamily:"DM Sans" }}/>
+            </div>
+            <div>
+              <div style={{ fontSize:12, color:C.muted, marginBottom:6 }}>
+                {lang==="ja"?"現在の体重":lang==="zh"?"当前体重":lang==="ko"?"현재 체중":"Current Weight"} ({useLbs?"lbs":"kg"})
+              </div>
+              <input type="number" value={currentWeightVal} onChange={e=>setCurrentWeightVal(e.target.value)}
+                placeholder={useLbs?"160":"70"}
+                style={{ width:"100%", background:C.bg, border:`2px solid ${C.border}`, borderRadius:12, padding:"12px 16px", fontSize:16, color:C.text, outline:"none", fontFamily:"DM Sans" }}/>
+            </div>
+
+            {/* BMI result */}
+            {bmi && bmiCat && (
+              <div style={{ background:C.greenPale, borderRadius:12, padding:"12px 16px", border:`1px solid ${C.border}` }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <div>
+                    <div style={{ fontSize:11, color:C.muted }}>{lang==="ja"?"あなたのBMI":lang==="zh"?"您的BMI":lang==="ko"?"현재 BMI":"Your BMI"}</div>
+                    <div style={{ fontFamily:"Bebas Neue", fontSize:28, color:bmiCat.color }}>{Math.round(bmi*10)/10}</div>
+                  </div>
+                  <div style={{ textAlign:"right" }}>
+                    <div style={{ fontSize:22 }}>{bmiCat.emoji}</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:bmiCat.color }}>{bmiCat.label}</div>
+                  </div>
+                </div>
+                {/* BMI bar */}
+                <div style={{ marginTop:8, height:6, background:"#e2e8f0", borderRadius:99, position:"relative", overflow:"hidden" }}>
+                  {[
+                    {pct:20,color:"#3b82f6"},{pct:27.5,color:"#16a34a"},
+                    {pct:27.5,color:"#f97316"},{pct:25,color:"#dc2626"}
+                  ].reduce((acc,seg,i)=>{
+                    const left=acc.left;
+                    acc.elements.push(<div key={i} style={{ position:"absolute", left:`${left}%`, width:`${seg.pct}%`, height:"100%", background:seg.color }}/>);
+                    acc.left+=seg.pct;
+                    return acc;
+                  },{left:0,elements:[]}).elements}
+                  <div style={{ position:"absolute", left:`${Math.min(95,Math.max(2,(bmi-10)/30*100))}%`, top:-2, width:10, height:10, background:"#1e293b", borderRadius:"50%", transform:"translateX(-50%)" }}/>
+                </div>
+                <div style={{ display:"flex", justifyContent:"space-between", marginTop:4, fontSize:9, color:C.muted }}>
+                  <span>10</span><span>18.5</span><span>25</span><span>30</span><span>40+</span>
+                </div>
+              </div>
+            )}
+
+            <button disabled={!heightCm||!currentWeightVal} onClick={()=>setStep(3)} style={{ background:heightCm&&currentWeightVal?C.green:"#d1d5db", color:"#fff", border:"none", borderRadius:12, padding:"14px 0", fontFamily:"Bebas Neue", fontSize:18, letterSpacing:1, cursor:heightCm&&currentWeightVal?"pointer":"not-allowed" }}>{btnLabel}</button>
+          </div>
+        )}
+
+        {/* Step 3 — Goal body type */}
+        {step===3 && (
+          <div style={{ display:"flex", flexDirection:"column", gap:12, marginTop:16 }}>
+            {goals.map(g=>(
+              <button key={g.id} onClick={()=>setSelectedGoal(g.id)} style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 16px", background:selectedGoal===g.id?g.color:C.bg, border:`2px solid ${selectedGoal===g.id?g.border:C.border}`, borderRadius:16, cursor:"pointer", transition:"all 0.2s", textAlign:"left" }}>
+                <span style={{ fontSize:32 }}>{g.emoji}</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontFamily:"Bebas Neue", fontSize:17, letterSpacing:1, color:selectedGoal===g.id?g.textColor:C.text }}>{g.title}</div>
+                  <div style={{ fontSize:11, color:C.muted, marginBottom:2 }}>{g.celeb}</div>
+                  <div style={{ fontSize:11, color:selectedGoal===g.id?g.textColor:C.muted }}>{g.desc}</div>
+                </div>
+                <div style={{ textAlign:"right" }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:selectedGoal===g.id?g.textColor:C.muted }}>{g.bodyFatRange}</div>
+                  <div style={{ fontSize:9, color:C.muted }}>body fat</div>
+                </div>
+              </button>
+            ))}
+
+            {selectedGoal && bmi && (
+              <div style={{ background:C.greenPale, border:`1px solid ${C.border}`, borderRadius:12, padding:"12px 16px" }}>
+                {(()=>{
+                  const g = goals.find(x=>x.id===selectedGoal);
+                  const idealKg = calcIdealWeight(parseFloat(heightCm), gender||"male", g.targetBf);
+                  const idealLbs = Math.round(idealKg*2.205);
+                  let wKg = parseFloat(currentWeightVal);
+                  if (useLbs) wKg = wKg * 0.453592;
+                  const diff = Math.round((wKg - idealKg)*10)/10;
+                  return (
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:700, color:C.green, marginBottom:4 }}>
+                        🎯 {lang==="ja"?"目標体重":lang==="zh"?"目标体重":lang==="ko"?"목표 체중":"Target Weight"}: {useLbs?`${idealLbs} lbs`:`${idealKg} kg`}
+                      </div>
+                      <div style={{ fontSize:11, color:C.muted }}>
+                        {diff>0
+                          ? `${lang==="ja"?"あと":lang==="zh"?"还需减少":lang==="ko"?"앞으로":"Need to lose"} ${useLbs?Math.round(diff*2.205):diff} ${useLbs?"lbs":"kg"}`
+                          : `${lang==="ja"?"目標達成！筋肉をつけよう":lang==="zh"?"已达目标！增肌吧":lang==="ko"?"목표 달성！근육 키우기":"Already at goal! Focus on muscle gain"}`
+                        } · {lang==="ja"?"目標体脂肪率":lang==="zh"?"目标体脂率":lang==="ko"?"목표 체지방률":"Target body fat"}: {g.targetBf}%
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            <button disabled={!selectedGoal} onClick={handleComplete} style={{ background:selectedGoal?`linear-gradient(135deg,${C.green},${C.greenLight})`:"#d1d5db", color:"#fff", border:"none", borderRadius:12, padding:"16px 0", fontFamily:"Bebas Neue", fontSize:20, letterSpacing:2, cursor:selectedGoal?"pointer":"not-allowed", marginTop:4, boxShadow:selectedGoal?"0 4px 16px rgba(22,163,74,0.3)":"none" }}>{startLabel}</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN ──────────────────────────────────────────────────────────
 export default function App() {
   const [lang, setLang]         = useState("en");
   const [showLang, setShowLang] = useState(false);
   const t = T[lang];
 
+  // Onboarding
+  const [profile, setProfile]   = useState(null); // null = not completed yet
+
   const [tab, setTab]           = useState("home");
   const [isPro, setIsPro]       = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [meals, setMeals]       = useState([]);
   const [weight, setWeight]     = useState("");
-  const [weights, setWeights]   = useState([182,181,180,179.5,179,178,177.5]);
+  const [weightsLbs, setWeightsLbs] = useState([182,181,180,179.5,179,178,177.5]);
+  const [weightsKg,  setWeightsKg]  = useState([82.5,82.1,81.6,81.4,81.2,80.7,80.5]);
+  const useLbs = lang === "en";
+  const weights    = useLbs ? weightsLbs : weightsKg;
+  const setWeights = useLbs ? setWeightsLbs : setWeightsKg;
   const [mood, setMood]         = useState(2);
   const [streak]                = useState(7);
   const [xp, setXp]             = useState(340);
@@ -700,6 +1031,7 @@ export default function App() {
     if (!isPro) setFreeChatsUsed(n=>n+1);
 
     const mealSummary = meals.length ? meals.map(m=>`${m.emoji} ${m.name} (${m.cal} cal)`).join(", ") : "nothing logged";
+    const profileCtx = profile ? `User profile — Name: ${profile.nickname}, Gender: ${profile.gender}, Height: ${profile.heightCm}cm, Current weight: ${profile.currentWeightKg}kg, BMI: ${profile.bmi}, Goal body type: ${profile.goalData?.title} (${profile.goalData?.celeb}), Target body fat: ${profile.goalData?.targetBf}%, Target weight: ${profile.idealWeightKg}kg.` : "";
     const isWorkout = /workout|exercise|lift|gym|muscle|training|squat|bench|deadlift|筋トレ|运动|훈련|entraînement|entrenamiento|training/i.test(userMsg);
     const isMealPlan = /meal plan|monthly|1.month|1ヶ月|食事プラン|饮食计划|식단|plan.*repas|plan.*comida|ernährungsplan/i.test(userMsg);
     const freeRestrict = !isPro && (isWorkout || isMealPlan);
@@ -707,10 +1039,22 @@ export default function App() {
     const langNames = { en:"English", ja:"Japanese", zh:"Chinese", ko:"Korean", es:"Spanish", fr:"French", de:"German" };
     const replyLang = langNames[lang] || "English";
 
+    // Detect if user is describing a situation/constraint
+    const isSituational = /tired|exhausted|busy|sick|sore|no time|no gym|travel|hotel|outside|restaurant|can.t|cannot|疲れ|忙し|外食|体調|出張|旅行|tired|cansado|fatigué|müde|피곤|疲惫/i.test(userMsg);
+
     const systemPrompt = freeRestrict
       ? `You are Coach Rex, a fired-up but warm fitness coach. Reply ONLY in ${replyLang}. The user asked about ${isWorkout?"workouts":"meal plans"} but is on FREE plan. Give ONE exciting teaser (one exercise or meal idea), then tell them to go PRO for the full plan. 2-3 sentences, energetic, emojis. End with a call to action to upgrade.`
-      : `You are Coach Rex, a fired-up passionate diet & fitness coach. Reply ONLY in ${replyLang}. Intense trainer energy, tough love, ALWAYS ends with encouragement. SHORT responses (3-5 sentences). Use emojis and energy. User tier: ${isPro?"PRO — give full workout & meal plan details":"FREE — food tips & motivation only, no detailed workout programs"}.
-Stats — Calories: ${totalCals}/${calGoal}, Protein: ${totalProtein}g, Mood: ${t.moodLabels[mood]}, Streak: ${streak} days, Meals: ${mealSummary}.`;
+      : `You are Coach Rex, a fired-up passionate diet & fitness coach. Reply ONLY in ${replyLang}. Intense trainer energy, tough love, ALWAYS ends with genuine encouragement. SHORT responses (3-5 sentences max). Use emojis and energy.
+
+ADAPTIVE COACHING RULES (very important):
+- If the user mentions being tired, sick, busy, traveling, eating out, or any life constraint: IMMEDIATELY adapt the plan. Don't push the original plan. Instead give a modified, realistic alternative that fits their situation. Example: tired → lighter workout or rest day + recovery meal. Traveling → hotel room workout or healthy restaurant order. Busy → 10-min express workout or easy meal swap.
+- Always acknowledge their situation with empathy first (1 sentence), then give the adapted solution (2-3 sentences), then end with encouragement (1 sentence).
+- Never make the user feel guilty for not following the original plan. Life happens — adapt and move forward.
+
+User tier: ${isPro?"PRO — give specific sets/reps, detailed meal plans, macro numbers":"FREE — general food tips & motivation only"}.
+${profileCtx}
+Stats — Calories: ${totalCals}/${calGoal}, Protein: ${totalProtein}g, Mood: ${t.moodLabels[mood]}, Streak: ${streak} days, Meals: ${mealSummary}.
+${isSituational ? "IMPORTANT: User is describing a life constraint or situation — activate adaptive coaching mode immediately." : ""}`;
 
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages",{
@@ -735,6 +1079,19 @@ Stats — Calories: ${totalCals}/${calGoal}, Protein: ${totalProtein}g, Mood: ${
   }
 
   const currentLang = LANGS.find(l=>l.code===lang);
+
+  // Show onboarding on first launch
+  if (!profile) {
+    return <Onboarding lang={lang} onComplete={(p) => {
+      setProfile(p);
+      // Update initial weights to match user input
+      const kg = p.currentWeightKg;
+      setWeightsKg([kg]);
+      setWeightsLbs([Math.round(kg*2.205*10)/10]);
+      // Personalise chat intro
+      setChatHistory([{ role:"assistant", text: T[lang].coachIntro.replace("Yo!", `Yo ${p.nickname}!`) }]);
+    }}/>;
+  }
 
   return (
     <>
@@ -772,7 +1129,10 @@ Stats — Calories: ${totalCals}/${calGoal}, Protein: ${totalProtein}g, Mood: ${
                   <span style={{ fontSize:10, color:C.textMid, fontWeight:600 }}>{currentLang.code.toUpperCase()}</span>
                 </button>
                 {isPro ? (
-                  <span style={{ background:`linear-gradient(135deg,${C.pro},#9333ea)`, color:"#fff", fontSize:10, fontWeight:700, padding:"3px 10px", borderRadius:99 }}>⚡ PRO</span>
+                  <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                    <span style={{ background:`linear-gradient(135deg,${C.pro},#9333ea)`, color:"#fff", fontSize:10, fontWeight:700, padding:"3px 10px", borderRadius:99 }}>⚡ PRO</span>
+                    <button onClick={handleStripePortal} style={{ background:"transparent", border:`1px solid #c4b5fd`, color:C.pro, fontSize:9, fontWeight:700, padding:"3px 8px", borderRadius:99, cursor:"pointer" }}>Manage</button>
+                  </div>
                 ) : (
                   <button onClick={()=>setShowUpgrade(true)} style={{ background:C.proPale, color:C.pro, border:`1px solid #c4b5fd`, fontSize:10, fontWeight:700, padding:"3px 10px", borderRadius:99, cursor:"pointer" }}>{t.upgradeTo}</button>
                 )}
@@ -799,11 +1159,58 @@ Stats — Calories: ${totalCals}/${calGoal}, Protein: ${totalProtein}g, Mood: ${
           {/* HOME */}
           {tab==="home" && (
             <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+
+              {/* Profile goal card */}
+              {profile && (
+                <div style={{ background:`linear-gradient(135deg, ${profile.goalData?.color||C.greenPale}, #fff)`, borderRadius:20, padding:16, border:`1.5px solid ${profile.goalData?.border||C.border}`, boxShadow:C.shadow }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <span style={{ fontSize:36 }}>{profile.goalData?.emoji||"💪"}</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontFamily:"Bebas Neue", fontSize:15, letterSpacing:1, color:profile.goalData?.textColor||C.green }}>GOAL: {profile.goalData?.title?.toUpperCase()}</div>
+                      <div style={{ fontSize:11, color:C.muted }}>{profile.goalData?.celeb}</div>
+                    </div>
+                    <div style={{ textAlign:"right" }}>
+                      <div style={{ fontFamily:"Bebas Neue", fontSize:20, color:profile.goalData?.textColor||C.green }}>{profile.idealWeightKg}kg</div>
+                      <div style={{ fontSize:9, color:C.muted }}>target</div>
+                    </div>
+                  </div>
+                  {(()=>{
+                    const currentKg = weights[weights.length-1];
+                    const diff = Math.round((currentKg - profile.idealWeightKg)*10)/10;
+                    const startKg = profile.currentWeightKg;
+                    const totalToLose = startKg - profile.idealWeightKg;
+                    const lost = startKg - currentKg;
+                    const pctDone = totalToLose>0 ? Math.min(100,Math.round((lost/totalToLose)*100)) : 100;
+                    return (
+                      <div style={{ marginTop:10 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                          <span style={{ fontSize:11, color:C.muted }}>Progress to goal</span>
+                          <span style={{ fontSize:11, fontWeight:700, color:profile.goalData?.textColor||C.green }}>{pctDone}%</span>
+                        </div>
+                        <div style={{ height:7, background:"#e2e8f0", borderRadius:99 }}>
+                          <div style={{ width:`${pctDone}%`, height:"100%", background:`linear-gradient(90deg,${C.green},${profile.goalData?.border||C.greenLight})`, borderRadius:99, transition:"width 0.5s" }}/>
+                        </div>
+                        <div style={{ marginTop:6, fontSize:11, color:diff>0?C.red:C.green, fontWeight:600 }}>
+                          {diff>0 ? `${diff}kg to go · Body fat target: ${profile.goalData?.targetBf}%` : "🎉 Goal reached! Focus on muscle quality"}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
               <div style={{ background:C.surface, borderRadius:20, padding:20, border:`1px solid ${C.border}`, boxShadow:C.shadow }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-                  <span style={{ fontFamily:"Bebas Neue", fontSize:18, letterSpacing:1 }}>{t.todayFuel}</span>
-                  <span style={{ fontSize:11, color:C.muted }}>{new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}</span>
+                  <div>
+                    <span style={{ fontFamily:"Bebas Neue", fontSize:18, letterSpacing:1 }}>{t.todayFuel}</span>
+                    <div style={{ fontSize:10, color:C.muted, marginTop:1 }}>{new Date().toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"})}</div>
+                  </div>
+                  <button onClick={()=>setTab("log")} style={{ background:C.greenPale, border:`1px solid ${C.border}`, borderRadius:20, padding:"4px 12px", fontSize:11, color:C.green, fontWeight:700, cursor:"pointer" }}>+ Add meal</button>
                 </div>
+                {meals.length===0 && (
+                  <div style={{ textAlign:"center", padding:"12px 0 4px", fontSize:12, color:C.muted }}>
+                    📸 No meals yet — tap <strong>+ Add meal</strong> to snap your first one!
+                  </div>
+                )}
                 <div style={{ display:"flex", justifyContent:"space-around", alignItems:"center" }}>
                   <Ring value={totalCals} max={calGoal} color={totalCals>calGoal?C.red:C.green} colorBg={C.border} label={t.calories} size={80}/>
                   <Ring value={totalProtein} max={150} color={C.accent} colorBg={C.accentPale} label={t.protein} size={64}/>
@@ -990,7 +1397,10 @@ Stats — Calories: ${totalCals}/${calGoal}, Protein: ${totalProtein}g, Mood: ${
                 </div>
                 <div style={{ marginLeft:"auto", display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
                   {isPro ? (
-                    <span style={{ background:`linear-gradient(135deg,${C.pro},#9333ea)`, color:"#fff", fontSize:9, fontWeight:700, padding:"2px 8px", borderRadius:99 }}>{t.proUnlimited}</span>
+                    <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
+                      <span style={{ background:`linear-gradient(135deg,${C.pro},#9333ea)`, color:"#fff", fontSize:9, fontWeight:700, padding:"2px 8px", borderRadius:99 }}>{t.proUnlimited}</span>
+                      <button onClick={handleStripePortal} style={{ background:"transparent", border:`1px solid #c4b5fd`, color:C.pro, fontSize:9, fontWeight:600, padding:"2px 6px", borderRadius:99, cursor:"pointer" }}>Cancel / Manage →</button>
+                    </div>
                   ) : (
                     <button onClick={()=>setShowUpgrade(true)} style={{ background:C.proPale, color:C.pro, border:`1px solid #c4b5fd`, fontSize:9, fontWeight:700, padding:"2px 8px", borderRadius:99, cursor:"pointer" }}>{t.upgradeMore}</button>
                   )}
@@ -1006,6 +1416,29 @@ Stats — Calories: ${totalCals}/${calGoal}, Protein: ${totalProtein}g, Mood: ${
                     <div style={{ fontSize:11, color:C.muted }}>{t.proLockedSub}</div>
                   </div>
                   <button onClick={()=>setShowUpgrade(true)} style={{ background:C.pro, color:"#fff", border:"none", borderRadius:8, padding:"5px 10px", fontSize:11, fontWeight:700, cursor:"pointer" }}>{t.unlock}</button>
+                </div>
+              )}
+
+              {/* PRO sample plans — shown to PRO users */}
+              {isPro && (
+                <div style={{ display:"flex", gap:8, marginBottom:10, overflowX:"auto", paddingBottom:4 }}>
+                  {[
+                    { icon:"🍽️", title:"This Week's Meals", sub:"7-day plan", color:C.goldPale, border:C.gold, prompt:"Give me a 7-day meal plan for this week" },
+                    { icon:"🏋️", title:"Workout Plan", sub:"Week 1 of 4", color:C.accentPale, border:C.accent, prompt:"Give me this week's workout plan with sets and reps" },
+                    { icon:"😴", title:"Rest Day Plan", sub:"Tired? Adapt!", color:"#fce7f3", border:"#f9a8d4", prompt:"I'm tired today, adapt my plan for a rest day" },
+                    { icon:"✈️", title:"Travel Mode", sub:"Away from gym", color:"#e0f2fe", border:"#7dd3fc", prompt:"I'm traveling and have no gym access, what can I do?" },
+                    { icon:"🍜", title:"Eating Out", sub:"Restaurant tips", color:"#fff7ed", border:"#fdba74", prompt:"I have to eat out today, what should I order to stay on track?" },
+                    { icon:"📊", title:"Macro Target", sub:"PFC balance", color:C.greenPale, border:C.green, prompt:"Optimize my macros for fat loss" },
+                  ].map(p=>(
+                    <button key={p.title} onClick={()=>setChatInput(p.prompt)} style={{
+                      minWidth:120, background:p.color, border:`1.5px solid ${p.border}`,
+                      borderRadius:14, padding:"10px 12px", cursor:"pointer", textAlign:"left", flexShrink:0
+                    }}>
+                      <div style={{ fontSize:22, marginBottom:4 }}>{p.icon}</div>
+                      <div style={{ fontSize:12, fontWeight:700, color:C.text }}>{p.title}</div>
+                      <div style={{ fontSize:10, color:C.muted }}>{p.sub}</div>
+                    </button>
+                  ))}
                 </div>
               )}
 
