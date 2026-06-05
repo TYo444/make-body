@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+// React is loaded via CDN
+const { useState, useRef, useEffect } = React;
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');`;
 
