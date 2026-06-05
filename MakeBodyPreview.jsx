@@ -1652,14 +1652,10 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
           <div style={{borderTop:"1px solid "+C.border,marginTop:16,paddingTop:14}}>
             <div style={{fontSize:10,color:C.muted,marginBottom:10,lineHeight:1.5}}>
               {lbl(
-                "「解約」はPRO課金の停止です。アカウントは残ります。
-「退会」はアカウント削除です。",
-                '"해지"는 PRO 과금 중지입니다. 계정은 유지됩니다.
-"탈퇴"는 계정 삭제입니다.',
-                '"Cancel PRO" stops billing. Your account remains.
-"Delete Account" permanently removes your data.'
-              ).split("
-").map((t,i)=><div key={i}>{t}</div>)}
+                "「解約」はPRO課金の停止です。アカウントは残ります。\n「退会」はアカウント削除です。",
+                "해지는 PRO 과금 중지입니다. 계정은 유지됩니다.\n탈퇴는 계정 삭제입니다.",
+                "Cancel PRO stops billing. Your account remains.\nDelete Account permanently removes your data."
+              ).split("\n").map((t,i)=><div key={i}>{t}</div>)}
             </div>
             <div style={{display:"flex",gap:8}}>
               {isPro && (
@@ -1728,30 +1724,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
                   {lbl("本当に退会しますか？","정말 탈퇴하시겠습니까?","Delete your account?")}
                 </div>
                 <div style={{fontSize:12,color:C.text,lineHeight:1.75,marginBottom:10}}>
-                  {lbl(
-                    "退会すると、以下のデータが削除対象になります：
-・アカウント情報
-・体重・食事・トレーニング記録
-・AIコーチとのチャット履歴
-・コーチの記憶
-
-この操作は取り消せません。",
-                    "탈퇴하면 다음 데이터가 삭제 대상이 됩니다：
-・계정 정보
-・체중·식사·트레이닝 기록
-・AI 코치 채팅 기록
-・코치의 기억
-
-이 작업은 취소할 수 없습니다.",
-                    "The following data will be deleted:
-・Account info
-・Weight, meal & training logs
-・AI coach chat history
-・Coach memory
-
-This action cannot be undone."
-                  ).split("
-").map((t,i)=><div key={i} style={{minHeight:t===""?8:undefined}}>{t}</div>)}
+                  {["退会すると以下のデータが削除されます。","・アカウント情報","・体重・食事・トレーニング記録","・AIコーチとのチャット履歴","・コーチの記憶","","この操作は取り消せません。"].map((t,i)=><div key={i} style={{minHeight:t===""?8:undefined,marginBottom:2}}>{t}</div>)}
                 </div>
                 {/* PRO契約中の警告 */}
                 {isPro && (
@@ -3426,12 +3399,9 @@ export default function App() {
         {lang==="ja"?"メンテナンス中":lang==="ko"?"점검 중":"Under Maintenance"}
       </div>
       <div style={{fontSize:14,color:C.muted,textAlign:"center",lineHeight:1.7,maxWidth:300}}>
-        {lang==="ja"?"現在メンテナンス中です。
-しばらくしてからお試しください。":
-         lang==="ko"?"현재 점검 중입니다.
-잠시 후 다시 시도해 주세요.":
-         "We're currently under maintenance.
-Please try again later."}
+        {lang==="ja"?"現在メンテナンス中です。しばらくしてからお試しください。":
+         lang==="ko"?"현재 점검 중입니다. 잠시 후 다시 시도해 주세요.":
+         "We're currently under maintenance. Please try again later."}
       </div>
       <div style={{marginTop:24,fontSize:11,color:C.muted}}>makebody999@gmail.com</div>
     </div>
