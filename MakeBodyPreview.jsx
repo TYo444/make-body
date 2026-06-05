@@ -2562,7 +2562,7 @@ function Onboarding({ lang, setLang, onComplete }) {
   );
 }
 
-export default function App() {
+function App() {
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [authStep, setAuthStep] = useState("loading"); // loading|signin|app
   const [sbUser, setSbUser]     = useState(null);
