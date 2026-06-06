@@ -439,13 +439,13 @@ function getExGuide(exerciseName, lang, gender) {
 
 const LEGAL = {
   privacy: {
-    en: { title:"Privacy Policy", body:"Last updated: May 2026\n\n1. DATA COLLECTED\nWe collect: nickname, gender (optional), age group, height, weight, meal logs, workout history. We may request GPS location for weather-based nutrition advice. Location is used in real-time only and never stored on our servers.\n\n2. PURPOSE\nData is used solely for personalized fitness and nutrition recommendations. We never sell or share your data with third parties.\n\n3. LOCATION DATA\nLocation access is optional. Declining does not affect app functionality. Location data is processed only on your device.\n\n4. DATA STORAGE\nAll data is stored encrypted on Supabase and locally on your device. No card data is stored.\n\n5. AI DISCLOSURE\nThis app uses Anthropic's Claude API. Chat content is processed in accordance with Anthropic's data processing policy. Some illustrations are created using AI generation technology. Characters depicted are fictional and not intended to represent real persons.\n\n6. HEALTH & WELLNESS DISCLAIMER\nMake Body is a lifestyle and habit-building support app. It does NOT provide medical advice, diagnosis, treatment, or any form of medical or psychological therapy. The AI coach provides general fitness and nutrition suggestions for informational purposes only. BMI, calorie estimates, and other metrics shown are approximate reference values, not medical assessments. Users with health conditions should consult a qualified healthcare professional before starting any fitness or nutrition program.\n\n7. PAYMENTS\nAll payments are processed by Stripe, Inc. No card data is stored by us.\n\n8. MINORS\nThis app is not intended for users under 13. Users aged 13-17 require parental consent for paid features.\n\n9. YOUR RIGHTS\nYou may request access, correction, or deletion of your data at any time. Deletion requests will be processed within 30 days of receipt.\nEU users have additional rights under GDPR, including the right to data portability.\n\n10. CONTACT\n" + CONTACT_EMAIL },
+    en: { title:"Privacy Policy", body:"Last updated: June 2026\n\n1. DATA COLLECTED\nWe collect: nickname, gender (optional), age group, height, weight, meal logs, workout history. We may request GPS location for weather-based nutrition advice. Location is used in real-time only and never stored on our servers.\n\n2. PURPOSE\nData is used solely for personalized fitness and nutrition recommendations. We never sell or share your data with third parties.\n\n3. LOCATION DATA\nLocation access is optional. Declining does not affect app functionality. Location data is processed only on your device.\n\n4. DATA STORAGE\nAll data is stored encrypted on Supabase and locally on your device. No card data is stored.\n\n5. AI DISCLOSURE\nThis app uses Anthropic's Claude API. Chat content is processed in accordance with Anthropic's data processing policy. Some illustrations are created using AI generation technology. Characters depicted are fictional and not intended to represent real persons.\n\n6. HEALTH & WELLNESS DISCLAIMER\nMake Body is a lifestyle and habit-building support app. It does NOT provide medical advice, diagnosis, treatment, or any form of medical or psychological therapy. The AI coach provides general fitness and nutrition suggestions for informational purposes only. BMI, calorie estimates, and other metrics shown are approximate reference values, not medical assessments. Users with health conditions should consult a qualified healthcare professional before starting any fitness or nutrition program.\n\n7. PAYMENTS\nAll payments are processed by Stripe, Inc. No card data is stored by us.\n\n8. MINORS\nThis app is not intended for users under 13. Users aged 13-17 require parental consent for paid features.\n\n9. YOUR RIGHTS\nYou may request access, correction, or deletion of your data at any time. Deletion requests will be processed within 30 days of receipt.\nEU users have additional rights under GDPR, including the right to data portability.\n\n10. CONTACT\n" + CONTACT_EMAIL },
 
-    ja: { title:"プライバシーポリシー", body:"最終更新：2026年5月\n\n1. 収集するデータ\nニックネーム、性別（任意）、年代、身長、体重、食事記録、運動記録を収集します。天気に基づく栄養アドバイスのために、GPSの位置情報を要求することがあります。位置情報はリアルタイムのみ使用し、サーバーには一切保存しません。\n\n2. データの利用目的\n個人化されたフィットネス・栄養アドバイスのみに使用します。第三者への販売・提供は行いません。\n\n3. 位置情報\n位置情報へのアクセスは任意です。拒否してもアプリの機能に影響はありません。\n\n4. データ保管\nSupabaseで暗号化保管、およびデバイス上にローカル保存します。カード情報は保管しません。\n\n5. AI開示事項\n本アプリはAnthropicのClaude APIを使用しています。チャット内容はAnthropicのデータ処理ポリシーに従って処理されます。一部のイラストはAI生成技術を利用して制作されています。画像に登場する人物は実在人物を意図したものではありません。\n\n6. 健康・ウェルネス免責事項\n本アプリはライフスタイル習慣改善のサポートを目的としたアプリです。医療行為・診断・治療・心理療法を提供するものではありません。AIコーチが提供する情報はフィットネス・栄養に関する一般的な提案であり、参考情報として提供しています。BMIやカロリー等の数値は概算の参考値であり、医療的評価ではありません。健康上の懸念がある方は医療専門家にご相談ください。\n\n7. 決済\n全ての決済はStripe, Inc.が処理します。カード情報は弊社では保管しません。\n\n8. 未成年者\n本アプリは13歳未満を対象としていません。13〜17歳の方が有料機能を利用する場合は保護者の同意が必要です。\n\n9. お客様の権利\nデータへのアクセス・修正・削除はいつでも申請できます。削除依頼は受領後30日以内に対応します。EUユーザーはGDPRに基づく追加の権利を有します。\n\n10. お問い合わせ\n" + CONTACT_EMAIL },
+    ja: { title:"プライバシーポリシー", body:"最終更新：2026年6月\n\n1. 収集するデータ\nニックネーム、性別（任意）、年代、身長、体重、食事記録、運動記録を収集します。天気に基づく栄養アドバイスのために、GPSの位置情報を要求することがあります。位置情報はリアルタイムのみ使用し、サーバーには一切保存しません。\n\n2. データの利用目的\n個人化されたフィットネス・栄養アドバイスのみに使用します。第三者への販売・提供は行いません。\n\n3. 位置情報\n位置情報へのアクセスは任意です。拒否してもアプリの機能に影響はありません。\n\n4. データ保管\nSupabaseで暗号化保管、およびデバイス上にローカル保存します。カード情報は保管しません。\n\n5. AI開示事項\n本アプリはAnthropicのClaude APIを使用しています。チャット内容はAnthropicのデータ処理ポリシーに従って処理されます。一部のイラストはAI生成技術を利用して制作されています。画像に登場する人物は実在人物を意図したものではありません。\n\n6. 健康・ウェルネス免責事項\n本アプリはライフスタイル習慣改善のサポートを目的としたアプリです。医療行為・診断・治療・心理療法を提供するものではありません。AIコーチが提供する情報はフィットネス・栄養に関する一般的な提案であり、参考情報として提供しています。BMIやカロリー等の数値は概算の参考値であり、医療的評価ではありません。健康上の懸念がある方は医療専門家にご相談ください。\n\n7. 決済\n全ての決済はStripe, Inc.が処理します。カード情報は弊社では保管しません。\n\n8. 未成年者\n本アプリは13歳未満を対象としていません。13〜17歳の方が有料機能を利用する場合は保護者の同意が必要です。\n\n9. お客様の権利\nデータへのアクセス・修正・削除はいつでも申請できます。削除依頼は受領後30日以内に対応します。EUユーザーはGDPRに基づく追加の権利を有します。\n\n10. お問い合わせ\n" + CONTACT_EMAIL },
 
-    ko: { title:"개인정보처리방침", body:"최종 업데이트：2026년 5월\n\n1. 수집하는 정보\n닉네임, 성별(선택), 연령대, 신장, 체중, 식사 기록, 운동 기록을 수집합니다.\n\n2. 데이터 이용 목적\n개인화된 피트니스 및 영양 추천에만 사용됩니다. 제3자에게 판매하지 않습니다.\n\n3. 데이터 저장\nSupabase에 암호화 저장 및 기기 내 로컬 저장. 카드 정보는 저장되지 않습니다.\n\n4. AI 공개사항\nAnthropic Claude API를 사용합니다. 일부 일러스트는 AI 생성 기술로 제작되었으며 실존 인물을 의도하지 않습니다.\n\n5. 건강 면책\n본 앱은 의료 서비스가 아닙니다. AI 코치의 정보는 참고용 일반 제안입니다.\n\n6. 결제\nStripe, Inc.에서 처리. 카드 정보는 저장되지 않습니다.\n\n7. 귀하의 권리\n언제든지 데이터 접근, 수정, 삭제를 요청할 수 있습니다. 삭제 요청은 접수 후 30일 이내에 처리됩니다. EU 사용자는 GDPR에 따른 추가 권리를 보유합니다.\n\n8. 문의처\n" + CONTACT_EMAIL },
+    ko: { title:"개인정보처리방침", body:"최종 업데이트：2026년 6월\n\n1. 수집하는 정보\n닉네임, 성별(선택), 연령대, 신장, 체중, 식사 기록, 운동 기록을 수집합니다.\n\n2. 데이터 이용 목적\n개인화된 피트니스 및 영양 추천에만 사용됩니다. 제3자에게 판매하지 않습니다.\n\n3. 데이터 저장\nSupabase에 암호화 저장 및 기기 내 로컬 저장. 카드 정보는 저장되지 않습니다.\n\n4. AI 공개사항\nAnthropic Claude API를 사용합니다. 일부 일러스트는 AI 생성 기술로 제작되었으며 실존 인물을 의도하지 않습니다.\n\n5. 건강 면책\n본 앱은 의료 서비스가 아닙니다. AI 코치의 정보는 참고용 일반 제안입니다.\n\n6. 결제\nStripe, Inc.에서 처리. 카드 정보는 저장되지 않습니다.\n\n7. 귀하의 권리\n언제든지 데이터 접근, 수정, 삭제를 요청할 수 있습니다. 삭제 요청은 접수 후 30일 이내에 처리됩니다. EU 사용자는 GDPR에 따른 추가 권리를 보유합니다.\n\n8. 문의처\n" + CONTACT_EMAIL },
 
-    zh: { title:"隐私政策", body:"最后更新：2026年5月\n\n我们收集：昵称、性别（可选）、年龄段、身高、体重、饮食和运动记录。数据仅用于个性化健身和营养建议，不对外销售。一些插图使用AI生成技术制作，图中人物为虚构角色，并非真实人物。\n\n您的权利：您可以随时请求访问、更正或删除您的数据。删除请求将在收到后30天内处理。EU用户享有GDPR下的额外权利。\n\n联系方式：" + CONTACT_EMAIL },
+    zh: { title:"隐私政策", body:"最后更新：2026年6月\n\n我们收集：昵称、性别（可选）、年龄段、身高、体重、饮食和运动记录。数据仅用于个性化健身和营养建议，不对外销售。一些插图使用AI生成技术制作，图中人物为虚构角色，并非真实人物。\n\n您的权利：您可以随时请求访问、更正或删除您的数据。删除请求将在收到后30天内处理。EU用户享有GDPR下的额外权利。\n\n联系方式：" + CONTACT_EMAIL },
 
     de: { title: "Datenschutzerklarung", body: "Letzte Aktualisierung: Juni 2026\\n\\nDaten: E-Mail, Nickname, Korperdaten, KI-Chat. Kein Drittverkauf.\\nDienste: Supabase, Externer KI-Dienst, Stripe.\\nLoschung: makebody999@gmail.com" },
     fr: { title: "Politique de confidentialite", body: "Mise a jour: juin 2026\\n\\nDonnees: email, pseudo, donnees corporelles, chat IA. Pas de vente a des tiers.\\nServices: Supabase, Service IA externe, Stripe.\\nSuppression: makebody999@gmail.com" },
@@ -453,13 +453,13 @@ const LEGAL = {
   },
 
   terms: {
-    en: { title:"Terms of Service", body:"Last updated: May 2026\n\n1. ACCEPTANCE\nBy using Make Body, you agree to these terms.\n\n2. SERVICE DESCRIPTION\nMake Body provides AI-powered fitness coaching and nutrition recommendations for informational purposes only. It is NOT a medical service.\n\n3. HEALTH & WELLNESS DISCLAIMER\nMake Body is a lifestyle and habit-support app. It does NOT provide medical advice, diagnosis, treatment, or any form of medical or psychological therapy. The AI coach provides general wellness suggestions based on user-provided information. These are NOT medical assessments. Calorie counts, BMI values, and nutrition estimates are approximations for reference only. Users should consult a qualified healthcare professional before starting any fitness or nutrition program, especially if they have pre-existing health conditions.\n\n4. AI-GENERATED CONTENT\nSome illustrations in this app are created using AI image generation technology. Characters depicted are fictional and not intended to represent real persons. This app uses Anthropic's Claude API for AI coaching features.\n\n5. SUBSCRIPTION & BILLING\n- Free plan: limited daily AI chats (3/day UTC, 10/day within first 24hrs)\n- Trial plan: $1.99 one-time. Valid 7 days OR 50 sessions (whichever first). No auto-charge. Returns to Free plan automatically.\n- PRO Monthly: $8.99/month\n- PRO Annual: $79.99/year (~26% savings)\n- Cancel anytime via Stripe customer portal\n- Cancellation effective at end of current billing period\n- No refunds after subscription activation (digital content, immediate access)\n- EU users: You may have a 14-day right of withdrawal. By accessing PRO features immediately upon payment, you expressly waive this right where applicable. EU users retain all mandatory statutory consumer protection rights.\n- Local taxes may apply\n\n6. AI USAGE LIMITS\n- Free plan: 3 chats per UTC calendar day (10 within first 24 hours of registration)\n- PRO plan: 300 chats per UTC calendar month\n- Monthly usage counts are tracked using UTC (Coordinated Universal Time), regardless of the user's local timezone or device clock settings.\n- Daily/monthly resets occur at UTC 00:00.\n\n6. MINORS\nUsers under 18 require parental consent for PRO subscription.\n\n7. INTELLECTUAL PROPERTY\nAll Make Body content, designs, and code are owned by the operator.\n\n8. LIMITATION OF LIABILITY\nTo the maximum extent permitted by law, Make Body is not liable for damages arising from app use.\n\n9. GOVERNING LAW\nJapanese law applies. EU users retain mandatory consumer protection rights.\n\n10. CONTACT\n" + CONTACT_EMAIL },
+    en: { title:"Terms of Service", body:"Last updated: June 2026\n\n1. ACCEPTANCE\nBy using Make Body, you agree to these terms.\n\n2. SERVICE DESCRIPTION\nMake Body provides AI-powered fitness coaching and nutrition recommendations for informational purposes only. It is NOT a medical service.\n\n3. HEALTH & WELLNESS DISCLAIMER\nMake Body is a lifestyle and habit-support app. It does NOT provide medical advice, diagnosis, treatment, or any form of medical or psychological therapy. The AI coach provides general wellness suggestions based on user-provided information. These are NOT medical assessments. Calorie counts, BMI values, and nutrition estimates are approximations for reference only. Users should consult a qualified healthcare professional before starting any fitness or nutrition program, especially if they have pre-existing health conditions.\n\n4. AI-GENERATED CONTENT\nSome illustrations in this app are created using AI image generation technology. Characters depicted are fictional and not intended to represent real persons. This app uses Anthropic's Claude API for AI coaching features.\n\n5. SUBSCRIPTION & BILLING\n- Free plan: limited daily AI chats (3/day UTC, 10/day within first 24hrs)\n- Trial plan: $1.99 one-time. Valid 7 days OR 50 sessions (whichever first). No auto-charge. Returns to Free plan automatically.\n- PRO Monthly: $8.99/month\n- PRO Annual: $79.99/year (~26% savings)\n- Cancel anytime via Stripe customer portal\n- Cancellation effective at end of current billing period\n- No refunds after subscription activation (digital content, immediate access)\n- EU users: You may have a 14-day right of withdrawal. By accessing PRO features immediately upon payment, you expressly waive this right where applicable. EU users retain all mandatory statutory consumer protection rights.\n- Local taxes may apply\n\n6. AI USAGE LIMITS\n- Free plan: 3 chats per UTC calendar day (10 within first 24 hours of registration)\n- PRO plan: 300 chats per UTC calendar month\n- Monthly usage counts are tracked using UTC (Coordinated Universal Time), regardless of the user's local timezone or device clock settings.\n- Daily/monthly resets occur at UTC 00:00.\n\n6. MINORS\nUsers under 18 require parental consent for PRO subscription.\n\n7. INTELLECTUAL PROPERTY\nAll Make Body content, designs, and code are owned by the operator.\n\n8. LIMITATION OF LIABILITY\nTo the maximum extent permitted by law, Make Body is not liable for damages arising from app use.\n\n9. GOVERNING LAW\nJapanese law applies. EU users retain mandatory consumer protection rights.\n\n10. CONTACT\n" + CONTACT_EMAIL },
 
-    ja: { title:"利用規約", body:"最終更新：2026年5月\n\n1. 同意\nMake Bodyをご利用いただくことで、本規約に同意したものとみなします。\n\n2. サービスの説明\n本アプリはAIを活用したフィットネスコーチング・栄養推奨を提供する情報提供サービスです。医療サービスではありません。\n\n3. 健康・ウェルネス免責事項\n本アプリは医療行為・診断・治療・心理療法を提供するものではありません。AIコーチが提供する情報はユーザーが入力した情報をもとにした一般的なライフスタイル・習慣改善の提案です。カロリー・BMI等の数値は参考値です。健康上の懸念がある方は、新しいプログラムを始める前に医療専門家にご相談ください。\n\n4. AI生成コンテンツ\n本アプリに含まれる一部イラスト・図解はAI画像生成技術を利用して制作されています。画像に登場する人物は実在人物を意図したものではありません。本アプリはAnthropicのClaude APIを使用しています。\n\n5. サブスクリプション・料金\n- 無料プラン：1日のAIチャット回数に制限あり\n- お試しプラン：$1.99（単発決済）。7日間または50回（いずれか早い方）有効。終了後の自動課金なし。自動的に無料プランへ戻ります。\n- PRO 月額：$8.99/月\n- PRO 年額：$79.99/年（約26%お得）\n- Stripeカスタマーポータルからいつでもキャンセル可能\n- キャンセルは現在の請求期間終了後に有効\n- 日割り返金なし\n- 現地税が適用される場合があります\n\n6. AI利用回数制限\n- 無料プラン：UTC日付ごとに1日3回（登録から24時間以内は10回）\n- PROプラン：UTCカレンダー月ごとに300回\n- 月間利用回数はUTC（協定世界時）基準で集計されます。端末の時刻設定に関わらず、サーバー側でUTCを基準に管理されます。\n- 回数のリセットはUTC 00:00（日次・月次）に行われます。\n\n6. 未成年者\n18歳未満の方がPROを利用する場合、保護者の同意が必要です。\n\n7. 知的財産\nMake Bodyの全コンテンツ・デザイン・コードは運営者に帰属します。\n\n8. 責任の制限\n適用法の許容する最大限において、運営者はアプリ利用に起因する損害について責任を負いません。\n\n9. 準拠法\n本規約は日本法を準拠法とします。EU居住ユーザーには強行規定の消費者保護法も適用されます。\n\n10. お問い合わせ\n" + CONTACT_EMAIL },
+    ja: { title:"利用規約", body:"最終更新：2026年6月\n\n1. 同意\nMake Bodyをご利用いただくことで、本規約に同意したものとみなします。\n\n2. サービスの説明\n本アプリはAIを活用したフィットネスコーチング・栄養推奨を提供する情報提供サービスです。医療サービスではありません。\n\n3. 健康・ウェルネス免責事項\n本アプリは医療行為・診断・治療・心理療法を提供するものではありません。AIコーチが提供する情報はユーザーが入力した情報をもとにした一般的なライフスタイル・習慣改善の提案です。カロリー・BMI等の数値は参考値です。健康上の懸念がある方は、新しいプログラムを始める前に医療専門家にご相談ください。\n\n4. AI生成コンテンツ\n本アプリに含まれる一部イラスト・図解はAI画像生成技術を利用して制作されています。画像に登場する人物は実在人物を意図したものではありません。本アプリはAnthropicのClaude APIを使用しています。\n\n5. サブスクリプション・料金\n- 無料プラン：1日のAIチャット回数に制限あり\n- お試しプラン：$1.99（単発決済）。7日間または50回（いずれか早い方）有効。終了後の自動課金なし。自動的に無料プランへ戻ります。\n- PRO 月額：$8.99/月\n- PRO 年額：$79.99/年（約26%お得）\n- Stripeカスタマーポータルからいつでもキャンセル可能\n- キャンセルは現在の請求期間終了後に有効\n- 日割り返金なし\n- 現地税が適用される場合があります\n\n6. AI利用回数制限\n- 無料プラン：UTC日付ごとに1日3回（登録から24時間以内は10回）\n- PROプラン：UTCカレンダー月ごとに300回\n- 月間利用回数はUTC（協定世界時）基準で集計されます。端末の時刻設定に関わらず、サーバー側でUTCを基準に管理されます。\n- 回数のリセットはUTC 00:00（日次・月次）に行われます。\n\n6. 未成年者\n18歳未満の方がPROを利用する場合、保護者の同意が必要です。\n\n7. 知的財産\nMake Bodyの全コンテンツ・デザイン・コードは運営者に帰属します。\n\n8. 責任の制限\n適用法の許容する最大限において、運営者はアプリ利用に起因する損害について責任を負いません。\n\n9. 準拠法\n本規約は日本法を準拠法とします。EU居住ユーザーには強行規定の消費者保護法も適用されます。\n\n10. お問い合わせ\n" + CONTACT_EMAIL },
 
-    ko: { title:"이용약관", body:"최종 업데이트：2026년 5월\n\nMake Body 이용 시 본 약관에 동의한 것으로 간주됩니다. 본 앱은 의료 서비스가 아닙니다. AI 코치의 정보는 참고용 일반 제안입니다. PRO 월간 $8.99, 연간 $79.99. 언제든지 Stripe 포털에서 취소 가능.\n\n문의：" + CONTACT_EMAIL },
+    ko: { title:"이용약관", body:"최종 업데이트：2026년 6월\n\nMake Body 이용 시 본 약관에 동의한 것으로 간주됩니다. 본 앱은 의료 서비스가 아닙니다. AI 코치의 정보는 참고용 일반 제안입니다. PRO 월간 $8.99, 연간 $79.99. 언제든지 Stripe 포털에서 취소 가능.\n\n문의：" + CONTACT_EMAIL },
 
-    zh: { title:"服务条款", body:"最后更新：2026年5月\n\n使用Make Body即表示您同意本条款。本应用提供AI健身和营养建议，仅供参考，不构成医疗建议。PRO月付$8.99，年付$79.99。随时可通过Stripe门户取消。\n\n联系：" + CONTACT_EMAIL },
+    zh: { title:"服务条款", body:"最后更新：2026年6月\n\n使用Make Body即表示您同意本条款。本应用提供AI健身和营养建议，仅供参考，不构成医疗建议。PRO月付$8.99，年付$79.99。随时可通过Stripe门户取消。\n\n联系：" + CONTACT_EMAIL },
 
     de: { title: "Nutzungsbedingungen", body: "Letzte Aktualisierung: Juni 2026\\n\\nKein medizinischer Dienst. KI-Inhalte sind Referenzinformationen. Automatische Verlängerung - bis Vortag kündigen.\\nKontakt: makebody999@gmail.com" },
     fr: { title: "Conditions utilisation", body: "Mise a jour: juin 2026\\n\\nPas un service medical. Contenu IA indicatif. Renouvellement automatique - annuler avant.\\nContact: makebody999@gmail.com" },
@@ -1455,18 +1455,18 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
           <div style={{textAlign:"center",padding:"30px 0"}}>
             <div style={{fontSize:32,marginBottom:10}}>✅</div>
             <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:6}}>{lbl("送信しました！","전송했습니다！","Sent successfully!")}</div>
-            <div style={{fontSize:12,color:C.muted,marginBottom:20}}>{lbl("通常1〜3営業日以内にご返信します。","보통 1~3 영업일 내에 답변드립니다.","We typically reply within 1–3 business days.")}</div>
+            <div style={{fontSize:12,color:C.muted,marginBottom:20}}>{lbl("ご要望を受け付けました。個別返信はできない場合がありますが、改善の参考にします。","요청을 접수했습니다. 개별 답변이 어려울 수 있으나 개선에 참고하겠습니다.","Your feedback has been received. We may not reply individually, but we use it to improve.")}</div>
             <button onClick={()=>{setFeedbackSent(false);setFeedback("");setSection("main");}} style={{background:C.green,border:"none",borderRadius:12,padding:"12px 30px",color:"#fff",fontSize:14,cursor:"pointer"}}>{lbl("閉じる","닫기","Close")}</button>
           </div>
         ) : (
           <div>
             <div style={{fontSize:12,color:C.muted,marginBottom:14}}>
-              {lbl("バグ報告・機能要望・その他ご意見をお聞かせください。","버그 보고, 기능 요청 또는 기타 의견을 알려주세요.","Report bugs, request features, or share feedback.")}
+              {lbl("バグ報告・機能要望・ご意見をお聞かせください。個別返信はできませんが、サービス改善に活かします。","버그 보고, 기능 요청, 의견을 알려주세요. 개별 답변은 어렵지만 서비스 개선에 반영합니다.","Share bugs, requests, or feedback. We may not reply individually, but all feedback helps us improve.")}
             </div>
             {/* 種別 */}
             <div style={{fontSize:10,color:C.muted,fontWeight:700,marginBottom:8}}>{lbl("種別","종류","Category")}</div>
             <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>
-              {[[lbl("バグ報告","버그 보고","Bug report"),"🐛"],[lbl("機能要望","기능 요청","Feature request"),"💡"],[lbl("使い方の質問","사용법 질문","Usage question"),"❓"],[lbl("その他","기타","Other"),"💬"]].map(([t,e])=>(
+              {[[lbl("バグ報告","버그 보고","Bug report"),"🐛"],[lbl("機能要望","기능 요청","Feature request"),"💡"],[lbl("その他","기타","Other"),"💬"]].map(([t,e])=>(
                 <button key={t} style={{padding:"7px 12px",borderRadius:20,border:"1px solid "+C.border,background:C.surface,color:C.muted,fontSize:12,cursor:"pointer"}}>{e} {t}</button>
               ))}
             </div>
@@ -2631,6 +2631,7 @@ function App() {
     return () => clearInterval(timer);
   }, [isPro]);
 
+  const [coachMsgFixed, setCoachMsgFixed] = useState(null); // 固定メッセージ
   const [calDate, setCalDate]   = useState(new Date());
   const [calFilter, setCalFilter] = useState("all"); // all|done|planned|missed
 
@@ -2713,6 +2714,13 @@ function App() {
   })();
 
   const canChat = cl.canChat;
+
+  // コーチメッセージを一度だけ計算して固定（毎秒変わらないよう）
+  useEffect(() => {
+    if (!profile || coachMsgFixed !== null) return;
+    // ここで計算したメッセージをセット（後でコーチカード側で使う）
+    setCoachMsgFixed("__ready__");
+  }, [profile]);
 
   // app_settings ポーリング（60秒ごと）
   useEffect(() => {
@@ -3317,6 +3325,7 @@ function App() {
       const headers = { "Content-Type": "application/json", "anthropic-version": "2023-06-01", "x-api-key": "" };
       if (sbUser?.user?.id)      headers["x-user-id"]      = sbUser.user.id;
       if (sbUser?.access_token)  headers["x-access-token"] = sbUser.access_token;
+      else if (sbUser?.isGuest)  headers["x-user-id"]      = sbUser.user?.id || "guest_anon";
 
       const r = await fetch(apiUrl, {
         method: "POST",
@@ -3344,14 +3353,14 @@ function App() {
       const reply = data.content?.[0]?.text || "Sorry, I hit an error. Try again!";
 
       // サーバーから返ってきた_usageでキャッシュを正確に更新（UTC基準）
-      if (data._usage) {
+      if (data.usage_info) {
         const serverCache = {
-          remaining:  data._usage.remaining,
-          used:       data._usage.used,
-          limit:      data._usage.limit,
-          isPro:      data._usage.isPro,
-          dayKey:     data._usage.dayKey,
-          monthKey:   data._usage.monthKey,
+          remaining:  data.usage_info.remaining,
+          used:       data.usage_info.used ?? usageCache.used,
+          limit:      data.usage_info.limit,
+          isPro:      data.usage_info.isPro,
+          dayKey:     usageCache.dayKey,
+          monthKey:   usageCache.monthKey,
         };
         setUsageCache(serverCache);
         lsSet("mb_usage_cache", serverCache);
@@ -3454,19 +3463,6 @@ function App() {
                 ? (lang==="ja"?"現在新規登録を停止中":lang==="ko"?"신규 등록 일시 중단":"Registration Paused")
                 : (lang === "ja" ? "始める" : lang === "ko" ? "시작하기" : "Create Account")))}
           </button>
-
-          {/* ゲストログイン */}
-          <div style={{display:"flex",alignItems:"center",gap:8,margin:"16px 0 4px"}}>
-            <div style={{flex:1,height:1,background:C.border}}/>
-            <span style={{fontSize:11,color:C.muted}}>{lang==="ja"?"または":lang==="ko"?"또는":"or"}</span>
-            <div style={{flex:1,height:1,background:C.border}}/>
-          </div>
-          <button onClick={handleGuestLogin} style={{width:"100%",background:"transparent",border:"1.5px solid "+C.border,borderRadius:12,padding:"12px 0",color:C.muted,fontSize:14,cursor:"pointer",fontWeight:600}}>
-            👤 {lang==="ja"?"アカウントなしで試す":lang==="ko"?"계정 없이 체험하기":"Try without account"}
-          </button>
-          <div style={{fontSize:10,color:C.muted,textAlign:"center",marginTop:6}}>
-            {lang==="ja"?"データはこの端末のみ保存されます":lang==="ko"?"데이터는 이 기기에만 저장됩니다":"Data saved on this device only"}
-          </div>
         </div>
       </div>
     </div>
@@ -3597,9 +3593,9 @@ function App() {
                 }
               } else if (daysSince >= 5) {
                 const opts = [
-                  {ja:`${daysSince}日ぶりか。戻ってきてくれた、それだけで十分。今日は1種目だけでいい。`,en:`${daysSince} days away. You came back — that's enough. Just one exercise today.`,ko:`${daysSince}일 만이야. 돌아와 줬어, 그것만으로도 충분해.`},
-                  {ja:`久しぶりだな。でも戻ってきたのが大事。焦らずいこう。`,en:`It's been a while. But coming back is what matters. No rush.`,ko:`오랜만이야. 하지만 돌아온 게 중요해. 서두르지 말자.`},
-                  {ja:`${name}、いたか。会えなくて正直寂しかった。今日は軽くでいいから動こう。`,en:`${name}, there you are. I missed you. Just move a little today — that's all.`,ko:`${name}, 있었구나. 솔직히 보고 싶었어. 오늘은 조금만 움직이자.`},
+                  {ja:`${daysSince}日ぶりだね。また来てくれた、それだけで十分だよ。`,en:`${daysSince} days away. You came back — that's enough. Just one exercise today.`,ko:`${daysSince}일 만이야. 돌아와 줬어, 그것만으로도 충분해.`},
+                  {ja:`${name}、久しぶり。また一緒にやっていこう。焦らずいこう。`,en:`${name}, welcome back. Let's start again together. No rush.`,ko:`${name}, 오랜만이야. 다시 함께 해보자. 서두르지 말자.`},
+                  {ja:`${name}、戻ってきてくれた。今日は軽くでいいから動こう。`,en:`${name}, you're back. Just move a little today — that's all.`,ko:`${name}, 돌아왔구나. 오늘은 조금만 움직이자.`},
                 ];
                 msg = rand(opts);
               } else {
@@ -3610,7 +3606,18 @@ function App() {
                 ];
                 msg = rand(opts);
               }
-              const dispMsg = msg[lang] || msg.en || msg.ja;
+              // メッセージを固定（ページ遷移・タイマーで毎秒変わらないよう）
+              const msgKey = "mb_coach_msg_" + new Date().toISOString().slice(0,10);
+              const savedMsg = lsGet(msgKey, null);
+              let finalMsg;
+              if (savedMsg) {
+                finalMsg = savedMsg;
+              } else {
+                finalMsg = msg[lang] || msg.en || msg.ja;
+                lsSet(msgKey, finalMsg);
+                // 翌日のキャッシュをクリア（古いキーを削除）
+              }
+              const dispMsg = finalMsg;
               return (
                 <div style={{background:"linear-gradient(135deg,"+coach.bg+","+C.card+")",borderRadius:18,padding:"16px 18px",marginBottom:12,border:"1px solid "+coach.color+"30",position:"relative",overflow:"hidden"}}>
                   <div style={{position:"absolute",top:-10,right:-10,fontSize:50,opacity:0.07}}>{coach.emoji}</div>
