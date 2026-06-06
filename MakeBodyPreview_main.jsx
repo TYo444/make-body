@@ -1369,7 +1369,7 @@ function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings }) {
         <button onClick={()=>{
             if (plan==="trial" && appSettings && !appSettings.trial_enabled) return;
             if ((plan==="monthly"||plan==="annual") && appSettings && !appSettings.pro_enabled) return;
-            window.open(plan==="trial"?STRIPE_TRIAL:plan==="annual"?STRIPE_ANNUAL:STRIPE_MONTHLY,"_blank");
+            location.href=(plan==="trial"?STRIPE_TRIAL:plan==="annual"?STRIPE_ANNUAL:STRIPE_MONTHLY);
             onClose();
           }}
           style={{width:"100%",background:(plan==="trial"&&appSettings&&!appSettings.trial_enabled)||(plan!=="trial"&&appSettings&&!appSettings.pro_enabled)?"#9ca3af":"linear-gradient(135deg,#16a34a,#22c55e)",border:"none",borderRadius:14,padding:"16px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:20,letterSpacing:2,cursor:"pointer",marginBottom:6,boxShadow:"0 4px 20px rgba(34,197,94,0.3)"}}>
@@ -2143,7 +2143,7 @@ function Onboarding({ lang, setLang, onComplete }) {
                       <div style={{fontSize:11,color:"#374151",lineHeight:1.9,whiteSpace:"pre-line",borderTop:"1px solid "+(g.color||C.green)+"20",paddingTop:6,marginTop:4}}>{benefit}</div>
                     )}
                   </div>
-                  {isSelected&&<span style={{color:g.color||C.green,fontSize:18,flexShrink:0}}>\u2713</span>}
+                  {isSelected&&<span style={{color:g.color||C.green,fontSize:18,flexShrink:0}}>✓</span>}
                 </button>
               );
             })}
@@ -2302,7 +2302,7 @@ function Onboarding({ lang, setLang, onComplete }) {
                       </div>
                     )}
                   </div>
-                  {isSelected&&<span style={{color:p.color,fontSize:18,flexShrink:0}}>\u2713</span>}
+                  {isSelected&&<span style={{color:p.color,fontSize:18,flexShrink:0}}>✓</span>}
                 </button>
               );
             })}
@@ -2439,6 +2439,23 @@ function Onboarding({ lang, setLang, onComplete }) {
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:12}}>
 
             {/* Annual */}
+            {/* トライアルプラン */}
+            <div style={{borderRadius:14,border:"2px solid "+(selectedPlan==="trial"?"#22c55e":"#8b5cf6"),background:selectedPlan==="trial"?"linear-gradient(135deg,#f0fdf4,#dcfce7)":"linear-gradient(135deg,#f5f3ff,#ede9fe)",padding:"12px 16px",cursor:"pointer",position:"relative",transition:"all 0.2s",marginBottom:8}} onClick={()=>setSelectedPlan("trial")}>
+              {selectedPlan==="trial"&&<div style={{position:"absolute",top:10,right:10,background:"#22c55e",color:"#fff",borderRadius:"50%",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>✓</div>}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+                    <div style={{fontFamily:"Bebas Neue",fontSize:15,color:selectedPlan==="trial"?"#166534":"#7c3aed",letterSpacing:1}}>{lbl("7日間お試し","7일 체험","7-Day Trial")}</div>
+                    <div style={{background:"#8b5cf6",color:"#fff",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:99}}>{lbl("おすすめ","추천","Best Start")}</div>
+                  </div>
+                  <div style={{fontSize:18,fontWeight:800,color:selectedPlan==="trial"?"#166534":"#7c3aed"}}>$1.99<span style={{fontSize:11,fontWeight:400}}> {lbl("単発・自動課金なし","단발·자동 결제 없음","one-time, no auto-charge")}</span></div>
+                </div>
+              </div>
+              <div style={{fontSize:10,color:selectedPlan==="trial"?"#166534":"#6d28d9",marginTop:4}}>
+                {lbl("7日間または50回（先着）。終了後は自動的に無料プランへ。","7일 또는 50회 중 먼저 종료. 종료 후 자동으로 무료 플랜.","7 days or 50 sessions. Returns to free plan automatically.")}
+              </div>
+            </div>
+
             <div style={{position:"relative",borderRadius:16,border:"2.5px solid "+(selectedPlan==="annual"?"#22c55e":"#f59e0b"),background:selectedPlan==="annual"?"linear-gradient(135deg,#f0fdf4,#dcfce7)":"linear-gradient(135deg,#fffbeb,#fef3c7)",padding:"16px 16px 14px",cursor:"pointer",boxShadow:selectedPlan==="annual"?"0 0 0 3px rgba(34,197,94,0.2)":"0 4px 20px rgba(245,158,11,0.15)",transition:"all 0.2s"}} onClick={()=>setSelectedPlan("annual")}>
               <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(90deg,#f59e0b,#ef4444)",color:"#fff",fontSize:11,fontWeight:800,padding:"3px 16px",borderRadius:10,whiteSpace:"nowrap"}}>
                 ⭐ {lbl("おすすめ・2ヶ月分お得","추천・2개월 무료","推荐・省2个月","Empfohlen","Recommandé","Recomendado","Best Value")}
@@ -2493,7 +2510,7 @@ function Onboarding({ lang, setLang, onComplete }) {
 
           {/* CTA */}
           {selectedPlan&&agreed?(
-            <button onClick={()=>{if(selectedPlan==="annual"){window.open(STRIPE_ANNUAL,"_blank");}else if(selectedPlan==="monthly"){window.open(STRIPE_MONTHLY,"_blank");}else{handleDone();}}} style={{width:"100%",background:selectedPlan==="free"?"#9ca3af":"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",borderRadius:16,padding:"18px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:22,letterSpacing:2,cursor:"pointer",boxShadow:selectedPlan==="free"?"none":"0 4px 20px rgba(34,197,94,0.3)"}}>
+            <button onClick={()=>{if(selectedPlan==="annual"){location.href=STRIPE_ANNUAL;}else if(selectedPlan==="monthly"){location.href=STRIPE_MONTHLY;}else{handleDone();}}} style={{width:"100%",background:selectedPlan==="free"?"#9ca3af":"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",borderRadius:16,padding:"18px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:22,letterSpacing:2,cursor:"pointer",boxShadow:selectedPlan==="free"?"none":"0 4px 20px rgba(34,197,94,0.3)"}}>
               {selectedPlan==="free"?lbl("無料で始める →","무료로 시작 →","免费开始 →","Kostenlos starten →","Commencer gratuit →","Empezar gratis →","Start free →"):lbl("AIコーチとの面談を始める →","AI 코치와의 면담 시작 →","开始与AI教练的面谈 →","KI-Coach-Gespräch starten →","Commencer avec mon coach IA →","Iniciar con mi coach IA →","Start with your AI coach →")}
             </button>
           ):(
@@ -2554,7 +2571,7 @@ function Onboarding({ lang, setLang, onComplete }) {
       {step < 6 && (()=>{
         const disabled = step===0 && (!nickname.trim() || !heightCm || !weightKg);
         return (
-          <button onClick={disabled?null:()=>setStep(s=>s+1)} style={{marginTop:20,width:"100%",background:disabled?"#e5e7eb":C.green,border:"none",borderRadius:14,padding:"16px 0",color:disabled?"#9ca3af":"#000",fontFamily:"Bebas Neue",fontSize:20,letterSpacing:2,cursor:disabled?"default":"pointer"}}>
+          <button onClick={disabled?null:()=>{ setStep(s=>s+1); setTimeout(()=>{ topRef.current?.scrollIntoView({behavior:"smooth",block:"start"}); window.scrollTo({top:0,behavior:"smooth"}); },50); }} style={{marginTop:20,width:"100%",background:disabled?"#e5e7eb":C.green,border:"none",borderRadius:14,padding:"16px 0",color:disabled?"#9ca3af":"#000",fontFamily:"Bebas Neue",fontSize:20,letterSpacing:2,cursor:disabled?"default":"pointer"}}>
             {step===5?lbl("改善プランを見る →","개선 플랜 보기 →","查看改善计划 →","Plan ansehen →","Voir le plan →","Ver el plan →","See my plan →"):t.next}
           </button>
         );
@@ -2569,6 +2586,9 @@ function App() {
   const [sbUser, setSbUser]     = useState(null);
   const [authErr, setAuthErr]   = useState("");
   const [showPw,  setShowPw]    = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSent, setResetSent] = useState(false);
   const [authEmail, setAuthEmail]   = useState("");
   const [authPw, setAuthPw]         = useState("");
   const [authMode, setAuthMode]     = useState("signin"); // signin|signup
@@ -2783,13 +2803,33 @@ function App() {
   }, []);
 
   useEffect(() => {
+    (async () => {
     const savedUser = lsGet("mb_sb_user", null);
     if (savedUser?.access_token) {
-      setSbUser(savedUser);
-      setAuthStep("app");
+      // Supabaseでトークンの有効性を確認
+      try {
+        const verifyRes = await fetch(SUPABASE_URL + "/auth/v1/user", {
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": "Bearer " + savedUser.access_token,
+          },
+        });
+        if (verifyRes.ok) {
+          setSbUser(savedUser);
+          setAuthStep("app");
+        } else {
+          // トークン期限切れ → ログイン画面へ
+          lsSet("mb_sb_user", null);
+          setAuthStep("signin");
+        }
+      } catch {
+        setSbUser(savedUser);
+        setAuthStep("app");
+      }
     } else {
       setAuthStep("signin");
     }
+    })();
   }, []);
 
   useEffect(() => {
@@ -2810,6 +2850,20 @@ function App() {
     } else {
       setStreak(1);
       lsSet("mb_streak", { count: 1, lastDate: today });
+    }
+  }
+
+  async function handlePasswordReset() {
+    if (!resetEmail) return;
+    try {
+      await fetch(SUPABASE_URL + "/auth/v1/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      setResetSent(true);
+    } catch (e) {
+      console.error("reset error:", e);
     }
   }
 
@@ -2904,7 +2958,12 @@ function App() {
       else if (authMode === "signup" && !res.error && !res.access_token) {
         setAuthErr(lang==="ja"?"確認メールを送信しました。メールをご確認ください。":lang==="ko"?"확인 이메일을 발송했습니다. 이메일을 확인해주세요.":"Confirmation email sent. Please check your inbox.");
       }
-    } catch (e) { setAuthErr(lang==="ja"?"通信エラーが発生しました。しばらくしてから再試行してください。":lang==="ko"?"네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.":"Network error. Please try again."); }
+    } catch (e) {
+      console.error("auth error:", e);
+      setAuthErr(lang==="ja"?"通信エラーが発生しました。しばらくしてから再試行してください。":lang==="ko"?"네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.":"Network error. Please try again.");
+    } finally {
+      setAuthLoading(false);
+    }
     setAuthLoading(false);
   }
 
@@ -3488,6 +3547,14 @@ function App() {
             </button>
           </div>
           {authErr && <div style={{color:"#ef4444",fontSize:12,marginBottom:10}}>{authErr}</div>}
+          {authMode==="signin" && (
+            <div style={{textAlign:"right",marginBottom:8,marginTop:-4}}>
+              <button onClick={()=>{setShowReset(true);setResetEmail(authEmail);setResetSent(false);}}
+                style={{background:"none",border:"none",color:C.green,fontSize:12,cursor:"pointer",textDecoration:"underline"}}>
+                {lang==="ja"?"パスワードを忘れた方はこちら":lang==="ko"?"비밀번호를 잊으셨나요?":"Forgot password?"}
+              </button>
+            </div>
+          )}
           <button onClick={handleAuth} disabled={authLoading} style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>
             {authLoading ? "..." : (authMode === "signin"
             ? (lang === "ja" ? "ログイン" : lang === "ko" ? "로그인" : "Sign In")
@@ -3499,6 +3566,53 @@ function App() {
       </div>
     </div>
   );
+  // パスワードリセットモーダル
+  if (authStep === "signin" && showReset) return (
+    <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"DM Sans, sans-serif"}}>
+      <div style={{width:"100%",maxWidth:360}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <div style={{fontFamily:"Bebas Neue",fontSize:38,letterSpacing:4,color:C.green}}>MAKE BODY</div>
+        </div>
+        <div style={{background:"#fff",borderRadius:20,padding:28,boxShadow:"0 4px 24px rgba(0,0,0,0.06)"}}>
+          {resetSent ? (
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:32,marginBottom:12}}>✅</div>
+              <div style={{fontWeight:700,fontSize:16,marginBottom:8,color:C.text}}>
+                {lang==="ja"?"メールを送信しました":lang==="ko"?"이메일을 전송했습니다":"Email sent"}
+              </div>
+              <div style={{fontSize:13,color:C.muted,marginBottom:20,lineHeight:1.6}}>
+                {lang==="ja"?"パスワード再設定リンクをメールで送りました。メールをご確認ください。":lang==="ko"?"비밀번호 재설정 링크를 이메일로 전송했습니다.":"Check your email for the password reset link."}
+              </div>
+              <button onClick={()=>setShowReset(false)} style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>
+                {lang==="ja"?"ログイン画面へ戻る":lang==="ko"?"로그인으로 돌아가기":"Back to login"}
+              </button>
+            </div>
+          ) : (
+            <>
+              <div style={{fontWeight:700,fontSize:18,marginBottom:6,color:C.text}}>
+                {lang==="ja"?"パスワードを再設定":lang==="ko"?"비밀번호 재설정":"Reset password"}
+              </div>
+              <div style={{fontSize:13,color:C.muted,marginBottom:20}}>
+                {lang==="ja"?"登録したメールアドレスを入力してください。":lang==="ko"?"등록한 이메일 주소를 입력해주세요.":"Enter your registered email address."}
+              </div>
+              <input value={resetEmail} onChange={e=>setResetEmail(e.target.value)}
+                placeholder="Email" type="email"
+                style={{width:"100%",background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",color:C.text,fontSize:14,marginBottom:16}}/>
+              <button onClick={handlePasswordReset}
+                style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer",marginBottom:10}}>
+                {lang==="ja"?"再設定リンクを送る":lang==="ko"?"재설정 링크 전송":"Send reset link"}
+              </button>
+              <button onClick={()=>setShowReset(false)}
+                style={{width:"100%",background:"none",border:"1px solid "+C.border,borderRadius:12,padding:"11px 0",color:C.muted,fontSize:13,cursor:"pointer"}}>
+                {lang==="ja"?"キャンセル":lang==="ko"?"취소":"Cancel"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   if (!profile) return (
     <Onboarding lang={lang} setLang={setLang} onComplete={handleOnboardingComplete}/>
   );
