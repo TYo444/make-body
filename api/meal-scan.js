@@ -4,7 +4,7 @@
 
 const SUPABASE_URL         = process.env.SUPABASE_URL || "https://potuhfeujqtytnfblaex.supabase.co";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || "https://makebody.app")
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || "https://make-body-pbg3.vercel.app")
   .split(",").map(s => s.trim());
 const MAX_IMAGE_SIZE_MB = 5;
 
@@ -105,7 +105,7 @@ async function incrementUsage(userId, dayKey, monthKey, currentDay, currentMonth
 
 export default async function handler(req, res) {
   const origin = req.headers.origin || "";
-  if (ALLOWED_ORIGINS.includes(origin)) {
+  if (ALLOWED_ORIGINS.includes(origin) || origin.endsWith(".vercel.app")) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");

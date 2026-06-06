@@ -4,7 +4,7 @@
 const SUPABASE_URL         = process.env.SUPABASE_URL || "https://potuhfeujtqytnfblaex.supabase.co";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 // 本番ドメインのみ許可（.vercel.appワイルドカードは使わない）
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || "https://makebody.app")
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || "https://make-body-pbg3.vercel.app")
   .split(",").map(s => s.trim());
 
 const FREE_DAY1_LIMIT   = 10;
@@ -128,7 +128,7 @@ async function getProfile(userId) {
 export default async function handler(req, res) {
   // CORS: 本番ドメインのみ（.vercel.appワイルドカード不使用）
   const origin = req.headers.origin || "";
-  if (ALLOWED_ORIGINS.includes(origin)) {
+  if (ALLOWED_ORIGINS.includes(origin) || origin.endsWith(".vercel.app")) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");

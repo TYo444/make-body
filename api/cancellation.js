@@ -188,7 +188,8 @@ async function saveDeleteRequest(userId, email, isPro, reason, comment) {
 // ── メインハンドラー ──────────────────────────────────────────────
 export default async function handler(req, res) {
   const origin = req.headers.origin || "";
-  if ((process.env.ALLOWED_ORIGIN || "https://makebody.app").split(",").map(s=>s.trim()).includes(origin)) {
+  const ALLOWED_ORIGINS_C = (process.env.ALLOWED_ORIGIN || "https://make-body-pbg3.vercel.app").split(",").map(s=>s.trim());
+  if (ALLOWED_ORIGINS_C.includes(origin) || origin.endsWith(".vercel.app")) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");

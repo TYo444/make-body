@@ -77,16 +77,16 @@ const C = {
 const PRICE_M     = "$8.99";
 const PRICE_Y     = "$79.99";
 const PRICE_TRIAL = "$1.99";  // 7日間お試し
-const STRIPE_TRIAL   = "https://buy.stripe.com/9B6aEQ1XH63R5aucw52Fa04"; // $1.99 7日間
-const STRIPE_MONTHLY = "https://buy.stripe.com/8x26oA7i1bob6ey8fP2Fa02";
-const STRIPE_ANNUAL  = "https://buy.stripe.com/6oU5kw1XH8bZ0Uecw52Fa03";
+const STRIPE_TRIAL   = "https://buy.stripe.com/9B6aEQ1XH63R5aucw52Fa04"; // $1.99
+const STRIPE_MONTHLY = "https://buy.stripe.com/8x26oA7i1bob6ey8fP2Fa02"; // $8.99
+const STRIPE_ANNUAL  = "https://buy.stripe.com/6oU5kw1XH8bZ0Uecw52Fa03"; // $79.99
 // ================================================================
 // ⚠️ BEFORE DEPLOY: STRIPE_PORTAL を本番URLに差し替えること
 // Stripe Dashboard → Billing → Customer portal → ポータルリンクをコピーして下に貼る
 // または Vercel環境変数 STRIPE_PORTAL_URL に設定（推奨）
 // ================================================================
-const STRIPE_PORTAL = "https://billing.stripe.com/p/login/test_placeholder"; // ← 本番URLに差し替え
-const STRIPE_PORTAL_IS_PLACEHOLDER = STRIPE_PORTAL.includes("test_placeholder");
+const STRIPE_PORTAL = "https://billing.stripe.com/p/login/14A14gaud1NB32m67H2Fa00";
+const STRIPE_PORTAL_IS_PLACEHOLDER = false; // 本番URL設定済み
 
 // デプロイ前チェックリスト:
 // [ ] Vercel環境変数にStripe・Supabase・ResendのAPIキーを設定
@@ -1244,9 +1244,9 @@ function TrialEndPaywall({ lang, cl, coach, profile, onUpgrade, onFree, onClose 
   );
 }
 
-function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings }) {
+function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings, sbUser }) {
   const [plan, setPlan] = useState("trial");
-  const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:en;
+  const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:(en||ja);
 
   const proFeats = [
     { icon:"🤖", text: lbl("AIコーチ無制限（月300回）","AI 코치 무제한（월 300회）","AI Coach — 300 chats/month") },
@@ -1369,7 +1369,11 @@ function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings }) {
         <button onClick={()=>{
             if (plan==="trial" && appSettings && !appSettings.trial_enabled) return;
             if ((plan==="monthly"||plan==="annual") && appSettings && !appSettings.pro_enabled) return;
-            location.href=(plan==="trial"?STRIPE_TRIAL:plan==="annual"?STRIPE_ANNUAL:STRIPE_MONTHLY);
+            const uid   = sbUser?.user?.id || "";
+            const email = sbUser?.email || sbUser?.user?.email || "";
+            const base  = plan==="trial"?STRIPE_TRIAL:plan==="annual"?STRIPE_ANNUAL:STRIPE_MONTHLY;
+            const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+            location.href = base + "?client_reference_id=" + uid + "&prefilled_email=" + encodeURIComponent(email) + "&return_url=" + returnUrl;
             onClose();
           }}
           style={{width:"100%",background:(plan==="trial"&&appSettings&&!appSettings.trial_enabled)||(plan!=="trial"&&appSettings&&!appSettings.pro_enabled)?"#9ca3af":"linear-gradient(135deg,#16a34a,#22c55e)",border:"none",borderRadius:14,padding:"16px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:20,letterSpacing:2,cursor:"pointer",marginBottom:6,boxShadow:"0 4px 20px rgba(34,197,94,0.3)"}}>
@@ -1412,6 +1416,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
   const [feedback, setFeedback] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(null);
 
   const goals = BODY_GOALS[profile?.gender || "male"];
   const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:en;
@@ -2510,7 +2515,14 @@ function Onboarding({ lang, setLang, onComplete }) {
 
           {/* CTA */}
           {selectedPlan&&agreed?(
-            <button onClick={()=>{if(selectedPlan==="annual"){location.href=STRIPE_ANNUAL;}else if(selectedPlan==="monthly"){location.href=STRIPE_MONTHLY;}else{handleDone();}}} style={{width:"100%",background:selectedPlan==="free"?"#9ca3af":"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",borderRadius:16,padding:"18px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:22,letterSpacing:2,cursor:"pointer",boxShadow:selectedPlan==="free"?"none":"0 4px 20px rgba(34,197,94,0.3)"}}>
+            <button onClick={()=>{
+  if(selectedPlan==="free"){handleDone();return;}
+  const uid   = sbUser?.user?.id || "";
+  const email = sbUser?.email || sbUser?.user?.email || "";
+  const base  = selectedPlan==="trial"?STRIPE_TRIAL:selectedPlan==="annual"?STRIPE_ANNUAL:STRIPE_MONTHLY;
+  const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+  location.href = base + "?client_reference_id=" + uid + "&prefilled_email=" + encodeURIComponent(email) + "&return_url=" + returnUrl;
+}} style={{width:"100%",background:selectedPlan==="free"?"#9ca3af":"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",borderRadius:16,padding:"18px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:22,letterSpacing:2,cursor:"pointer",boxShadow:selectedPlan==="free"?"none":"0 4px 20px rgba(34,197,94,0.3)"}}>
               {selectedPlan==="free"?lbl("無料で始める →","무료로 시작 →","免费开始 →","Kostenlos starten →","Commencer gratuit →","Empezar gratis →","Start free →"):lbl("AIコーチとの面談を始める →","AI 코치와의 면담 시작 →","开始与AI教练的面谈 →","KI-Coach-Gespräch starten →","Commencer avec mon coach IA →","Iniciar con mi coach IA →","Start with your AI coach →")}
             </button>
           ):(
@@ -2816,6 +2828,22 @@ function App() {
         });
         if (verifyRes.ok) {
           setSbUser(savedUser);
+          // profileをlsから先に復元（Supabase取得前に表示できるように）
+          const cachedProfile = lsGet("mb_profile", null);
+          if (cachedProfile) {
+            setProfile(cachedProfile);
+            setLang(cachedProfile.lang || "ja");
+          }
+          // Supabase側のis_pro（webhook更新済み）を確認
+          try {
+            const latestProf = await sb.getProfile(savedUser.user?.id, savedUser.access_token);
+            if (latestProf?.is_pro !== undefined) setIsPro(latestProf.is_pro);
+            if (latestProf?.profile_data) {
+              const pd = JSON.parse(latestProf.profile_data);
+              setProfile(pd); setLang(pd.lang || "ja");
+              lsSet("mb_profile", pd);
+            }
+          } catch(e) { /* silent */ }
           setAuthStep("app");
         } else {
           // トークン期限切れ → ログイン画面へ
@@ -2952,6 +2980,10 @@ function App() {
             lsSet("mb_usage_cache", usageData);
           }
         } catch(e) { /* silent */ }
+        // Supabase側のis_pro（webhook更新済み）を確認してセット
+        if (prof?.is_pro !== undefined) {
+          setIsPro(prof.is_pro);
+        }
         setAuthStep("app");
       }
       // メール確認待ち（Confirm emailがオンの場合）
@@ -2986,6 +3018,7 @@ function App() {
       await sb.upsertProfile(sbUser.user.id, sbUser.access_token, {
         profile_data: JSON.stringify(p),
         lang: p.lang || "en",
+        email: sbUser.email || sbUser.user?.email || null,  // webhook連携用
         is_pro: isPro,  // is_proはwebhookのみで変更。ここでは現在値を維持
       }).catch(() => {});
     }
@@ -3386,10 +3419,9 @@ function App() {
         (isPro ? "PRO: 90-day plans, body predictions, timeline simulations, weekly check-ins. FUTURE SIM: weight=" + (profile?.currentWeightKg||70) + "kg targetBf=" + (profile?.bodyGoal?.targetBf||12) + "% streak=" + streak + "d - give realistic timeline estimates with encouragement." : "FREE: Short tips only. Full coaching requires PRO.") + "\n" +
         pCtx + "\n" + fitCtx + "\n" + nutCtx + "\n" +
         "Today: Cals " + totCal + "/" + calGoal + ", Protein " + totPro + "g, Mood:" + MOODS[mood] + ", Streak:" + streak + "d.\n" +
-        (isPersonal ? "IMPORTANT: This message has emotional/personal content. Lead with empathy and human warmth FIRST. Do not jump to fitness advice. Ask a follow-up question about how they feel. Only offer fitness/nutrition if they bring it up or after emotional connection is made. " : "") + (isNutrition ? "Use batch cooking. " : "") + (lateNight ? "LATE NIGHT: Be extra warm, no workout push." : "")
+        (isPersonal ? "IMPORTANT: This message has emotional/personal content. Lead with empathy and human warmth FIRST. Do not jump to fitness advice. Ask a follow-up question about how they feel. Only offer fitness/nutrition if they bring it up or after emotional connection is made. " : "") + (isNutrition ? "Use batch cooking. " : "") + (lateNight ? "LATE NIGHT: Be extra warm, no workout push." : "");
     try {
-      const apiUrl = typeof window !== "undefined" && window.location?.hostname !== "localhost"
-        ? "/api/chat" : "https://api.anthropic.com/v1/messages";
+      const apiUrl = "/api/chat";
       const messages = [
         ...newHist.slice(-12).map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.text })),
       ];
@@ -3403,10 +3435,9 @@ function App() {
       if (filtered[0]?.role === "assistant") filtered.shift();
 
       // x-user-id / x-access-token を付与（サーバー側UTC制限判定に使用）
-      const headers = { "Content-Type": "application/json", "anthropic-version": "2023-06-01", "x-api-key": "" };
+      const headers = { "Content-Type": "application/json" };
       if (sbUser?.user?.id)      headers["x-user-id"]      = sbUser.user.id;
       if (sbUser?.access_token)  headers["x-access-token"] = sbUser.access_token;
-      else if (sbUser?.isGuest)  headers["x-user-id"]      = sbUser.user?.id || "guest_anon";
 
       const r = await fetch(apiUrl, {
         method: "POST",
@@ -3417,7 +3448,7 @@ function App() {
       // 429 = サーバー側で利用制限に達した
       if (r.status === 429) {
         const errData = await r.json().catch(() => ({}));
-        setChatHist(h => [...h, { role: "assistant", text:
+        setHist(h => [...h, { role: "assistant", text:
           isPro
             ? (lang==="ja" ? `今月の相談回数(${errData.limit}回)に達しました。来月またご利用いただけます。` : `Monthly limit (${errData.limit}) reached. Available again next month.`)
             : (lang==="ja" ? `本日の相談回数(${errData.limit}回)に達しました。明日またどうぞ！` : `Daily limit (${errData.limit}) reached. Come back tomorrow!`)
@@ -3431,6 +3462,15 @@ function App() {
       }
 
       const data = await r.json();
+
+      // サーバーエラーレスポンス（401/500/feature_disabled等）をハンドル
+      if (!r.ok || data.error) {
+        const errText = data.message || data.error || "Error. Please try again.";
+        setHist(h => [...h, { role: "assistant", text: errText }]);
+        setAiLoading(false);
+        return;
+      }
+
       const reply = data.content?.[0]?.text || "Sorry, I hit an error. Try again!";
 
       // サーバーから返ってきた_usageでキャッシュを正確に更新（UTC基準）
@@ -3477,7 +3517,9 @@ function App() {
         }
       }
     } catch (e) {
-      setChatHist(h => [...h, { role: "assistant", text: "Oops, something went wrong. Try again!" }]);
+      console.error("sendChat error:", e);
+      const errMsg = "Oops, something went wrong. Try again!";
+      setHist(h => [...h, { role: "assistant", text: errMsg }]);
     }
     setAiLoading(false);
   }
@@ -4775,7 +4817,7 @@ function App() {
         onFree={()=>{ setShowTrialPaywall(false); }}
         onClose={()=>setShowTrialPaywall(false)}
       />}
-      {showUpgrade&&<UpgradeModal lang={lang} onClose={()=>setShowUpgrade(false)} profile={profile} cl={cl} coach={coach} appSettings={appSettings}/>}
+      {showUpgrade&&<UpgradeModal lang={lang} onClose={()=>setShowUpgrade(false)} profile={profile} cl={cl} coach={coach} appSettings={appSettings} sbUser={sbUser}/>}
       {showSettings&&<SettingsModal profile={profile} setProfile={setProfile} lang={lang} setLang={setLang} isPro={isPro} onSignOut={handleSignOut} onClose={()=>setShowSettings(false)}
               setShowUpgrade={setShowUpgrade} onSave={saveProfile} sbUser={sbUser}/>}
 
