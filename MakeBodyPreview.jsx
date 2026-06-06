@@ -77,9 +77,9 @@ const C = {
 const PRICE_M     = "$8.99";
 const PRICE_Y     = "$79.99";
 const PRICE_TRIAL = "$1.99";  // 7日間お試し
-const STRIPE_TRIAL   = "https://buy.stripe.com/9B6aEQ1XH63R5aucw52Fa04"; // $1.99 7日間
-const STRIPE_MONTHLY = "https://buy.stripe.com/8x26oA7i1bob6ey8fP2Fa02";
-const STRIPE_ANNUAL  = "https://buy.stripe.com/6oU5kw1XH8bZ0Uecw52Fa03";
+const STRIPE_TRIAL   = "https://buy.stripe.com/test_6oU5kw1XH8bZ0Uecw52Fa03"; // $1.99 テスト用
+const STRIPE_MONTHLY = "https://buy.stripe.com/test_8x26oA7i1bob6ey8fP2Fa02"; // $8.99 テスト用
+const STRIPE_ANNUAL  = "https://buy.stripe.com/test_9B6aEQ1XH63R5aucw52Fa04"; // $79.99 テスト用
 // ================================================================
 // ⚠️ BEFORE DEPLOY: STRIPE_PORTAL を本番URLに差し替えること
 // Stripe Dashboard → Billing → Customer portal → ポータルリンクをコピーして下に貼る
@@ -1369,7 +1369,7 @@ function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings }) {
         <button onClick={()=>{
             if (plan==="trial" && appSettings && !appSettings.trial_enabled) return;
             if ((plan==="monthly"||plan==="annual") && appSettings && !appSettings.pro_enabled) return;
-            window.open(plan==="trial"?STRIPE_TRIAL:plan==="annual"?STRIPE_ANNUAL:STRIPE_MONTHLY,"_blank");
+            location.href=(plan==="trial"?STRIPE_TRIAL:plan==="annual"?STRIPE_ANNUAL:STRIPE_MONTHLY);
             onClose();
           }}
           style={{width:"100%",background:(plan==="trial"&&appSettings&&!appSettings.trial_enabled)||(plan!=="trial"&&appSettings&&!appSettings.pro_enabled)?"#9ca3af":"linear-gradient(135deg,#16a34a,#22c55e)",border:"none",borderRadius:14,padding:"16px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:20,letterSpacing:2,cursor:"pointer",marginBottom:6,boxShadow:"0 4px 20px rgba(34,197,94,0.3)"}}>
@@ -2493,7 +2493,7 @@ function Onboarding({ lang, setLang, onComplete }) {
 
           {/* CTA */}
           {selectedPlan&&agreed?(
-            <button onClick={()=>{if(selectedPlan==="annual"){window.open(STRIPE_ANNUAL,"_blank");}else if(selectedPlan==="monthly"){window.open(STRIPE_MONTHLY,"_blank");}else{handleDone();}}} style={{width:"100%",background:selectedPlan==="free"?"#9ca3af":"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",borderRadius:16,padding:"18px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:22,letterSpacing:2,cursor:"pointer",boxShadow:selectedPlan==="free"?"none":"0 4px 20px rgba(34,197,94,0.3)"}}>
+            <button onClick={()=>{if(selectedPlan==="annual"){location.href=STRIPE_ANNUAL;}else if(selectedPlan==="monthly"){location.href=STRIPE_MONTHLY;}else{handleDone();}}} style={{width:"100%",background:selectedPlan==="free"?"#9ca3af":"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",borderRadius:16,padding:"18px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:22,letterSpacing:2,cursor:"pointer",boxShadow:selectedPlan==="free"?"none":"0 4px 20px rgba(34,197,94,0.3)"}}>
               {selectedPlan==="free"?lbl("無料で始める →","무료로 시작 →","免费开始 →","Kostenlos starten →","Commencer gratuit →","Empezar gratis →","Start free →"):lbl("AIコーチとの面談を始める →","AI 코치와의 면담 시작 →","开始与AI教练的面谈 →","KI-Coach-Gespräch starten →","Commencer avec mon coach IA →","Iniciar con mi coach IA →","Start with your AI coach →")}
             </button>
           ):(
