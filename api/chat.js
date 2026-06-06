@@ -1,7 +1,7 @@
 // /api/chat.js
 // 環境変数: ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY, ALLOWED_ORIGIN
 
-const SUPABASE_URL         = process.env.SUPABASE_URL || "https://potuhfeujqtytnfblaex.supabase.co";
+const SUPABASE_URL         = process.env.SUPABASE_URL || "https://potuhfeujtqytnfblaex.supabase.co";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 // 本番ドメインのみ許可（.vercel.appワイルドカードは使わない）
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || "https://makebody.app")
@@ -139,13 +139,17 @@ export default async function handler(req, res) {
   try {
     const accessToken = req.headers["x-access-token"] || null;
 
-    // 認証: x-access-tokenをSupabaseで検証（ゲスト利用不可）
-    // guest_プレフィックスやx-user-idだけによるAPI利用を禁止
-    if (!accessToken || accessToken === "guest") {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-    const userId = await verifyToken(accessToken);
-    if (!userId) {
+    // 認証: x-access-tokenをSupabaseで検証
+    const guestId = req.headers["x-user-id"] || null;
+    let userId = null;
+    let isGuest = false;
+
+    if (accessToken && accessToken !== "guest") {
+      userId = await verifyToken(accessToken);
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    } else if (guestId && (guestId.startsWith("guest_") || guestId === "guest_anon")) {
+      isGuest = true; // ゲスト：制限付きで許可（3回/日）
+    } else {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
@@ -161,7 +165,24 @@ export default async function handler(req, res) {
       }
     }
 
-    // 利用制限チェック
+    // 利用制限チェック（ゲストはデフォルト3回/日）
+    if (isGuest || !userId) {
+      // ゲストはローカル制限のみ（サーバー側カウントなし）
+      const payload = req.body;
+      const { system, messages, tools } = payload;
+      const model = MODEL_FREE_TRIAL;
+      const maxTokens = MAX_TOKENS_FREE;
+      const pload = { model, max_tokens: maxTokens, messages: messages || [] };
+      if (system) pload.system = system;
+      const ar = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify(pload),
+      });
+      const d = await ar.json();
+      return res.status(ar.status).json(d);
+    }
+
     const [prof, usage] = await Promise.all([getProfile(userId), getUsage(userId)]);
     const isPro          = prof?.is_pro || false;
     const isTrialPlan    = prof?.plan_type === "trial";

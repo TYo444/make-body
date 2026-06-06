@@ -25,7 +25,7 @@ const UPGRADE_HINTS = {
 
 const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || "makebody999@gmail.com";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const SUPABASE_URL   = process.env.SUPABASE_URL   || "https://potuhfeujqtytnfblaex.supabase.co";
+const SUPABASE_URL   = process.env.SUPABASE_URL   || "https://potuhfeujtqytnfblaex.supabase.co";
 const SB_KEY         = process.env.SUPABASE_SERVICE_KEY;
 const CRON_SECRET    = process.env.CRON_SECRET;
 

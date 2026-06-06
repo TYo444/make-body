@@ -1,7 +1,7 @@
 // /api/app-settings.js
 // アプリ設定をSupabaseから取得して返す（30秒キャッシュ）
 
-const SUPABASE_URL         = process.env.SUPABASE_URL || "https://potuhfeujqtytnfblaex.supabase.co";
+const SUPABASE_URL         = process.env.SUPABASE_URL || "https://potuhfeujtqytnfblaex.supabase.co";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 const DEFAULT_SETTINGS = {

@@ -3,7 +3,7 @@ const { useState, useRef, useEffect } = React;
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');`;
 
-const SUPABASE_URL = "https://potuhfeujqtytnfblaex.supabase.co";
+const SUPABASE_URL = "https://potuhfeujtqytnfblaex.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvdHVoZmV1anRxeXRuZmJsYWV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNzgyNDEsImV4cCI6MjA5NTY1NDI0MX0.uuKAYelOUOggPu3mWE_XSYUWBalEXhts8l37ZqMk-gI";
 
 const sb = {
@@ -2836,7 +2836,18 @@ function App() {
       const res = authMode === "signup"
         ? await sb.signUp(authEmail, authPw)
         : await sb.signIn(authEmail, authPw);
-      if (res.error) { setAuthErr(res.error.message || "Error"); }
+      if (res.error) {
+        const msg = res.error.message || "";
+        if (msg.includes("Invalid login") || msg.includes("invalid_credentials")) {
+          setAuthErr(lang==="ja"?"メールアドレスまたはパスワードが間違っています。":lang==="ko"?"이메일 또는 비밀번호가 올바르지 않습니다.":"Invalid email or password.");
+        } else if (msg.includes("already registered") || msg.includes("already been registered")) {
+          setAuthErr(lang==="ja"?"このメールアドレスはすでに登録済みです。":lang==="ko"?"이미 등록된 이메일 주소입니다.":"This email is already registered.");
+        } else if (msg.includes("Password should")) {
+          setAuthErr(lang==="ja"?"パスワードは6文字以上にしてください。":lang==="ko"?"비밀번호는 6자 이상이어야 합니다.":"Password must be at least 6 characters.");
+        } else {
+          setAuthErr(lang==="ja"?"エラーが発生しました。再度お試しください。":lang==="ko"?"오류가 발생했습니다. 다시 시도해주세요.":"An error occurred. Please try again.");
+        }
+      }
       else if (res.access_token) {
         const user = { ...res, email: authEmail };
         setSbUser(user); lsSet("mb_sb_user", user);
@@ -2883,7 +2894,7 @@ function App() {
         } catch(e) { /* silent */ }
         setAuthStep("app");
       }
-    } catch (e) { setAuthErr("Network error"); }
+    } catch (e) { setAuthErr(lang==="ja"?"通信エラーが発生しました。しばらくしてから再試行してください。":lang==="ko"?"네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.":"Network error. Please try again."); }
     setAuthLoading(false);
   }
 

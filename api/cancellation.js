@@ -7,7 +7,7 @@
 //   RESEND_API_KEY       = re_xxxxx
 //   ADMIN_EMAIL          = makebody999@gmail.com
 
-const SUPABASE_URL   = process.env.SUPABASE_URL || "https://potuhfeujqtytnfblaex.supabase.co";
+const SUPABASE_URL   = process.env.SUPABASE_URL || "https://potuhfeujtqytnfblaex.supabase.co";
 const SB_KEY         = process.env.SUPABASE_SERVICE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const ADMIN_EMAIL    = process.env.ADMIN_EMAIL || "makebody999@gmail.com";

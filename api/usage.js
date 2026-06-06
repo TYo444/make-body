@@ -1,7 +1,7 @@
 // /api/usage.js
 // 現在の利用回数をクライアントに返す（表示用キャッシュ更新のため）
 
-const SUPABASE_URL         = process.env.SUPABASE_URL || "https://potuhfeujqtytnfblaex.supabase.co";
+const SUPABASE_URL         = process.env.SUPABASE_URL || "https://potuhfeujtqytnfblaex.supabase.co";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 const FREE_DAY1_LIMIT   = 10;
