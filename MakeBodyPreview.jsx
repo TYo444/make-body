@@ -1244,9 +1244,9 @@ function TrialEndPaywall({ lang, cl, coach, profile, onUpgrade, onFree, onClose 
   );
 }
 
-function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings }) {
+function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings, sbUser }) {
   const [plan, setPlan] = useState("trial");
-  const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:en;
+  const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:(en||ja);
 
   const proFeats = [
     { icon:"🤖", text: lbl("AIコーチ無制限（月300回）","AI 코치 무제한（월 300회）","AI Coach — 300 chats/month") },
@@ -1369,7 +1369,11 @@ function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings }) {
         <button onClick={()=>{
             if (plan==="trial" && appSettings && !appSettings.trial_enabled) return;
             if ((plan==="monthly"||plan==="annual") && appSettings && !appSettings.pro_enabled) return;
-            location.href=(plan==="trial"?STRIPE_TRIAL:plan==="annual"?STRIPE_ANNUAL:STRIPE_MONTHLY);
+            const uid   = sbUser?.user?.id || "";
+            const email = sbUser?.email || sbUser?.user?.email || "";
+            const base  = plan==="trial"?STRIPE_TRIAL:plan==="annual"?STRIPE_ANNUAL:STRIPE_MONTHLY;
+            const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+            location.href = base + "?client_reference_id=" + uid + "&prefilled_email=" + encodeURIComponent(email) + "&return_url=" + returnUrl;
             onClose();
           }}
           style={{width:"100%",background:(plan==="trial"&&appSettings&&!appSettings.trial_enabled)||(plan!=="trial"&&appSettings&&!appSettings.pro_enabled)?"#9ca3af":"linear-gradient(135deg,#16a34a,#22c55e)",border:"none",borderRadius:14,padding:"16px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:20,letterSpacing:2,cursor:"pointer",marginBottom:6,boxShadow:"0 4px 20px rgba(34,197,94,0.3)"}}>
@@ -1412,6 +1416,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
   const [feedback, setFeedback] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(null);
 
   const goals = BODY_GOALS[profile?.gender || "male"];
   const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:en;
@@ -2510,7 +2515,14 @@ function Onboarding({ lang, setLang, onComplete }) {
 
           {/* CTA */}
           {selectedPlan&&agreed?(
-            <button onClick={()=>{if(selectedPlan==="trial"){location.href=STRIPE_TRIAL;}else if(selectedPlan==="annual"){location.href=STRIPE_ANNUAL;}else if(selectedPlan==="monthly"){location.href=STRIPE_MONTHLY;}else{handleDone();}}} style={{width:"100%",background:selectedPlan==="free"?"#9ca3af":"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",borderRadius:16,padding:"18px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:22,letterSpacing:2,cursor:"pointer",boxShadow:selectedPlan==="free"?"none":"0 4px 20px rgba(34,197,94,0.3)"}}>
+            <button onClick={()=>{
+  if(selectedPlan==="free"){handleDone();return;}
+  const uid   = sbUser?.user?.id || "";
+  const email = sbUser?.email || sbUser?.user?.email || "";
+  const base  = selectedPlan==="trial"?STRIPE_TRIAL:selectedPlan==="annual"?STRIPE_ANNUAL:STRIPE_MONTHLY;
+  const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+  location.href = base + "?client_reference_id=" + uid + "&prefilled_email=" + encodeURIComponent(email) + "&return_url=" + returnUrl;
+}} style={{width:"100%",background:selectedPlan==="free"?"#9ca3af":"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",borderRadius:16,padding:"18px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:22,letterSpacing:2,cursor:"pointer",boxShadow:selectedPlan==="free"?"none":"0 4px 20px rgba(34,197,94,0.3)"}}>
               {selectedPlan==="free"?lbl("無料で始める →","무료로 시작 →","免费开始 →","Kostenlos starten →","Commencer gratuit →","Empezar gratis →","Start free →"):lbl("AIコーチとの面談を始める →","AI 코치와의 면담 시작 →","开始与AI教练的面谈 →","KI-Coach-Gespräch starten →","Commencer avec mon coach IA →","Iniciar con mi coach IA →","Start with your AI coach →")}
             </button>
           ):(
@@ -2822,6 +2834,16 @@ function App() {
             setProfile(cachedProfile);
             setLang(cachedProfile.lang || "ja");
           }
+          // Supabase側のis_pro（webhook更新済み）を確認
+          try {
+            const latestProf = await sb.getProfile(savedUser.user?.id, savedUser.access_token);
+            if (latestProf?.is_pro !== undefined) setIsPro(latestProf.is_pro);
+            if (latestProf?.profile_data) {
+              const pd = JSON.parse(latestProf.profile_data);
+              setProfile(pd); setLang(pd.lang || "ja");
+              lsSet("mb_profile", pd);
+            }
+          } catch(e) { /* silent */ }
           setAuthStep("app");
         } else {
           // トークン期限切れ → ログイン画面へ
@@ -2958,6 +2980,10 @@ function App() {
             lsSet("mb_usage_cache", usageData);
           }
         } catch(e) { /* silent */ }
+        // Supabase側のis_pro（webhook更新済み）を確認してセット
+        if (prof?.is_pro !== undefined) {
+          setIsPro(prof.is_pro);
+        }
         setAuthStep("app");
       }
       // メール確認待ち（Confirm emailがオンの場合）
@@ -2992,6 +3018,7 @@ function App() {
       await sb.upsertProfile(sbUser.user.id, sbUser.access_token, {
         profile_data: JSON.stringify(p),
         lang: p.lang || "en",
+        email: sbUser.email || sbUser.user?.email || null,  // webhook連携用
         is_pro: isPro,  // is_proはwebhookのみで変更。ここでは現在値を維持
       }).catch(() => {});
     }
@@ -4790,7 +4817,7 @@ function App() {
         onFree={()=>{ setShowTrialPaywall(false); }}
         onClose={()=>setShowTrialPaywall(false)}
       />}
-      {showUpgrade&&<UpgradeModal lang={lang} onClose={()=>setShowUpgrade(false)} profile={profile} cl={cl} coach={coach} appSettings={appSettings}/>}
+      {showUpgrade&&<UpgradeModal lang={lang} onClose={()=>setShowUpgrade(false)} profile={profile} cl={cl} coach={coach} appSettings={appSettings} sbUser={sbUser}/>}
       {showSettings&&<SettingsModal profile={profile} setProfile={setProfile} lang={lang} setLang={setLang} isPro={isPro} onSignOut={handleSignOut} onClose={()=>setShowSettings(false)}
               setShowUpgrade={setShowUpgrade} onSave={saveProfile} sbUser={sbUser}/>}
 

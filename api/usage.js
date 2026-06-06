@@ -18,7 +18,8 @@ function sbHeaders() {
 
 export default async function handler(req, res) {
   const origin = req.headers.origin || "";
-  if ((process.env.ALLOWED_ORIGIN || "https://makebody.app").split(",").map(s=>s.trim()).includes(origin)) {
+  const ALLOWED_ORIGINS_U = (process.env.ALLOWED_ORIGIN || "https://make-body-pbg3.vercel.app").split(",").map(s=>s.trim());
+  if (ALLOWED_ORIGINS_U.includes(origin) || origin.endsWith(".vercel.app")) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
