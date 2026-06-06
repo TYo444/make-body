@@ -2622,7 +2622,15 @@ function App() {
   const [chatHist, setChatHist] = useState([]);
   const [chatIn, setChatIn]     = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [usageCache, setUsageCache] = useState(lsGet("mb_usage_cache", { remaining: 3, limit: 3, used: 0, isPro: false }));
+  const [usageCache, setUsageCache] = useState(() => {
+    const cached = lsGet("mb_usage_cache", { remaining: 3, limit: 3, used: 0, isPro: false });
+    // dayKeyが今日と違う場合はリセット（UTCベース）
+    const todayUTC = new Date().toISOString().slice(0, 10);
+    if (cached.dayKey && cached.dayKey !== todayUTC) {
+      return { remaining: cached.isPro ? 300 : 3, limit: cached.isPro ? 300 : 3, used: 0, isPro: cached.isPro || false, dayKey: todayUTC };
+    }
+    return cached;
+  });
 
   const [schedule, setSchedule] = useState([]);
   const [counterM, setCounterM] = useState(null); // {exercise, sets, reps}
@@ -2840,6 +2848,9 @@ function App() {
             if (latestProf?.is_pro !== undefined) setIsPro(latestProf.is_pro);
             if (latestProf?.profile_data) {
               const pd = JSON.parse(latestProf.profile_data);
+              // nicknameが空の場合はキャッシュから復元
+              const cachedPd2 = lsGet("mb_profile", null);
+              if (!pd.nickname && cachedPd2?.nickname) pd.nickname = cachedPd2.nickname;
               setProfile(pd); setLang(pd.lang || "ja");
               lsSet("mb_profile", pd);
             }
@@ -2943,6 +2954,9 @@ function App() {
         const prof = await sb.getProfile(res.user?.id, res.access_token);
         if (prof?.profile_data) {
           const pd = JSON.parse(prof.profile_data);
+          // nicknameが空の場合はlocalStorageのキャッシュから復元
+          const cachedPd = lsGet("mb_profile", null);
+          if (!pd.nickname && cachedPd?.nickname) pd.nickname = cachedPd.nickname;
           setProfile(pd); setLang(pd.lang || "en");
           setIsPro(prof.is_pro || false);  // ← Webhook/Supabase側のis_proのみ参照
           lsSet("mb_profile", pd);
@@ -2996,7 +3010,6 @@ function App() {
     } finally {
       setAuthLoading(false);
     }
-    setAuthLoading(false);
   }
 
   async function handleSignOut() {
@@ -3284,7 +3297,31 @@ function App() {
     // Free = short prompt for cost savings
     const isFreeLimited = !isPro && !cl.isFirstDay;
 
-    const sys = isFreeLimited
+    // 栄養タブ専用プロンプト
+    const nutLangInst = {
+      ja: "日本語で返答してください。",
+      ko: "한국어로 답변해 주세요.",
+      zh: "请用中文回答。",
+      de: "Bitte antworten Sie auf Deutsch.",
+      fr: "Veuillez répondre en français.",
+      es: "Por favor responde en español.",
+    }[lang] || "Reply in English.";
+
+    const nutSys = isFreeLimited
+      ? "You are a friendly nutrition coach. " + nutLangInst + " Keep answers to 3 sentences max. User: " + (profile?.nickname||"friend") + ", goal: " + (profile?.bodyGoal?.title||"healthy body") + ". Calories: " + totCal + "/" + calGoal + "kcal, Protein: " + totPro + "g. Avoid: " + (profile?.allergies?.join(",")||"none") + ". No medical advice."
+      : "You are a professional nutrition and dietitian coach. " + nutLangInst + "
+" +
+        "User profile: " + (profile?.nickname||"friend") + ", " + (profile?.gender||"") + ", " + (profile?.ageGroup||"") + ", " + (profile?.heightCm||"")+"cm, " + (profile?.currentWeightKg||"")+"kg, goal: " + (profile?.bodyGoal?.title||"healthy body") + ".
+" +
+        "Today's nutrition: Calories " + totCal + "/" + calGoal + "kcal, Protein: " + totPro + "g, Mood: " + MOODS[mood] + ".
+" +
+        "Allergies/avoid: " + (profile?.allergies?.join(",")||"none") + ".
+" +
+        "Meals today: " + nutCtx + "
+" +
+        "RULES: Specific food suggestions with portions. Practical and budget-friendly. Batch cooking when useful. Never diagnose. Max 4 sentences unless recipe requested. EMOJI: max 1-2 per reply.";
+
+    const sys = isNutChat ? nutSys : isFreeLimited
       ? "You are " + coach.name + ". " + lInst + " Warm helpful coach. Max 3 sentences unless plan requested. " + lgCtx + " User:" + (profile?.nickname||"") + ", goal:" + (profile?.bodyGoal?.title||"") + ". Mood:" + MOODS[mood] + ". Streak:" + streak + "d. EMOJI: Use sparingly — max 1-2 per reply, not at start/end of every sentence."
       : "You are " + coach.name + " " + coach.emoji + " — dedicated personal coach. " + lInst + "\n" +
         coach.style + "\n" +
@@ -3475,13 +3512,14 @@ function App() {
 
       // サーバーから返ってきた_usageでキャッシュを正確に更新（UTC基準）
       if (data.usage_info) {
+        const todayUTC = new Date().toISOString().slice(0,10);
         const serverCache = {
           remaining:  data.usage_info.remaining,
           used:       data.usage_info.used ?? usageCache.used,
           limit:      data.usage_info.limit,
           isPro:      data.usage_info.isPro,
-          dayKey:     usageCache.dayKey,
-          monthKey:   usageCache.monthKey,
+          dayKey:     todayUTC,
+          monthKey:   new Date().toISOString().slice(0,7),
         };
         setUsageCache(serverCache);
         lsSet("mb_usage_cache", serverCache);
@@ -3548,6 +3586,35 @@ function App() {
       <style dangerouslySetInnerHTML={{__html:"@keyframes spin{to{transform:rotate(360deg)}}"}}></style>
     </div>
   );
+  if (authStep === "signin" && showReset) return (
+    <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"DM Sans, sans-serif"}}>
+      <style>{FONTS}</style>
+      <div style={{width:"100%",maxWidth:360}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <div style={{fontFamily:"Bebas Neue",fontSize:38,letterSpacing:4,color:C.green}}>MAKE BODY</div>
+        </div>
+        <div style={{background:"#fff",borderRadius:20,padding:28,boxShadow:"0 4px 24px rgba(0,0,0,0.06)"}}>
+          {resetSent ? (
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:32,marginBottom:12}}>✅</div>
+              <div style={{fontWeight:700,fontSize:16,marginBottom:8}}>{lang==="ja"?"メールを送信しました":lang==="ko"?"이메일을 전송했습니다":"Email sent"}</div>
+              <div style={{fontSize:13,color:C.muted,marginBottom:20,lineHeight:1.6}}>{lang==="ja"?"パスワード再設定リンクをメールで送りました。メールをご確認ください。":lang==="ko"?"비밀번호 재설정 링크를 이메일로 전송했습니다.":"Check your email for the password reset link."}</div>
+              <button onClick={()=>setShowReset(false)} style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>{lang==="ja"?"ログイン画面へ戻る":lang==="ko"?"로그인으로 돌아가기":"Back to login"}</button>
+            </div>
+          ) : (
+            <>
+              <div style={{fontWeight:700,fontSize:18,marginBottom:6}}>{lang==="ja"?"パスワードを再設定":lang==="ko"?"비밀번호 재설정":"Reset password"}</div>
+              <div style={{fontSize:13,color:C.muted,marginBottom:20}}>{lang==="ja"?"登録済みのメールアドレスを入力してください":lang==="ko"?"등록된 이메일 주소를 입력해주세요":"Enter your registered email address"}</div>
+              <input value={resetEmail} onChange={e=>setResetEmail(e.target.value)} placeholder="Email" type="email" style={{width:"100%",background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",color:C.text,fontSize:14,marginBottom:16,boxSizing:"border-box"}}/>
+              <button onClick={handlePasswordReset} style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer",marginBottom:10}}>{lang==="ja"?"再設定リンクを送る":lang==="ko"?"재설정 링크 전송":"Send reset link"}</button>
+              <button onClick={()=>setShowReset(false)} style={{width:"100%",background:"none",border:"1px solid "+C.border,borderRadius:12,padding:"11px 0",color:C.muted,fontSize:13,cursor:"pointer"}}>{lang==="ja"?"キャンセル":lang==="ko"?"취소":"Cancel"}</button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   if (authStep === "signin") return (
     <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"DM Sans, sans-serif"}}>
       <style>{FONTS}</style>
@@ -3609,51 +3676,6 @@ function App() {
     </div>
   );
   // パスワードリセットモーダル
-  if (authStep === "signin" && showReset) return (
-    <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"DM Sans, sans-serif"}}>
-      <div style={{width:"100%",maxWidth:360}}>
-        <div style={{textAlign:"center",marginBottom:32}}>
-          <div style={{fontFamily:"Bebas Neue",fontSize:38,letterSpacing:4,color:C.green}}>MAKE BODY</div>
-        </div>
-        <div style={{background:"#fff",borderRadius:20,padding:28,boxShadow:"0 4px 24px rgba(0,0,0,0.06)"}}>
-          {resetSent ? (
-            <div style={{textAlign:"center"}}>
-              <div style={{fontSize:32,marginBottom:12}}>✅</div>
-              <div style={{fontWeight:700,fontSize:16,marginBottom:8,color:C.text}}>
-                {lang==="ja"?"メールを送信しました":lang==="ko"?"이메일을 전송했습니다":"Email sent"}
-              </div>
-              <div style={{fontSize:13,color:C.muted,marginBottom:20,lineHeight:1.6}}>
-                {lang==="ja"?"パスワード再設定リンクをメールで送りました。メールをご確認ください。":lang==="ko"?"비밀번호 재설정 링크를 이메일로 전송했습니다.":"Check your email for the password reset link."}
-              </div>
-              <button onClick={()=>setShowReset(false)} style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>
-                {lang==="ja"?"ログイン画面へ戻る":lang==="ko"?"로그인으로 돌아가기":"Back to login"}
-              </button>
-            </div>
-          ) : (
-            <>
-              <div style={{fontWeight:700,fontSize:18,marginBottom:6,color:C.text}}>
-                {lang==="ja"?"パスワードを再設定":lang==="ko"?"비밀번호 재설정":"Reset password"}
-              </div>
-              <div style={{fontSize:13,color:C.muted,marginBottom:20}}>
-                {lang==="ja"?"登録したメールアドレスを入力してください。":lang==="ko"?"등록한 이메일 주소를 입력해주세요.":"Enter your registered email address."}
-              </div>
-              <input value={resetEmail} onChange={e=>setResetEmail(e.target.value)}
-                placeholder="Email" type="email"
-                style={{width:"100%",background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",color:C.text,fontSize:14,marginBottom:16}}/>
-              <button onClick={handlePasswordReset}
-                style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer",marginBottom:10}}>
-                {lang==="ja"?"再設定リンクを送る":lang==="ko"?"재설정 링크 전송":"Send reset link"}
-              </button>
-              <button onClick={()=>setShowReset(false)}
-                style={{width:"100%",background:"none",border:"1px solid "+C.border,borderRadius:12,padding:"11px 0",color:C.muted,fontSize:13,cursor:"pointer"}}>
-                {lang==="ja"?"キャンセル":lang==="ko"?"취소":"Cancel"}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   if (!profile) return (
     <Onboarding lang={lang} setLang={setLang} onComplete={handleOnboardingComplete}/>
@@ -3896,6 +3918,26 @@ function App() {
                   <div style={{fontSize:10,color:C.muted,marginBottom:2}}>BMI</div>
                   <div style={{fontFamily:"Bebas Neue",fontSize:22,color:bmiCat(profile.bmi||22).color}}>{profile.bmi||"—"}</div>
                   <div style={{fontSize:9,color:bmiCat(profile.bmi||22).color}}>{bmiCat(profile.bmi||22).label}</div>
+                </div>
+              </div>
+              {/* 追加情報行 */}
+              <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"目標まで":lang==="ko"?"목표까지":"To Goal"}</div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:20,color:profile.currentWeightKg>profile.idealWeightKg?"#ef4444":C.green}}>
+                    {profile.idealWeightKg ? (Math.abs(profile.currentWeightKg - profile.idealWeightKg).toFixed(1)) : "—"}<span style={{fontSize:11,fontWeight:400}}> kg</span>
+                  </div>
+                  <div style={{fontSize:9,color:C.muted}}>{profile.currentWeightKg>profile.idealWeightKg?(lang==="ja"?"減量":lang==="ko"?"감량":"lose"):(lang==="ja"?"増量":lang==="ko"?"증량":"gain")}</div>
+                </div>
+                <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"推定体脂肪":lang==="ko"?"체지방 추정":"Est. Body Fat"}</div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:20,color:C.text}}>{profile.estCurrentBf||"—"}<span style={{fontSize:11,fontWeight:400}}>%</span></div>
+                  <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"推定値":"추정값":"estimate"}</div>
+                </div>
+                <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"カロリー目標":lang==="ko"?"칼로리 목표":"Cal Target"}</div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:20,color:C.text}}>{calGoal}<span style={{fontSize:11,fontWeight:400}}> kcal</span></div>
+                  <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"1日の目標":lang==="ko"?"일일 목표":"daily goal"}</div>
                 </div>
               </div>
               {/* Weight log input */}
@@ -4773,13 +4815,29 @@ function App() {
                   ))}
                 </div>
               )}
+              {/* クイックメッセージ */}
+              {canChat && nutChatHist.length === 0 && (
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+                  {[
+                    {ja:"今日のメニュー教えて",ko:"오늘 메뉴 알려줘",en:"What should I eat today?"},
+                    {ja:"タンパク質が多い食事は？",ko:"단백질 많은 식사는?",en:"High protein meal ideas?"},
+                    {ja:"間食におすすめは？",ko:"간식 추천해줘",en:"Snack recommendations?"},
+                    {ja:"夜遅い食事はどうする？",ko:"늦은 저녁은 어떻게?",en:"Late night eating tips?"},
+                  ].map((q,i)=>(
+                    <button key={i} onClick={()=>{sendChat(q[lang]||q.en, setNutChatHist, nutChatHist);}}
+                      style={{background:C.greenGlow,border:"1px solid "+C.green,borderRadius:20,padding:"6px 12px",fontSize:12,color:C.green,cursor:"pointer",fontWeight:500}}>
+                      {q[lang]||q.en}
+                    </button>
+                  ))}
+                </div>
+              )}
               {/* 入力欄 */}
               {canChat ? (
                 <div style={{display:"flex",gap:8}}>
                   <input
                     value={nutChatIn}
                     onChange={e=>setNutChatIn(e.target.value)}
-                    onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();if(nutChatIn.trim())sendChat(nutChatIn.trim(),setNutChatHist,nutChatHist);setNutChatIn("");} }}
+                    onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();if(nutChatIn.trim()){sendChat(nutChatIn.trim(),setNutChatHist,nutChatHist);setNutChatIn("");}}}}
                     placeholder={lang==="ja"?"食事・栄養について聞く...":lang==="ko"?"식사·영양에 대해 묻기...":"Ask about nutrition..."}
                     style={{flex:1,background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:"9px 12px",fontSize:12,color:C.text}}
                   />
