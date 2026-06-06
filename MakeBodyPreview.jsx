@@ -1936,6 +1936,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
 
 function Onboarding({ lang, setLang, onComplete }) {
   const [step, setStep]                   = useState(0);
+  const topRef = useRef(null);
   const [nickname, setNickname]           = useState("");
   const [gender, setGender]               = useState("male");
   const [heightCm, setHeightCm]           = useState("");
