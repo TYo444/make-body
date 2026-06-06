@@ -3927,7 +3927,7 @@ function App() {
                 <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
                   <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"推定体脂肪":lang==="ko"?"체지방 추정":"Est. Body Fat"}</div>
                   <div style={{fontFamily:"Bebas Neue",fontSize:20,color:C.text}}>{profile.estCurrentBf||"—"}<span style={{fontSize:11,fontWeight:400}}>%</span></div>
-                  <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"推定値":"추정값":"estimate"}</div>
+                  <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"推定値":lang==="ko"?"추정값":"estimate"}</div>
                 </div>
                 <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
                   <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"カロリー目標":lang==="ko"?"칼로리 목표":"Cal Target"}</div>
