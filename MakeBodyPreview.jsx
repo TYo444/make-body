@@ -2568,6 +2568,7 @@ function App() {
   const [authStep, setAuthStep] = useState("loading"); // loading|signin|app
   const [sbUser, setSbUser]     = useState(null);
   const [authErr, setAuthErr]   = useState("");
+  const [showPw,  setShowPw]    = useState(false);
   const [authEmail, setAuthEmail]   = useState("");
   const [authPw, setAuthPw]         = useState("");
   const [authMode, setAuthMode]     = useState("signin"); // signin|signup
@@ -2848,7 +2849,12 @@ function App() {
           setAuthErr(lang==="ja"?"エラーが発生しました。再度お試しください。":lang==="ko"?"오류가 발생했습니다. 다시 시도해주세요.":"An error occurred. Please try again.");
         }
       }
-      else if (res.access_token) {
+      else if (res.session?.access_token || res.access_token) {
+        // Supabaseがsessionオブジェクトで返す場合も対応
+        if (!res.access_token && res.session?.access_token) {
+          res.access_token = res.session.access_token;
+          res.user = res.user || res.session.user;
+        }
         const user = { ...res, email: authEmail };
         setSbUser(user); lsSet("mb_sb_user", user);
         // Load profile from Supabase
@@ -2893,6 +2899,10 @@ function App() {
           }
         } catch(e) { /* silent */ }
         setAuthStep("app");
+      }
+      // メール確認待ち（Confirm emailがオンの場合）
+      else if (authMode === "signup" && !res.error && !res.access_token) {
+        setAuthErr(lang==="ja"?"確認メールを送信しました。メールをご確認ください。":lang==="ko"?"확인 이메일을 발송했습니다. 이메일을 확인해주세요.":"Confirmation email sent. Please check your inbox.");
       }
     } catch (e) { setAuthErr(lang==="ja"?"通信エラーが発生しました。しばらくしてから再試行してください。":lang==="ko"?"네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.":"Network error. Please try again."); }
     setAuthLoading(false);
@@ -3466,7 +3476,17 @@ function App() {
             ))}
           </div>
           <input value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="Email" type="email" style={{width:"100%",background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",color:C.text,fontSize:14,marginBottom:10}}/>
-          <input value={authPw} onChange={e => setAuthPw(e.target.value)} placeholder="Password" type="password" style={{width:"100%",background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",color:C.text,fontSize:14,marginBottom:16}} onKeyDown={e => e.key === "Enter" && handleAuth()}/>
+          <div style={{position:"relative",marginBottom:16}}>
+            <input value={authPw} onChange={e => setAuthPw(e.target.value)}
+              placeholder={lang==="ja"?"パスワード":lang==="ko"?"비밀번호":"Password"}
+              type={showPw?"text":"password"}
+              style={{width:"100%",background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"12px 44px 12px 14px",color:C.text,fontSize:14}}
+              onKeyDown={e => e.key === "Enter" && handleAuth()}/>
+            <button onClick={()=>setShowPw(p=>!p)}
+              style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:16,padding:4}}>
+              {showPw?"🙈":"👁️"}
+            </button>
+          </div>
           {authErr && <div style={{color:"#ef4444",fontSize:12,marginBottom:10}}>{authErr}</div>}
           <button onClick={handleAuth} disabled={authLoading} style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>
             {authLoading ? "..." : (authMode === "signin"
