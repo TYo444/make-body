@@ -2510,7 +2510,7 @@ function Onboarding({ lang, setLang, onComplete }) {
 
           {/* CTA */}
           {selectedPlan&&agreed?(
-            <button onClick={()=>{if(selectedPlan==="annual"){location.href=STRIPE_ANNUAL;}else if(selectedPlan==="monthly"){location.href=STRIPE_MONTHLY;}else{handleDone();}}} style={{width:"100%",background:selectedPlan==="free"?"#9ca3af":"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",borderRadius:16,padding:"18px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:22,letterSpacing:2,cursor:"pointer",boxShadow:selectedPlan==="free"?"none":"0 4px 20px rgba(34,197,94,0.3)"}}>
+            <button onClick={()=>{if(selectedPlan==="trial"){location.href=STRIPE_TRIAL;}else if(selectedPlan==="annual"){location.href=STRIPE_ANNUAL;}else if(selectedPlan==="monthly"){location.href=STRIPE_MONTHLY;}else{handleDone();}}} style={{width:"100%",background:selectedPlan==="free"?"#9ca3af":"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",borderRadius:16,padding:"18px 0",color:"#fff",fontFamily:"Bebas Neue",fontSize:22,letterSpacing:2,cursor:"pointer",boxShadow:selectedPlan==="free"?"none":"0 4px 20px rgba(34,197,94,0.3)"}}>
               {selectedPlan==="free"?lbl("無料で始める →","무료로 시작 →","免费开始 →","Kostenlos starten →","Commencer gratuit →","Empezar gratis →","Start free →"):lbl("AIコーチとの面談を始める →","AI 코치와의 면담 시작 →","开始与AI教练的面谈 →","KI-Coach-Gespräch starten →","Commencer avec mon coach IA →","Iniciar con mi coach IA →","Start with your AI coach →")}
             </button>
           ):(
@@ -2816,6 +2816,12 @@ function App() {
         });
         if (verifyRes.ok) {
           setSbUser(savedUser);
+          // profileをlsから先に復元（Supabase取得前に表示できるように）
+          const cachedProfile = lsGet("mb_profile", null);
+          if (cachedProfile) {
+            setProfile(cachedProfile);
+            setLang(cachedProfile.lang || "ja");
+          }
           setAuthStep("app");
         } else {
           // トークン期限切れ → ログイン画面へ
@@ -3403,10 +3409,9 @@ function App() {
       if (filtered[0]?.role === "assistant") filtered.shift();
 
       // x-user-id / x-access-token を付与（サーバー側UTC制限判定に使用）
-      const headers = { "Content-Type": "application/json", "anthropic-version": "2023-06-01", "x-api-key": "" };
+      const headers = { "Content-Type": "application/json" };
       if (sbUser?.user?.id)      headers["x-user-id"]      = sbUser.user.id;
       if (sbUser?.access_token)  headers["x-access-token"] = sbUser.access_token;
-      else if (sbUser?.isGuest)  headers["x-user-id"]      = sbUser.user?.id || "guest_anon";
 
       const r = await fetch(apiUrl, {
         method: "POST",
