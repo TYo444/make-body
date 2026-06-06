@@ -1410,6 +1410,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
   const [fl,  setFl]     = useState(profile?.fitnessLevel || "beginner");
   const [eq,  setEq]     = useState(profile?.equipment || "home");
   const [dp,  setDp]     = useState(profile?.daysPerWeek || 3);
+  const [gdr, setGdr]    = useState(profile?.gender || "male");
   const [notif, setNotif]   = useState(profile?.notifications ?? true);
   const [legal, setLegal]   = useState(null);
   const [section, setSection] = useState("main"); // main | feedback | data | account
@@ -1426,7 +1427,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
     const newProfile = { ...profile, coachId:pid, fitnessLevel:fl, equipment:eq, daysPerWeek:dp,
       currentWeightKg:parseFloat(wt)||profile?.currentWeightKg,
       heightCm:parseFloat(ht)||profile?.heightCm,
-      bodyGoal:g, notifications:notif };
+      bodyGoal:g, notifications:notif, gender:gdr };
     if (onSave) onSave(newProfile);
     else setProfile(newProfile);
     onClose();
@@ -1888,6 +1889,18 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
 
         {/* 体格・頻度 */}
         <div style={{fontSize:10,color:C.muted,fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>{lbl("体格・頻度","체격·빈도","Body Stats & Frequency")}</div>
+        {/* 性別選択 */}
+        <div style={{marginBottom:10}}>
+          <div style={{fontSize:10,color:C.muted,marginBottom:6}}>{lbl("性別","성별","Gender")}</div>
+          <div style={{display:"flex",gap:6}}>
+            {[{id:"male",ja:"男性",ko:"남성",en:"Male"},{id:"female",ja:"女性",ko:"여성",en:"Female"},{id:"other",ja:"その他",ko:"기타",en:"Other"}].map(g=>(
+              <button key={g.id} onClick={()=>setGdr(g.id)}
+                style={{flex:1,padding:"8px 4px",borderRadius:8,border:"1.5px solid "+(gdr===g.id?C.green:C.border),background:gdr===g.id?C.greenGlow:"transparent",color:gdr===g.id?C.green:C.muted,fontSize:12,fontWeight:gdr===g.id?700:400,cursor:"pointer"}}>
+                {lbl(g.ja,g.ko,g.en)}
+              </button>
+            ))}
+          </div>
+        </div>
         <div style={{display:"flex",gap:8,marginBottom:10}}>
           <div style={{flex:1}}>
             <div style={{fontSize:10,color:C.muted,marginBottom:4}}>{lbl("体重 (kg)","체중 (kg)","Weight (kg)")}</div>
@@ -2930,16 +2943,16 @@ function App() {
       const res = authMode === "signup"
         ? await sb.signUp(authEmail, authPw)
         : await sb.signIn(authEmail, authPw);
-      if (res.error) {
-        const msg = res.error.message || "";
-        if (msg.includes("Invalid login") || msg.includes("invalid_credentials")) {
+      if (res.error || res.error_description || res.msg) {
+        const msg = res.error?.message || res.error_description || res.msg || res.error || "";
+        if (msg.includes("Invalid login") || msg.includes("invalid_credentials") || msg.includes("Invalid email") || msg.includes("Email not confirmed")) {
           setAuthErr(lang==="ja"?"メールアドレスまたはパスワードが間違っています。":lang==="ko"?"이메일 또는 비밀번호가 올바르지 않습니다.":"Invalid email or password.");
-        } else if (msg.includes("already registered") || msg.includes("already been registered")) {
+        } else if (msg.includes("already registered") || msg.includes("already been registered") || msg.includes("User already")) {
           setAuthErr(lang==="ja"?"このメールアドレスはすでに登録済みです。":lang==="ko"?"이미 등록된 이메일 주소입니다.":"This email is already registered.");
-        } else if (msg.includes("Password should")) {
+        } else if (msg.includes("Password should") || msg.includes("password")) {
           setAuthErr(lang==="ja"?"パスワードは6文字以上にしてください。":lang==="ko"?"비밀번호는 6자 이상이어야 합니다.":"Password must be at least 6 characters.");
         } else {
-          setAuthErr(lang==="ja"?"エラーが発生しました。再度お試しください。":lang==="ko"?"오류가 발생했습니다. 다시 시도해주세요.":"An error occurred. Please try again.");
+          setAuthErr((lang==="ja"?"エラー: ":lang==="ko"?"오류: ":"Error: ") + (msg || (lang==="ja"?"再度お試しください。":"Please try again.")));
         }
       }
       else if (res.session?.access_token || res.access_token) {
@@ -3223,7 +3236,13 @@ function App() {
     setAiLoading(true);
 
     // Build context
-    const pCtx = profile ? "User: "+profile.nickname+", "+profile.gender+", age: "+profile.ageGroup+", "+profile.heightCm+"cm, "+profile.currentWeightKg+"kg, BMI: "+profile.bmi+", body goal: "+profile.bodyGoal?.title+", target: "+profile.idealWeightKg+"kg" : "";
+    const isMaleUser = (profile?.gender || "male") === "male";
+    const genderCtx = isMaleUser
+      ? (lang==="ja"?"男性（体脂肪率・筋肉量重視）":"Male (focus: body fat%, muscle mass)")
+      : profile?.gender==="female"
+      ? (lang==="ja"?"女性（体型・体重バランス重視）":"Female (focus: body shape, weight balance)")
+      : "Other";
+    const pCtx = profile ? "User: "+profile.nickname+", gender:"+genderCtx+", age: "+profile.ageGroup+", "+profile.heightCm+"cm, "+profile.currentWeightKg+"kg, BMI: "+profile.bmi+", body fat: "+(profile.estCurrentBf||"est.")+"%, body goal: "+profile.bodyGoal?.title+", target: "+profile.idealWeightKg+"kg" : "";
     const loginHistCtx = lsGet("mb_login_history", []);
     const todayCtxKey = todayKey();
     const pastLogins = loginHistCtx.filter(d=>d<todayCtxKey);
@@ -3496,6 +3515,14 @@ function App() {
       const data = await r.json();
 
       // サーバーエラーレスポンス（401/500/feature_disabled等）をハンドル
+      if (r.status === 401) {
+        // トークン切れ → ログアウトしてログイン画面へ
+        lsSet("mb_sb_user", null);
+        setAiLoading(false);
+        alert(lang==="ja"?"セッションが切れました。再度ログインしてください。":lang==="ko"?"세션이 만료되었습니다. 다시 로그인해주세요.":"Session expired. Please log in again.");
+        setAuthStep("signin");
+        return;
+      }
       if (!r.ok || data.error) {
         const errText = data.message || data.error || "Error. Please try again.";
         setHist(h => [...h, { role: "assistant", text: errText }]);
@@ -3906,8 +3933,17 @@ function App() {
                   <div style={{fontFamily:"Bebas Neue",fontSize:22,color:C.green}}>{profile.currentWeightKg}<span style={{fontSize:12,fontWeight:400}}> kg</span></div>
                 </div>
                 <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
-                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"目標体重":lang==="ko"?"목표 체중":"Target"}</div>
-                  <div style={{fontFamily:"Bebas Neue",fontSize:22,color:coach.color}}>{profile.idealWeightKg || "—"}<span style={{fontSize:12,fontWeight:400}}> kg</span></div>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>
+                    {profile?.gender==="female"
+                      ? (lang==="ja"?"目標体重":lang==="ko"?"목표 체중":"Goal Weight")
+                      : (lang==="ja"?"目標体脂肪":lang==="ko"?"목표 체지방":"Goal BF%")}
+                  </div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:22,color:coach.color}}>
+                    {profile?.gender==="female"
+                      ? (profile.idealWeightKg || "—")
+                      : (profile?.bodyGoal?.targetBf || "—")}
+                    <span style={{fontSize:12,fontWeight:400}}>{profile?.gender==="female"?" kg":"%"}</span>
+                  </div>
                 </div>
                 <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
                   <div style={{fontSize:10,color:C.muted,marginBottom:2}}>BMI</div>
@@ -3944,7 +3980,14 @@ function App() {
                   const updated = {...weightLog, [today]: w};
                   setWeightLog(updated);
                   syncWeightHistory(updated);
-                  setProfile(p=>({...p, currentWeightKg: w}));
+                  // BMI再計算
+                  const h = profile?.heightCm ? profile.heightCm / 100 : 1.7;
+                  const newBmi = Math.round((w / (h * h)) * 10) / 10;
+                  // 推定体脂肪率再計算（Deurenberg式）
+                  const ageNum = profile?.ageGroup ? parseInt(profile.ageGroup) || 30 : 30;
+                  const isMale = (profile?.gender || "male") === "male";
+                  const newBf = Math.round((1.20 * newBmi + 0.23 * ageNum - (isMale ? 16.2 : 5.4)) * 10) / 10;
+                  setProfile(p=>({...p, currentWeightKg: w, bmi: newBmi, estCurrentBf: Math.max(5, newBf)}));
                   setWeightInput("");
                 }} style={{background:C.green,border:"none",borderRadius:8,padding:"8px 14px",color:"#000",fontSize:12,fontWeight:700,cursor:"pointer"}}>
                   {lang==="ja"?"記録":lang==="ko"?"기록":"Log"}
