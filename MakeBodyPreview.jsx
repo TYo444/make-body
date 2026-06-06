@@ -3309,16 +3309,11 @@ function App() {
 
     const nutSys = isFreeLimited
       ? "You are a friendly nutrition coach. " + nutLangInst + " Keep answers to 3 sentences max. User: " + (profile?.nickname||"friend") + ", goal: " + (profile?.bodyGoal?.title||"healthy body") + ". Calories: " + totCal + "/" + calGoal + "kcal, Protein: " + totPro + "g. Avoid: " + (profile?.allergies?.join(",")||"none") + ". No medical advice."
-      : "You are a professional nutrition and dietitian coach. " + nutLangInst + "
-" +
-        "User profile: " + (profile?.nickname||"friend") + ", " + (profile?.gender||"") + ", " + (profile?.ageGroup||"") + ", " + (profile?.heightCm||"")+"cm, " + (profile?.currentWeightKg||"")+"kg, goal: " + (profile?.bodyGoal?.title||"healthy body") + ".
-" +
-        "Today's nutrition: Calories " + totCal + "/" + calGoal + "kcal, Protein: " + totPro + "g, Mood: " + MOODS[mood] + ".
-" +
-        "Allergies/avoid: " + (profile?.allergies?.join(",")||"none") + ".
-" +
-        "Meals today: " + nutCtx + "
-" +
+      : "You are a professional nutrition and dietitian coach. " + nutLangInst + "\n" +
+        "User profile: " + (profile?.nickname||"friend") + ", " + (profile?.gender||"") + ", " + (profile?.ageGroup||"") + ", " + (profile?.heightCm||"")+"cm, " + (profile?.currentWeightKg||"")+"kg, goal: " + (profile?.bodyGoal?.title||"healthy body") + ".\n" +
+        "Today's nutrition: Calories " + totCal + "/" + calGoal + "kcal, Protein: " + totPro + "g, Mood: " + MOODS[mood] + ".\n" +
+        "Allergies/avoid: " + (profile?.allergies?.join(",")||"none") + ".\n" +
+        "Meals today: " + nutCtx + "\n" +
         "RULES: Specific food suggestions with portions. Practical and budget-friendly. Batch cooking when useful. Never diagnose. Max 4 sentences unless recipe requested. EMOJI: max 1-2 per reply.";
 
     const sys = isNutChat ? nutSys : isFreeLimited
