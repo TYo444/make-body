@@ -3392,10 +3392,9 @@ function App() {
         (isPro ? "PRO: 90-day plans, body predictions, timeline simulations, weekly check-ins. FUTURE SIM: weight=" + (profile?.currentWeightKg||70) + "kg targetBf=" + (profile?.bodyGoal?.targetBf||12) + "% streak=" + streak + "d - give realistic timeline estimates with encouragement." : "FREE: Short tips only. Full coaching requires PRO.") + "\n" +
         pCtx + "\n" + fitCtx + "\n" + nutCtx + "\n" +
         "Today: Cals " + totCal + "/" + calGoal + ", Protein " + totPro + "g, Mood:" + MOODS[mood] + ", Streak:" + streak + "d.\n" +
-        (isPersonal ? "IMPORTANT: This message has emotional/personal content. Lead with empathy and human warmth FIRST. Do not jump to fitness advice. Ask a follow-up question about how they feel. Only offer fitness/nutrition if they bring it up or after emotional connection is made. " : "") + (isNutrition ? "Use batch cooking. " : "") + (lateNight ? "LATE NIGHT: Be extra warm, no workout push." : "")
+        (isPersonal ? "IMPORTANT: This message has emotional/personal content. Lead with empathy and human warmth FIRST. Do not jump to fitness advice. Ask a follow-up question about how they feel. Only offer fitness/nutrition if they bring it up or after emotional connection is made. " : "") + (isNutrition ? "Use batch cooking. " : "") + (lateNight ? "LATE NIGHT: Be extra warm, no workout push." : "");
     try {
-      const apiUrl = typeof window !== "undefined" && window.location?.hostname !== "localhost"
-        ? "/api/chat" : "https://api.anthropic.com/v1/messages";
+      const apiUrl = "/api/chat";
       const messages = [
         ...newHist.slice(-12).map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.text })),
       ];
@@ -3422,7 +3421,7 @@ function App() {
       // 429 = サーバー側で利用制限に達した
       if (r.status === 429) {
         const errData = await r.json().catch(() => ({}));
-        setChatHist(h => [...h, { role: "assistant", text:
+        setHist(h => [...h, { role: "assistant", text:
           isPro
             ? (lang==="ja" ? `今月の相談回数(${errData.limit}回)に達しました。来月またご利用いただけます。` : `Monthly limit (${errData.limit}) reached. Available again next month.`)
             : (lang==="ja" ? `本日の相談回数(${errData.limit}回)に達しました。明日またどうぞ！` : `Daily limit (${errData.limit}) reached. Come back tomorrow!`)
@@ -3436,6 +3435,15 @@ function App() {
       }
 
       const data = await r.json();
+
+      // サーバーエラーレスポンス（401/500/feature_disabled等）をハンドル
+      if (!r.ok || data.error) {
+        const errText = data.message || data.error || "Error. Please try again.";
+        setHist(h => [...h, { role: "assistant", text: errText }]);
+        setAiLoading(false);
+        return;
+      }
+
       const reply = data.content?.[0]?.text || "Sorry, I hit an error. Try again!";
 
       // サーバーから返ってきた_usageでキャッシュを正確に更新（UTC基準）
@@ -3482,7 +3490,9 @@ function App() {
         }
       }
     } catch (e) {
-      setChatHist(h => [...h, { role: "assistant", text: "Oops, something went wrong. Try again!" }]);
+      console.error("sendChat error:", e);
+      const errMsg = "Oops, something went wrong. Try again!";
+      setHist(h => [...h, { role: "assistant", text: errMsg }]);
     }
     setAiLoading(false);
   }
