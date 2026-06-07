@@ -1425,6 +1425,8 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
+  const [showCancelFeedback, setShowCancelFeedback] = useState(false);
+  const [cancelFeedbackMode, setCancelFeedbackMode] = useState(null);
 
   const goals = BODY_GOALS[profile?.gender || "male"] || BODY_GOALS["male"];
   const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:en;
