@@ -3242,7 +3242,7 @@ function App() {
     setHist(newHist);
 
     // 楽観的にremaining-1（実際の判定はサーバー側）
-    const optimisticCache = { ...usageCache, remaining: Math.max(0, (usageCache.remaining ?? 1) - 1) };
+    const optimisticCache = { ...usageCache, remaining: Math.max(0, (usageCache.remaining ?? 1) - 1), used: (usageCache.used ?? 0) + 1 };
     setUsageCache(optimisticCache);
     lsSet("mb_usage_cache", optimisticCache);
 

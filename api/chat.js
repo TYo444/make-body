@@ -247,6 +247,7 @@ export default async function handler(req, res) {
       ...data,
       usage_info: {
         remaining: Math.max(0, limit - used - 1),
+        used: used + 1,
         limit, isPro, isTrial,
       },
     });
