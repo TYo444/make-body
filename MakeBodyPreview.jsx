@@ -3539,9 +3539,6 @@ function App() {
       if (!r.ok || data.error) {
         const errText = data.message || data.error || "Error. Please try again.";
         setHist(h => [...h, { role: "assistant", text: errText }]);
-        // エラー時はoptimisticCacheを元に戻す
-        setUsageCache(usageCache);
-        lsSet("mb_usage_cache", usageCache);
         setAiLoading(false);
         return;
       }
@@ -3561,9 +3558,6 @@ function App() {
         };
         setUsageCache(serverCache);
         lsSet("mb_usage_cache", serverCache);
-      } else {
-        // usage_infoがない場合もoptimisticCacheを永続化
-        lsSet("mb_usage_cache", optimisticCache);
       }
       // Parse SCHEDULE lines
       const schedLines = reply.match(/SCHEDULE:\s*(.+?)(?:\n|$)/g) || [];
@@ -3599,9 +3593,6 @@ function App() {
       console.error("sendChat error:", e);
       const errMsg = "Oops, something went wrong. Try again!";
       setHist(h => [...h, { role: "assistant", text: errMsg }]);
-      // エラー時はoptimisticCacheを元に戻す
-      setUsageCache(usageCache);
-      lsSet("mb_usage_cache", usageCache);
     }
     setAiLoading(false);
   }
