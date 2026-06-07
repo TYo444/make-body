@@ -186,6 +186,13 @@ const BODY_GOALS = {
     { id:"athletic", title:"Athletic",       ja:"アスリート体型",   ko:"운동선수형",   zh:"运动型",      bf:"8–12%",  targetBf:10, color:"#f59e0b", ref:"マラソン・サッカー選手スタイル" },
     { id:"muscular", title:"Muscular",       ja:"マッスル",        ko:"머슬형",      zh:"肌肉型",      bf:"6–10%",  targetBf:8,  color:"#ef4444", ref:"フィジーク・格闘家スタイル" },
   ],
+  other: [
+    { id:"kpop",     title:"K-POP Idol",     ja:"K-POPアイドル系", ko:"K팝 아이돌형", zh:"K-POP偶像型",  bf:"8–13%",  targetBf:10, color:"#00bfff", ref:"韓国アイドル・K-POPスタイル" },
+    { id:"lean",     title:"Lean & Toned",   ja:"細マッチョ",      ko:"슬림핏",      zh:"精实线条",    bf:"10–15%", targetBf:12, color:"#00bfff", ref:"細マッチョ・スリムフィット" },
+    { id:"toned",    title:"Toned",          ja:"引き締め",        ko:"탄탄형",      zh:"紧致型",      bf:"18–23%", targetBf:19, color:"#22c55e", ref:"トーンアップ・引き締め" },
+    { id:"athletic", title:"Athletic",       ja:"アスリート体型",   ko:"운동선수형",   zh:"运动型",      bf:"8–12%",  targetBf:10, color:"#f59e0b", ref:"マラソン・サッカー選手スタイル" },
+    { id:"strong",   title:"Strong",         ja:"強い体",          ko:"강한 체형",   zh:"强健型",      bf:"16–21%", targetBf:18, color:"#ef4444", ref:"クロスフィット・アスリート" },
+  ],
   female: [
     { id:"kpop_girl", title:"K-POP Girl",    ja:"K-POP Girl系",   ko:"K팝 걸형",    zh:"K-POP女团型", bf:"15–20%", targetBf:17, color:"#ec4899", ref:"韓国ガールズグループスタイル" },
     { id:"slim",      title:"Slim & Fit",    ja:"スリム",          ko:"슬림핏",      zh:"苗条型",      bf:"18–23%", targetBf:20, color:"#8b5cf6", ref:"モデル・スリムフィット" },
@@ -1419,7 +1426,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
 
-  const goals = BODY_GOALS[profile?.gender || "male"];
+  const goals = BODY_GOALS[profile?.gender || "male"] || BODY_GOALS["male"];
   const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:en;
 
   function save() {
@@ -3032,6 +3039,9 @@ function App() {
     setSbUser(null); lsSet("mb_sb_user", null);
     setProfile(null); lsSet("mb_profile", null);
     setChatHist([]); lsSet("mb_chat", []);
+    // usageCacheはログアウトでもlocalStorageに保持（再ログイン後に復元するため）
+    // dayKeyが今日なら残す
+    lsSet("mb_usage_cache", usageCache);
     setAuthStep("signin");
     setShowSettings(false);
   }
