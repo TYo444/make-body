@@ -3569,7 +3569,6 @@ function App() {
         if (m) addToSchedule(m[1].trim(), parseInt(m[2]), parseInt(m[3]));
       });
       const updated = [...newHist, { role: "assistant", text: reply }];
-      console.log("setHist called, isNutChat:", isNutChat, "reply:", reply.slice(0,50), "updated len:", updated.length);
       setHist(updated);
       if (!isNutChat) {
         lsSet("mb_chat", updated.slice(-50));
@@ -4132,7 +4131,7 @@ function App() {
                   </div>
                 </div>
                 {/* Chat history */}
-                <div style={{minHeight:200,marginBottom:12}}>
+                <div ref={el => { if (el && chatHist.length > 0) el.scrollTop = el.scrollHeight; }} style={{minHeight:120,maxHeight:420,overflowY:"auto",marginBottom:12,scrollBehavior:"smooth"}}>
                   {chatHist.map((msg,i)=>(
                     <div key={i} style={{marginBottom:10,display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start"}}>
                       <div style={{maxWidth:"84%",background:msg.role==="user"?coach.color:C.card,borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",padding:"10px 14px",border:msg.role==="user"?"none":"1px solid "+C.border}}>
