@@ -3539,6 +3539,9 @@ function App() {
       if (!r.ok || data.error) {
         const errText = data.message || data.error || "Error. Please try again.";
         setHist(h => [...h, { role: "assistant", text: errText }]);
+        // エラー時はoptimisticCacheを元に戻す
+        setUsageCache(usageCache);
+        lsSet("mb_usage_cache", usageCache);
         setAiLoading(false);
         return;
       }
@@ -3596,6 +3599,9 @@ function App() {
       console.error("sendChat error:", e);
       const errMsg = "Oops, something went wrong. Try again!";
       setHist(h => [...h, { role: "assistant", text: errMsg }]);
+      // エラー時はoptimisticCacheを元に戻す
+      setUsageCache(usageCache);
+      lsSet("mb_usage_cache", usageCache);
     }
     setAiLoading(false);
   }
