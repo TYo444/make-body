@@ -66,38 +66,43 @@ async function getUsage(userId) {
   const monthKey = new Date().toISOString().slice(0, 7);
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/ai_usage?user_id=eq.${userId}&select=day_key,month_key,day_count,month_count&order=updated_at.desc&limit=1`,
+      `${SUPABASE_URL}/rest/v1/ai_usage?user_id=eq.${userId}&month_key=eq.${monthKey}&select=day_key,month_key,day_count,month_count&limit=1`,
       { headers: sbHeaders() }
     );
     const rows = await res.json();
     const row  = rows?.[0] || {};
     return {
       dayKey, monthKey,
-      dayCount:   row.day_key   === dayKey   ? (row.day_count   || 0) : 0,
-      monthCount: row.month_key === monthKey ? (row.month_count || 0) : 0,
+      dayCount:   row.day_key === dayKey ? (row.day_count || 0) : 0,
+      monthCount: row.month_count || 0,
     };
   } catch { return { dayKey, monthKey, dayCount: 0, monthCount: 0 }; }
 }
 
 async function incrementUsage(userId, dayKey, monthKey, currentDay, currentMonth) {
   try {
+    // month_keyで既存レコードを確認（UNIQUE制約はuser_id+month_key）
     const checkRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/ai_usage?user_id=eq.${userId}&day_key=eq.${dayKey}&select=id`,
+      `${SUPABASE_URL}/rest/v1/ai_usage?user_id=eq.${userId}&month_key=eq.${monthKey}&select=id,day_key,day_count,month_count`,
       { headers: sbHeaders() }
     );
     const existing = await checkRes.json();
     if (existing?.length > 0) {
-      await fetch(`${SUPABASE_URL}/rest/v1/ai_usage?user_id=eq.${userId}&day_key=eq.${dayKey}`, {
+      // 既存レコードを更新（day_keyも今日に更新、day_countはday_keyが変わったらリセット）
+      const rec = existing[0];
+      const newDayCount = rec.day_key === dayKey ? (rec.day_count || 0) + 1 : 1;
+      await fetch(`${SUPABASE_URL}/rest/v1/ai_usage?user_id=eq.${userId}&month_key=eq.${monthKey}`, {
         method: "PATCH",
         headers: { ...sbHeaders(), "Prefer": "return=minimal" },
         body: JSON.stringify({
-          day_count:   currentDay   + 1,
-          month_count: currentMonth + 1,
-          month_key:   monthKey,
+          day_key:     dayKey,
+          day_count:   newDayCount,
+          month_count: (rec.month_count || 0) + 1,
           updated_at:  new Date().toISOString(),
         }),
       });
     } else {
+      // 新規レコード作成
       await fetch(`${SUPABASE_URL}/rest/v1/ai_usage`, {
         method: "POST",
         headers: { ...sbHeaders(), "Prefer": "return=minimal" },
@@ -106,7 +111,7 @@ async function incrementUsage(userId, dayKey, monthKey, currentDay, currentMonth
           day_key:     dayKey,
           month_key:   monthKey,
           day_count:   1,
-          month_count: currentMonth + 1,
+          month_count: 1,
           updated_at:  new Date().toISOString(),
         }),
       });
