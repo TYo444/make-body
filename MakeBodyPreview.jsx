@@ -3569,6 +3569,7 @@ function App() {
         if (m) addToSchedule(m[1].trim(), parseInt(m[2]), parseInt(m[3]));
       });
       const updated = [...newHist, { role: "assistant", text: reply }];
+      console.log("setHist called, isNutChat:", isNutChat, "reply:", reply.slice(0,50), "updated len:", updated.length);
       setHist(updated);
       if (!isNutChat) {
         lsSet("mb_chat", updated.slice(-50));
