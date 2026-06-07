@@ -4135,7 +4135,7 @@ function App() {
                   {chatHist.map((msg,i)=>(
                     <div key={i} style={{marginBottom:10,display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start"}}>
                       <div style={{maxWidth:"84%",background:msg.role==="user"?coach.color:C.card,borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",padding:"10px 14px",border:msg.role==="user"?"none":"1px solid "+C.border}}>
-                        <div style={{fontSize:13,color:msg.role==="user"?"#000":C.white,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{msg.text}</div>
+                        <div style={{fontSize:13,color:msg.role==="user"?"#000":C.text,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{msg.text}</div>
                       </div>
                     </div>
                   ))}
