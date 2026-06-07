@@ -1427,6 +1427,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
   const [showCancelFeedback, setShowCancelFeedback] = useState(false);
   const [cancelFeedbackMode, setCancelFeedbackMode] = useState(null);
+  const [showWithdrawDone, setShowWithdrawDone] = useState(false);
 
   const goals = BODY_GOALS[profile?.gender || "male"] || BODY_GOALS["male"];
   const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:en;
@@ -3557,6 +3558,9 @@ function App() {
         };
         setUsageCache(serverCache);
         lsSet("mb_usage_cache", serverCache);
+      } else {
+        // usage_infoがない場合もoptimisticCacheを永続化
+        lsSet("mb_usage_cache", optimisticCache);
       }
       // Parse SCHEDULE lines
       const schedLines = reply.match(/SCHEDULE:\s*(.+?)(?:\n|$)/g) || [];
