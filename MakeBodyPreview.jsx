@@ -5259,6 +5259,7 @@ function App() {
                   )}
                 </div>
               )}
+              </>
             )}
             {nutView === "chat" && (
               <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid "+C.border,marginTop:12}}>
