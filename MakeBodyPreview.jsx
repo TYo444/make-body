@@ -5259,7 +5259,6 @@ function App() {
                   )}
                 </div>
               )}
-              </>
             )}
             {nutView === "chat" && (
               <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid "+C.border,marginTop:12}}>
@@ -5267,11 +5266,11 @@ function App() {
                   <span style={{fontSize:18}}>🥗</span>
                   <div style={{fontFamily:"Bebas Neue",fontSize:13,letterSpacing:1,color:C.text}}>
                     {lang==="ja"?"栄養・食事の相談":lang==="ko"?"영양·식사 상담":"Nutrition Chat"}
+                  </div>
+                  <span style={{fontSize:10,background:C.proBg,color:C.pro,borderRadius:8,padding:"1px 6px",marginLeft:"auto"}}>
+                    {lang==="ja"?"利用回数に含まれます":lang==="ko"?"이용 횟수에 포함":"counts toward limit"}
+                  </span>
                 </div>
-                <span style={{fontSize:10,background:C.proBg,color:C.pro,borderRadius:8,padding:"1px 6px",marginLeft:"auto"}}>
-                  {lang==="ja"?"利用回数に含まれます":lang==="ko"?"이용 횟수에 포함":"counts toward limit"}
-                </span>
-              </div>
               {/* チャット履歴 */}
               {nutChatHist.length>0&&(
                 <div style={{marginBottom:10,maxHeight:200,overflowY:"auto"}}>
@@ -5323,8 +5322,10 @@ function App() {
               )}
               </div>
             )}
-          </div>
-        )}
+      </div>
+      </div>
+      </div>
+      </div>
       </div>
 
       {/* Bottom nav */}
