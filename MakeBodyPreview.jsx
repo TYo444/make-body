@@ -758,7 +758,10 @@ function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose })
   const CD_START = 5;
   const guide   = getExGuide(exercise, lang, profile?.gender);
   const genderK = profile?.gender === "female" ? "female" : "male";
-  const imgSrc  = null; // exerciseImages removed for preview compatibility
+  const genderPrefix = (profile?.gender === "female") ? "female" : "male";
+  const exKey = guide?.key || "";
+  const imgKey = genderPrefix + "_" + exKey;
+  const imgSrc = (typeof EXERCISE_IMAGES !== "undefined" && EXERCISE_IMAGES[imgKey]) ? EXERCISE_IMAGES[imgKey] : null;
   const ar      = calcAdaptiveReps(profile, guide?.key);
   const tS      = ar.sets;
   const tR      = ar.reps;
