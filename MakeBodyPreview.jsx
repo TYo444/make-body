@@ -5089,7 +5089,7 @@ function App() {
                               <div style={{fontSize:11,color:C.text}}>{m.val}</div>
                             </div>
                           ))}
-                          <div style={{fontSize:10,color:C.muted,marginTop:6}}>{lang==="ja"?"目標 ":"목표 ":"Target "}{planDay.kcal}kcal / {lang==="ja"?"タンパク質":"단백질":"Protein"} {planDay.protein}g</div>
+                          <div style={{fontSize:10,color:C.muted,marginTop:6}}>{lang==="ja"?"目標 ":lang==="ko"?"목표 ":"Target "}{planDay.kcal}kcal / {lang==="ja"?"タンパク質":lang==="ko"?"단백질":"Protein"} {planDay.protein}g</div>
                         </div>
                       );
                     })()
