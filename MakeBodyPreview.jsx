@@ -2704,8 +2704,12 @@ function App() {
   const [mealDate, setMealDate]   = useState(todayKey());
   const [futureMenus, setFutureMenus] = useState(() => lsGet("mb_future_menus", {}));
   const [menuLoading, setMenuLoading] = useState(false);
-  const [nutChatHist, setNutChatHist] = useState([]);
+  const [nutChatHist, setNutChatHist] = useState(lsGet("mb_nut_chat", []));
   const [nutChatIn, setNutChatIn]     = useState("");
+
+  useEffect(() => {
+    if (nutChatHist.length > 0) lsSet("mb_nut_chat", nutChatHist.slice(-50));
+  }, [nutChatHist]);
   const [analyzing, setAnalyzing] = useState(false);
   const [scannedMeal, setScannedMeal] = useState(null);
   const [mealHist, setMealHist] = useState({}); // { dateKey: [meals] }
@@ -2894,8 +2898,13 @@ function App() {
     })();
   }, []);
 
+  const userScrolledUp = useRef(false);
+  const chatContainerRef = useRef(null);
+
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!userScrolledUp.current) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [chatHist]);
 
   function updateStreak(saved) {
@@ -3042,6 +3051,7 @@ function App() {
     setSbUser(null); lsSet("mb_sb_user", null);
     setProfile(null); lsSet("mb_profile", null);
     setChatHist([]); lsSet("mb_chat", []);
+    setNutChatHist([]); lsSet("mb_nut_chat", []);
     // usageCacheはログアウトでもlocalStorageに保持（再ログイン後に復元するため）
     // dayKeyが今日なら残す
     lsSet("mb_usage_cache", usageCache);
@@ -3483,7 +3493,7 @@ function App() {
         (isPro ? "PRO: 90-day plans, body predictions, timeline simulations, weekly check-ins. FUTURE SIM: weight=" + (profile?.currentWeightKg||70) + "kg targetBf=" + (profile?.bodyGoal?.targetBf||12) + "% streak=" + streak + "d - give realistic timeline estimates with encouragement." : "FREE: Short tips only. Full coaching requires PRO.") + "\n" +
         pCtx + "\n" + fitCtx + "\n" + nutCtx + "\n" +
         "Today: Cals " + totCal + "/" + calGoal + ", Protein " + totPro + "g, Mood:" + MOODS[mood] + ", Streak:" + streak + "d.\n" +
-        (isPersonal ? "IMPORTANT: This message has emotional/personal content. Lead with empathy and human warmth FIRST. Do not jump to fitness advice. Ask a follow-up question about how they feel. Only offer fitness/nutrition if they bring it up or after emotional connection is made. " : "") + (isNutrition ? "Use batch cooking. " : "") + (lateNight ? "LATE NIGHT: Be extra warm, no workout push." : "");
+        (isPersonal ? "IMPORTANT: This message has emotional/personal content. Lead with empathy and human warmth FIRST. Do not jump to fitness advice. Ask a follow-up question about how they feel. Only offer fitness/nutrition if they bring it up or after emotional connection is made. " : "") + (isNutrition ? "Use batch cooking. " : "") + (lateNight ? "LATE NIGHT: Be extra warm, no workout push." : "") + "\nWhen providing a workout plan, you MUST include SCHEDULE lines in EXACTLY this format (one per exercise, after your message):\nSCHEDULE: [Exercise Name] | [sets]x[reps]\nExample: SCHEDULE: Squat | 3x10\nSCHEDULE: Push-up | 3x15";
     try {
       const apiUrl = "/api/chat";
       const messages = [
@@ -4128,7 +4138,13 @@ function App() {
                   </div>
                 </div>
                 {/* Chat history */}
-                <div ref={el => { if (el && chatHist.length > 0) el.scrollTop = el.scrollHeight; }} style={{minHeight:120,maxHeight:420,overflowY:"auto",marginBottom:12,scrollBehavior:"smooth"}}>
+                <div
+                  ref={el => { if (el && chatHist.length > 0 && !userScrolledUp.current) el.scrollTop = el.scrollHeight; }}
+                  onScroll={e => {
+                    const el = e.target;
+                    userScrolledUp.current = el.scrollTop < el.scrollHeight - el.clientHeight - 50;
+                  }}
+                  style={{minHeight:120,maxHeight:420,overflowY:"auto",marginBottom:12,scrollBehavior:"smooth"}}>
                   {chatHist.map((msg,i)=>(
                     <div key={i} style={{marginBottom:10,display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start"}}>
                       <div style={{maxWidth:"84%",background:msg.role==="user"?coach.color:C.card,borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",padding:"10px 14px",border:msg.role==="user"?"none":"1px solid "+C.border}}>
