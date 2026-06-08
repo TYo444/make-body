@@ -960,7 +960,7 @@ function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose })
             <div style={{fontFamily:"Bebas Neue",fontSize:28,color:C.green,marginBottom:8}}>{L.done}</div>
             {cheer&&(<div style={{background:"linear-gradient(135deg,"+coach?.color+"20,"+coach?.color+"08)",borderRadius:12,padding:"10px 13px",marginBottom:16,border:"1px solid "+coach?.color+"25"}}><div style={{fontSize:13,color:coach?.color,fontWeight:700}}>{coach?.emoji} {cheer}</div></div>)}
             <div style={{fontSize:12,color:C.muted,marginBottom:22}}>{tS} sets x {tR} {L.reps} {L.comped}</div>
-            <button onClick={onClose} style={{background:C.green,border:"none",borderRadius:14,padding:"14px 40px",color:"#fff",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>{L.comp}</button>
+            <button onClick={()=>onClose(true)} style={{background:C.green,border:"none",borderRadius:14,padding:"14px 40px",color:"#fff",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>{L.comp}</button>
           </div>
         )}
       </div>
@@ -2874,6 +2874,34 @@ function App() {
     const planData = { weekStart: monday, days: plan };
     setWeeklyPlan(planData);
     lsSet("mb_weekly_plan", planData);
+
+    // scheduleにも週間プランを追加（既存の手動追加分は保持）
+    const existingSchedule = lsGet("mb_schedule", []);
+    // 今週の自動生成分を削除して再追加
+    const manualItems = existingSchedule.filter(s => !s.isAutoGen);
+    const autoItems = [];
+    plan.forEach((day, i) => {
+      if (day.isRest || day.workout.length === 0) return;
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const dk = d.toISOString().slice(0,10);
+      day.workout.forEach(ex => {
+        autoItems.push({
+          id: Date.now() + Math.random(),
+          dateKey: dk,
+          exercise: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          done: false,
+          missed: false,
+          note: "",
+          isAutoGen: true,
+        });
+      });
+    });
+    const newSchedule = [...manualItems, ...autoItems];
+    setSchedule(newSchedule);
+    lsSet("mb_schedule", newSchedule);
   }, [profile?.coachId, profile?.fitnessLevel, profile?.daysPerWeek, profile?.gender]);
   const [analyzing, setAnalyzing] = useState(false);
   const [scannedMeal, setScannedMeal] = useState(null);
@@ -4143,20 +4171,28 @@ function App() {
                       </div>
                     ) : (
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                        {todayPlan.workout.map((ex,i)=>(
-                          <div key={i} onClick={()=>setCounterM({exercise:ex.name,sets:ex.sets,reps:ex.reps})}
-                            style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:C.surface,borderRadius:8,border:"1px solid "+C.border,cursor:"pointer",transition:"background 0.15s"}}
-                            onMouseEnter={e=>e.currentTarget.style.background=C.greenGlow}
-                            onMouseLeave={e=>e.currentTarget.style.background=C.surface}>
-                            <div style={{fontSize:12,fontWeight:600,color:C.text}}>{ex.name}</div>
-                            <div style={{display:"flex",alignItems:"center",gap:8}}>
-                              <div style={{fontSize:12,color:coach.color,fontWeight:700}}>
-                                {ex.sets}×{ex.reps}{ex.unit==="sec"?(lang==="ja"?"秒":lang==="ko"?"초":"s"):(lang==="ja"?"回":lang==="ko"?"회":"reps")}
+                        {(()=>{
+                          const doneList = lsGet("mb_done_"+today, []);
+                          return todayPlan.workout.map((ex,i)=>{
+                            const isDone = doneList.includes(ex.name);
+                            return (
+                              <div key={i}
+                                onClick={()=>!isDone&&setCounterM({exercise:ex.name,sets:ex.sets,reps:ex.reps})}
+                                style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:isDone?"rgba(34,197,94,0.08)":C.surface,borderRadius:8,border:"1px solid "+(isDone?C.green+"40":C.border),cursor:isDone?"default":"pointer",opacity:isDone?0.7:1,transition:"all 0.2s"}}>
+                                <div style={{fontSize:12,fontWeight:600,color:isDone?C.muted:C.text,textDecoration:isDone?"line-through":"none"}}>
+                                  {isDone?"✅ ":""}{ex.name}
+                                </div>
+                                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                  <div style={{fontSize:12,color:isDone?C.muted:coach.color,fontWeight:700}}>
+                                    {ex.sets}×{ex.reps}{ex.unit==="sec"?(lang==="ja"?"秒":lang==="ko"?"초":"s"):(lang==="ja"?"回":lang==="ko"?"회":"reps")}
+                                  </div>
+                                  {!isDone&&<div style={{fontSize:10,color:C.green,fontWeight:700}}>▶ START</div>}
+                                  {isDone&&<div style={{fontSize:10,color:C.green,fontWeight:700}}>{lang==="ja"?"完了":lang==="ko"?"완료":"Done"}</div>}
+                                </div>
                               </div>
-                              <div style={{fontSize:10,color:C.green,fontWeight:700}}>▶ START</div>
-                            </div>
-                          </div>
-                        ))}
+                            );
+                          });
+                        })()}
                       </div>
                     )}
                   </div>
@@ -5033,7 +5069,32 @@ function App() {
               return(
                 <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid "+C.border}}>
                   <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text,marginBottom:8}}>{lang==="ja"?"食事記録":lang==="ko"?"식사 기록":"MEAL LOG"}</div>
-                  {dayMeals.length===0?<div style={{fontSize:12,color:C.muted}}>{lang==="ja"?"まだ記録なし":lang==="ko"?"아직 기록 없음":"No meals logged yet"}</div>:
+                  {dayMeals.length===0?(
+                    mealDate >= today && weeklyPlan ? (()=>{
+                      // 未来/今日の場合はweeklyPlanの食事提案を表示
+                      const dayOffset = Math.round((new Date(mealDate+"T00:00:00") - new Date(today+"T00:00:00")) / 86400000);
+                      const planDay = weeklyPlan.days?.[dayOffset];
+                      if (!planDay) return <div style={{fontSize:12,color:C.muted}}>{lang==="ja"?"まだ記録なし":lang==="ko"?"아직 기록 없음":"No meals logged yet"}</div>;
+                      return (
+                        <div>
+                          <div style={{fontSize:10,color:C.muted,marginBottom:8}}>{lang==="ja"?"📋 今日の食事プラン":lang==="ko"?"📋 식사 계획":"📋 Meal Plan"}</div>
+                          {[
+                            {label:lang==="ja"?"朝":lang==="ko"?"아침":"Morning", val:planDay.meal?.morning},
+                            {label:lang==="ja"?"昼":lang==="ko"?"점심":"Lunch",   val:planDay.meal?.lunch},
+                            {label:lang==="ja"?"夜":lang==="ko"?"저녁":"Dinner",  val:planDay.meal?.dinner},
+                            {label:lang==="ja"?"間食":lang==="ko"?"간식":"Snack", val:planDay.meal?.snack},
+                          ].map((m,i)=>(
+                            <div key={i} style={{display:"flex",gap:8,padding:"6px 0",borderBottom:"1px solid "+C.dim}}>
+                              <div style={{fontSize:11,fontWeight:700,color:C.green,minWidth:24,flexShrink:0}}>{m.label}</div>
+                              <div style={{fontSize:11,color:C.text}}>{m.val}</div>
+                            </div>
+                          ))}
+                          <div style={{fontSize:10,color:C.muted,marginTop:6}}>{lang==="ja"?"目標 ":"목표 ":"Target "}{planDay.kcal}kcal / {lang==="ja"?"タンパク質":"단백질":"Protein"} {planDay.protein}g</div>
+                        </div>
+                      );
+                    })()
+                  : <div style={{fontSize:12,color:C.muted}}>{lang==="ja"?"まだ記録なし":lang==="ko"?"아직 기록 없음":"No meals logged yet"}</div>
+                  ):
                   dayMeals.map((m,i)=>(
                     <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid "+C.dim}}>
                       <div>
@@ -5265,7 +5326,26 @@ function App() {
       </div>
 
       {/* Modals */}
-      {counterM&&<WorkoutCounter exercise={counterM.exercise} sets={counterM.sets} reps={counterM.reps} lang={lang} coach={coach} profile={profile} onClose={()=>setCounterM(null)}/>}
+      {counterM&&<WorkoutCounter exercise={counterM.exercise} sets={counterM.sets} reps={counterM.reps} lang={lang} coach={coach} profile={profile} onClose={(completed)=>{
+        if (completed) {
+          // scheduleの該当種目をdone=trueに
+          const dk = today;
+          const updated = schedule.map(s =>
+            s.dateKey === dk && s.exercise === counterM.exercise && !s.done
+              ? { ...s, done: true }
+              : s
+          );
+          setSchedule(updated);
+          syncWorkoutHistory(updated);
+          // ホームのプランもdone状態を記録
+          const doneKey = "mb_done_" + dk;
+          const doneList = lsGet(doneKey, []);
+          if (!doneList.includes(counterM.exercise)) {
+            lsSet(doneKey, [...doneList, counterM.exercise]);
+          }
+        }
+        setCounterM(null);
+      }}/>}
       {showTrialPaywall&&<TrialEndPaywall
         lang={lang} cl={cl} coach={coach} profile={profile}
         onUpgrade={()=>{ setShowTrialPaywall(false); setShowUpgrade(true); }}
