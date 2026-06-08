@@ -895,14 +895,14 @@ function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose })
   };
 
   return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={e=>{if(e.target===e.currentTarget)onClose(false);}}>
       <div style={{background:C.surface,borderRadius:"20px 20px 0 0",width:"100%",maxWidth:480,maxHeight:"92vh",overflowY:"auto",overflowX:"hidden",padding:"16px 16px 28px",scrollbarWidth:"thin",scrollbarColor:"#22c55e #e5e7eb"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
           <div style={{fontFamily:"Bebas Neue",fontSize:18,letterSpacing:1,color:C.text}}>{exercise}</div>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
             <span style={{fontSize:18}}>{coach?.emoji}</span>
             <span style={{fontSize:10,color:C.muted}}>{coach?.name}</span>
-            <button onClick={onClose} style={{width:28,height:28,background:C.dim,border:"none",borderRadius:"50%",color:C.muted,fontSize:12,cursor:"pointer"}}>X</button>
+            <button onClick={()=>onClose(false)} style={{width:28,height:28,background:C.dim,border:"none",borderRadius:"50%",color:C.muted,fontSize:12,cursor:"pointer"}}>X</button>
           </div>
         </div>
         <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:12}}>
@@ -2850,6 +2850,7 @@ function App() {
   const [nutChatHist, setNutChatHist] = useState(lsGet("mb_nut_chat", []));
   const [nutChatIn, setNutChatIn]     = useState("");
   const [weeklyPlan, setWeeklyPlan]   = useState(lsGet("mb_weekly_plan", null));
+  const [nutView, setNutView]         = useState("calendar"); // calendar|chat|scan
 
   useEffect(() => {
     if (nutChatHist.length > 0) lsSet("mb_nut_chat", nutChatHist.slice(-50));
@@ -4081,34 +4082,12 @@ function App() {
                     {streak>0&&<div style={{marginLeft:"auto",background:"rgba(34,197,94,0.15)",borderRadius:10,padding:"4px 10px",fontSize:11,color:C.greenDark}}>🔥 {streak}{lang==="ja"?"日":lang==="ko"?"일":lang==="zh"?"天":" days"}</div>}
                   </div>
                   <div style={{fontSize:13,color:C.text,lineHeight:1.6,fontWeight:500}}>{dispMsg}</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginTop:12}}>
-                    <div style={{background:"rgba(255,255,255,0.55)",borderRadius:10,padding:"8px 6px",textAlign:"center"}}>
-                      <div style={{fontSize:16,fontWeight:800,color:C.green}}>{achieveRate}%</div>
-                      <div style={{fontSize:9,color:"#6b7280"}}>{lang==="ja"?"達成率":lang==="ko"?"달성률":"Progress"}</div>
-                    </div>
-                    <div style={{background:"rgba(255,255,255,0.55)",borderRadius:10,padding:"8px 6px",textAlign:"center"}}>
-                      <div style={{fontSize:16,fontWeight:800,color:"#d97706"}}>{Math.max(0,calGoal-totCal)}</div>
-                      <div style={{fontSize:9,color:"#6b7280"}}>{lang==="ja"?"残りkcal":lang==="ko"?"남은kcal":"kcal left"}</div>
-                    </div>
-                    <div style={{background:"rgba(255,255,255,0.55)",borderRadius:10,padding:"8px 6px",textAlign:"center"}}>
-                      <div style={{fontSize:16,fontWeight:800,color:"#3b82f6"}}>{Math.max(0,Math.round((calGoal*0.3/4)-totPro))}g</div>
-                      <div style={{fontSize:9,color:"#6b7280"}}>{lang==="ja"?"タンパク質":lang==="ko"?"단백질":"Protein"}</div>
-                    </div>
-                  </div>
+
                 </div>
               );
             })()}
 
-            {/* ── Protein nudge ── */}
-            {Math.max(0,Math.round((calGoal*0.3/4)-totPro)) > 20 && (
-              <div style={{background:"rgba(96,165,250,0.08)",border:"1px solid rgba(96,165,250,0.2)",borderRadius:14,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
-                <span style={{fontSize:18}}>💡</span>
-                <div>
-                  <div style={{fontSize:12,fontWeight:700,color:"#60a5fa"}}>{lang==="ja"?"タンパク質があと"+Math.max(0,Math.round((calGoal*0.3/4)-totPro))+"g不足":lang==="ko"?"단백질이 "+Math.max(0,Math.round((calGoal*0.3/4)-totPro))+"g 부족":lang==="zh"?"蛋白质还差"+Math.max(0,Math.round((calGoal*0.3/4)-totPro))+"g":"Protein: "+Math.max(0,Math.round((calGoal*0.3/4)-totPro))+"g short today"}</div>
-                  <div style={{fontSize:11,color:"#9ca3af"}}>{lang==="ja"?"サラダチキン1個でほぼ補えます":lang==="ko"?"닭가슴살 1개로 보충 가능":lang==="zh"?"一份鸡胸肉即可补充":lang==="de"?"Hähnchen empfohlen":lang==="fr"?"Poulet recommandé":lang==="es"?"Pollo recomendado":"Try: chicken breast or protein shake"}</div>
-                </div>
-              </div>
-            )}
+
 
             {/* Today's workout */}
             <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
@@ -4235,8 +4214,15 @@ function App() {
                         )}
                       </div>
                     ) : (
-                      <div style={{marginTop:6,padding:"8px 10px",background:C.greenGlow,borderRadius:8,border:"1px solid "+C.green+"40",fontSize:11,color:C.green,cursor:"pointer"}} onClick={()=>setShowUpgrade(true)}>
-                        🔒 {lang==="ja"?"朝昼夜の具体的な食事メニューはトライアルまたはPROで":lang==="ko"?"아침점심저녁 구체적 식사는 트라이얼/PRO에서":"Detailed meal plan available in Trial or PRO"}
+                      <div style={{marginTop:6}}>
+                        {Math.max(0,Math.round((todayPlan.protein)-totPro)) > 10 && (
+                          <div style={{fontSize:11,color:"#60a5fa",marginBottom:6,padding:"6px 10px",background:"rgba(96,165,250,0.08)",borderRadius:8}}>
+                            💡 {lang==="ja"?"タンパク質あと"+Math.max(0,Math.round(todayPlan.protein-totPro))+"g不足 → サラダチキン1個でほぼ補えます":lang==="ko"?"단백질 "+Math.max(0,Math.round(todayPlan.protein-totPro))+"g 부족 → 닭가슴살 1개 추천":"Protein "+Math.max(0,Math.round(todayPlan.protein-totPro))+"g short → try chicken breast"}
+                          </div>
+                        )}
+                        <div style={{padding:"8px 10px",background:C.greenGlow,borderRadius:8,border:"1px solid "+C.green+"40",fontSize:11,color:C.green,cursor:"pointer"}} onClick={()=>setShowUpgrade(true)}>
+                          🔒 {lang==="ja"?"朝昼夜の具体的な食事メニューはトライアルまたはPROで":lang==="ko"?"아침점심저녁 구체적 식사는 트라이얼/PRO에서":"Detailed meal plan available in Trial or PRO"}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -4457,10 +4443,13 @@ function App() {
                             const isToday=dk===today;
                             const hasMeals=mealHist[dk]?.length>0;
                             return(
-                              <div key={di} onClick={()=>{setCalDate(new Date(dk));setCalFilter("all");}} style={{background:isToday?coach.bg:total>0?C.green+"08":"transparent",borderRadius:8,padding:"5px 0",textAlign:"center",cursor:"pointer",border:"1px solid "+isToday?coach.color:total>0?C.green+"20":C.border}}>
-                                <div style={{fontSize:11,color:isToday?coach.color:total>0?C.green:C.muted,fontWeight:isToday?700:400}}>{d}</div>
-                                {total>0&&<div style={{fontSize:8,color:done===total?C.green:C.muted}}>{done}/{total}</div>}
-                                {hasMeals&&<div style={{fontSize:7,color:"#f97316"}}>•</div>}
+                              <div key={di} onClick={()=>{setCalDate(new Date(dk));setCalFilter("all");}} style={{background:isToday?coach.bg:done===total&&total>0?"rgba(34,197,94,0.1)":"transparent",borderRadius:8,padding:"5px 0",textAlign:"center",cursor:"pointer",border:"1px solid "+(isToday?coach.color:done===total&&total>0?C.green+"40":total>0?C.border:C.dim)}}>
+                                <div style={{fontSize:11,color:isToday?coach.color:done===total&&total>0?C.green:total>0?C.text:C.muted,fontWeight:isToday||total>0?700:400}}>{d}</div>
+                                <div style={{display:"flex",justifyContent:"center",gap:2,marginTop:1}}>
+                                  {done>0&&<div style={{width:5,height:5,borderRadius:"50%",background:C.green}}/>}
+                                  {(total-done)>0&&dk>=today&&<div style={{width:5,height:5,borderRadius:"50%",background:coach.color+"80"}}/>}
+                                  {(total-done)>0&&dk<today&&<div style={{width:5,height:5,borderRadius:"50%",background:"#ef4444"}}/>}
+                                </div>
                               </div>
                             );
                           })}
@@ -4491,6 +4480,11 @@ function App() {
                       </div>
                     ));
                   })()}
+                {/* 凡例 */}
+                <div style={{display:"flex",gap:12,marginTop:8,fontSize:10,color:C.muted}}>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:C.green}}/>{lang==="ja"?"完了":lang==="ko"?"완료":"Done"}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:coach.color+"80"}}/>{lang==="ja"?"予定":lang==="ko"?"예정":"Scheduled"}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:"#ef4444"}}/>{lang==="ja"?"未完了":lang==="ko"?"미완료":"Missed"}</div>
                 </div>
               </div>
             )}
@@ -4618,6 +4612,7 @@ function App() {
                 </div>
                 <div style={{fontSize:10,color:C.muted,textAlign:"right",marginTop:4}}>{cl.used}/{cl.limit} {lang==="ja"?"回使用":lang==="ko"?"회 사용":"used"}</div>
               </div>
+            )}
             )}
           </div>
         )}
@@ -4882,8 +4877,18 @@ function App() {
           <div style={{animation:"fadeIn .3s ease"}}>
             <TrialProgressBanner cl={cl} lang={lang} coach={coach} profile={profile} onUpgrade={()=>setShowUpgrade(true)}/>
 
-            {/* ── カレンダーグリッド ── */}
-            {(()=>{
+            {/* ── ビュー切り替え ── */}
+            <div style={{display:"flex",gap:6,marginBottom:12}}>
+              {[["calendar",lang==="ja"?"📅 カレンダー":lang==="ko"?"📅 캘린더":"📅 Calendar"],
+                ["chat",lang==="ja"?"💬 相談":lang==="ko"?"💬 상담":"💬 Chat"],
+                ["scan",lang==="ja"?"📷 スキャン":lang==="ko"?"📷 스캔":"📷 Scan"]].map(([v,label])=>(
+                <button key={v} onClick={()=>setNutView(v)} style={{flex:1,padding:"8px 0",borderRadius:10,border:"2px solid "+(nutView===v?C.green:C.border),background:nutView===v?"rgba(34,197,94,0.1)":"transparent",color:nutView===v?C.green:C.muted,fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {nutView === "calendar" && (()=>{
               const selDate = new Date(mealDate+"T00:00:00");
               const calYear = selDate.getFullYear();
               const calMonth = selDate.getMonth();
@@ -4970,257 +4975,205 @@ function App() {
               );
             })()}
 
-            {/* 選択中の日付ラベル */}
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-              <div style={{fontFamily:"Bebas Neue",fontSize:15,letterSpacing:1,color:C.text}}>
-                {mealDate===today
-                  ?(lang==="ja"?"📅 今日":lang==="ko"?"📅 오늘":"📅 Today")
-                  :mealDate>today
-                    ?(lang==="ja"?"🔮 "+new Date(mealDate+"T00:00:00").toLocaleDateString("ja-JP",{month:"short",day:"numeric"}):
-                      lang==="ko"?"🔮 "+new Date(mealDate+"T00:00:00").toLocaleDateString("ko-KR",{month:"short",day:"numeric"}):
-                      "🔮 "+new Date(mealDate+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}))
-                    :(lang==="ja"?"📖 "+new Date(mealDate+"T00:00:00").toLocaleDateString("ja-JP",{month:"short",day:"numeric"}):
-                      lang==="ko"?"📖 "+new Date(mealDate+"T00:00:00").toLocaleDateString("ko-KR",{month:"short",day:"numeric"}):
-                      "📖 "+new Date(mealDate+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}))}
-              </div>
-              <div style={{fontSize:10,color:C.muted,background:
-                mealDate===today?"rgba(34,197,94,0.12)":mealDate>today?"rgba(168,85,247,0.12)":"rgba(96,165,250,0.12)",
-                borderRadius:20,padding:"2px 8px",
-                color:mealDate===today?C.green:mealDate>today?"#a855f7":"#60a5fa"}}>
-                {mealDate===today
-                  ?(lang==="ja"?"今日":lang==="ko"?"오늘":"Today")
-                  :mealDate>today
-                    ?(lang==="ja"?"献立プラン":lang==="ko"?"식단 계획":"Plan")
-                    :(lang==="ja"?"過去の記録":lang==="ko"?"과거 기록":"Past")}
-              </div>
-            </div>
+            {nutView === "calendar" && (
+              <>
 
-            {/* Macro summary */}
-            {(()=>{
-              const dayMeals=mealDate===today?meals:(mealHist[mealDate]||[]);
-              const cal=dayMeals.reduce((s,m)=>s+(m.cal||0),0);
-              const pro=dayMeals.reduce((s,m)=>s+(m.protein||0),0);
-              const carbs=dayMeals.reduce((s,m)=>s+(m.carbs||0),0);
-              const fat=dayMeals.reduce((s,m)=>s+(m.fat||0),0);
-              return(
+              {/* 選択中の日付ラベル */}
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <div style={{fontFamily:"Bebas Neue",fontSize:15,letterSpacing:1,color:C.text}}>
+                  {mealDate===today
+                    ?(lang==="ja"?"📅 今日":lang==="ko"?"📅 오늘":"📅 Today")
+                    :mealDate>today
+                      ?(lang==="ja"?"🔮 "+new Date(mealDate+"T00:00:00").toLocaleDateString("ja-JP",{month:"short",day:"numeric"}):
+                        lang==="ko"?"🔮 "+new Date(mealDate+"T00:00:00").toLocaleDateString("ko-KR",{month:"short",day:"numeric"}):
+                        "🔮 "+new Date(mealDate+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}))
+                      :(lang==="ja"?"📖 "+new Date(mealDate+"T00:00:00").toLocaleDateString("ja-JP",{month:"short",day:"numeric"}):
+                        lang==="ko"?"📖 "+new Date(mealDate+"T00:00:00").toLocaleDateString("ko-KR",{month:"short",day:"numeric"}):
+                        "📖 "+new Date(mealDate+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}))}
+                </div>
+                <div style={{fontSize:10,color:C.muted,background:
+                  mealDate===today?"rgba(34,197,94,0.12)":mealDate>today?"rgba(168,85,247,0.12)":"rgba(96,165,250,0.12)",
+                  borderRadius:20,padding:"2px 8px",
+                  color:mealDate===today?C.green:mealDate>today?"#a855f7":"#60a5fa"}}>
+                  {mealDate===today
+                    ?(lang==="ja"?"今日":lang==="ko"?"오늘":"Today")
+                    :mealDate>today
+                      ?(lang==="ja"?"献立プラン":lang==="ko"?"식단 계획":"Plan")
+                      :(lang==="ja"?"過去の記録":lang==="ko"?"과거 기록":"Past")}
+                </div>
+              </div>
+
+              {/* Macro summary */}
+              {(()=>{
+                const dayMeals=mealDate===today?meals:(mealHist[mealDate]||[]);
+                const cal=dayMeals.reduce((s,m)=>s+(m.cal||0),0);
+                const pro=dayMeals.reduce((s,m)=>s+(m.protein||0),0);
+                const carbs=dayMeals.reduce((s,m)=>s+(m.carbs||0),0);
+                const fat=dayMeals.reduce((s,m)=>s+(m.fat||0),0);
+                return(
+                  <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                      <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text}}>
+                      {mealDate===today
+                        ? (lang==="ja"?"今日の栄養":lang==="ko"?"오늘의 영양":"TODAY'S NUTRITION")
+                        : mealDate>today
+                          ? (lang==="ja"?"献立プラン":lang==="ko"?"식단 계획":"MEAL PLAN")
+                          : (lang==="ja"?"過去の記録":lang==="ko"?"과거 기록":"PAST RECORD")}
+                    </div>
+                      <div style={{fontFamily:"Bebas Neue",fontSize:18,color:cal>calGoal?"#ef4444":C.green}}>{cal}<span style={{fontSize:10,color:C.muted}}>/{calGoal}kcal</span></div>
+                    </div>
+                    <div style={{height:4,background:C.dim,borderRadius:99,marginBottom:10}}>
+                      <div style={{height:"100%",background:cal>calGoal?"#ef4444":C.green,borderRadius:99,width:Math.min(100,pct(cal,calGoal))+"%",transition:"width .4s"}}/>
+                    </div>
+                    <div style={{display:"flex",gap:6}}>
+                      {[{label:lang==="ja"?"タンパク質":lang==="ko"?"단백질":"Protein",val:pro,unit:"g",color:C.green},{label:lang==="ja"?"炭水化物":lang==="ko"?"탄수화물":"Carbs",val:carbs,unit:"g",color:"#f97316"},{label:lang==="ja"?"脂質":lang==="ko"?"지방":"Fat",val:fat,unit:"g",color:"#a855f7"}].map(m=>(
+                        <div key={m.label} style={{flex:1,background:C.surface,borderRadius:8,padding:"6px 0",textAlign:"center",border:"1px solid "+C.border}}>
+                          <div style={{fontSize:13,fontWeight:700,color:m.color}}>{m.val}{m.unit}</div>
+                          <div style={{fontSize:9,color:C.muted}}>{m.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Meal scan */}
+              {(mealDate===today||mealDate<today)&&(
                 <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                    <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text}}>
-                    {mealDate===today
-                      ? (lang==="ja"?"今日の栄養":lang==="ko"?"오늘의 영양":"TODAY'S NUTRITION")
-                      : mealDate>today
-                        ? (lang==="ja"?"献立プラン":lang==="ko"?"식단 계획":"MEAL PLAN")
-                        : (lang==="ja"?"過去の記録":lang==="ko"?"과거 기록":"PAST RECORD")}
-                  </div>
-                    <div style={{fontFamily:"Bebas Neue",fontSize:18,color:cal>calGoal?"#ef4444":C.green}}>{cal}<span style={{fontSize:10,color:C.muted}}>/{calGoal}kcal</span></div>
-                  </div>
-                  <div style={{height:4,background:C.dim,borderRadius:99,marginBottom:10}}>
-                    <div style={{height:"100%",background:cal>calGoal?"#ef4444":C.green,borderRadius:99,width:Math.min(100,pct(cal,calGoal))+"%",transition:"width .4s"}}/>
-                  </div>
-                  <div style={{display:"flex",gap:6}}>
-                    {[{label:lang==="ja"?"タンパク質":lang==="ko"?"단백질":"Protein",val:pro,unit:"g",color:C.green},{label:lang==="ja"?"炭水化物":lang==="ko"?"탄수화물":"Carbs",val:carbs,unit:"g",color:"#f97316"},{label:lang==="ja"?"脂質":lang==="ko"?"지방":"Fat",val:fat,unit:"g",color:"#a855f7"}].map(m=>(
-                      <div key={m.label} style={{flex:1,background:C.surface,borderRadius:8,padding:"6px 0",textAlign:"center",border:"1px solid "+C.border}}>
-                        <div style={{fontSize:13,fontWeight:700,color:m.color}}>{m.val}{m.unit}</div>
-                        <div style={{fontSize:9,color:C.muted}}>{m.label}</div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text,marginBottom:8}}>{lang==="ja"?"食事スキャン":lang==="ko"?"식사 스캔":"MEAL SCANNER"}</div>
+                  {scannedMeal ? (
+                    <div>
+                      <div style={{fontSize:11,color:C.muted,marginBottom:6}}>{lang==="ja"?"※AIによる推定値です。参考としてご利用ください。":lang==="ko"?"※AI 추정값입니다. 참고용으로 활용하세요.":"※ AI estimates — values are approximate for reference only."}</div>
+                      <div style={{background:C.surface,borderRadius:10,padding:"10px 12px",marginBottom:8,border:"1px solid "+C.green+"30"}}>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:13,color:C.green,marginBottom:4}}>✅ {lang==="ja"?"食事を検出":"MEAL DETECTED"}</div>
+                        <div style={{fontSize:13,color:C.text,fontWeight:700}}>{scannedMeal.name}</div>
+                        <div style={{fontSize:11,color:C.muted}}>{scannedMeal.cal}kcal · P:{scannedMeal.protein}g · C:{scannedMeal.carbs}g · F:{scannedMeal.fat}g</div>
+                      </div>
+                      <div style={{display:"flex",gap:8}}>
+                        <button onClick={()=>{
+                          const entry={...scannedMeal,dateKey:today,id:Date.now()};
+                          const updMeals=[...meals,entry];
+                          setMeals(updMeals);
+                          const updHist={...mealHist,[today]:updMeals};
+                          setMealHist(updHist);
+                          syncMealHistory(updHist);
+                          setScannedMeal(null);
+                        }} style={{flex:1,background:C.green,border:"none",borderRadius:10,padding:"10px 0",color:"#000",fontSize:12,fontWeight:700,cursor:"pointer"}}>{lang==="ja"?"記録する":lang==="ko"?"기록하기":"Add to log"}</button>
+                        <button onClick={()=>setScannedMeal(null)} style={{flex:1,background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"10px 0",color:C.muted,fontSize:12,cursor:"pointer"}}>{lang==="ja"?"キャンセル":lang==="ko"?"취소":"Cancel"}</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <input type="file" accept="image/*" capture="environment" id="meal-scan-input" style={{display:"none"}} onChange={handleMealScan}/>
+                      {isPro ? (<button onClick={()=>document.getElementById("meal-scan-input")?.click()} style={{width:"100%",background:C.surface,border:"2px dashed "+C.border,borderRadius:12,padding:"16px 0",color:C.muted,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                        {analyzing ? (lang==="ja"?"解析中...":lang==="ko"?"분석 중...":"Analyzing...") : ("📸 "+(lang==="ja"?"写真で食事を記録":lang==="ko"?"사진으로 식사 기록":"Scan your meal"))}
+                      </button>) : (<button onClick={()=>setShowUpgrade(true)} style={{width:"100%",background:C.surface,border:"2px dashed "+C.border,borderRadius:12,padding:"16px 0",color:C.pro,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>🔒 {lang==="ja"?"食事スキャン（PRO）":lang==="ko"?"식사 스캔 (PRO)":"Meal Scan (PRO)"}</button>)}
+                      {!isPro&&<div style={{fontSize:10,color:C.muted,textAlign:"center",marginTop:6}}>{lang==="ja"?"AIスキャン機能はPROのみ":lang==="ko"?"AI 스캔은 PRO 전용":"AI scan — PRO only"}</div>}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Meal list */}
+              {(()=>{
+                const dayMeals=mealDate===today?meals:(mealHist[mealDate]||[]);
+                return(
+                  <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid "+C.border}}>
+                    <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text,marginBottom:8}}>{lang==="ja"?"食事記録":lang==="ko"?"식사 기록":"MEAL LOG"}</div>
+                    {dayMeals.length===0?(
+                      mealDate >= today && weeklyPlan ? (()=>{
+                        // 未来/今日の場合はweeklyPlanの食事提案を表示
+                        const dayOffset = Math.round((new Date(mealDate+"T00:00:00") - new Date(today+"T00:00:00")) / 86400000);
+                        const planDay = weeklyPlan.days?.[dayOffset];
+                        if (!planDay) return <div style={{fontSize:12,color:C.muted}}>{lang==="ja"?"まだ記録なし":lang==="ko"?"아직 기록 없음":"No meals logged yet"}</div>;
+                        return (
+                          <div>
+                            <div style={{fontSize:10,color:C.muted,marginBottom:8}}>{lang==="ja"?"📋 今日の食事プラン":lang==="ko"?"📋 식사 계획":"📋 Meal Plan"}</div>
+                            {[
+                              {label:lang==="ja"?"朝":lang==="ko"?"아침":"Morning", val:planDay.meal?.morning},
+                              {label:lang==="ja"?"昼":lang==="ko"?"점심":"Lunch",   val:planDay.meal?.lunch},
+                              {label:lang==="ja"?"夜":lang==="ko"?"저녁":"Dinner",  val:planDay.meal?.dinner},
+                              {label:lang==="ja"?"間食":lang==="ko"?"간식":"Snack", val:planDay.meal?.snack},
+                            ].map((m,i)=>(
+                              <div key={i} style={{display:"flex",gap:8,padding:"6px 0",borderBottom:"1px solid "+C.dim}}>
+                                <div style={{fontSize:11,fontWeight:700,color:C.green,minWidth:24,flexShrink:0}}>{m.label}</div>
+                                <div style={{fontSize:11,color:C.text}}>{m.val}</div>
+                              </div>
+                            ))}
+                            <div style={{fontSize:10,color:C.muted,marginTop:6}}>{lang==="ja"?"目標 ":lang==="ko"?"목표 ":"Target "}{planDay.kcal}kcal / {lang==="ja"?"タンパク質":lang==="ko"?"단백질":"Protein"} {planDay.protein}g</div>
+                          </div>
+                        );
+                      })()
+                    : <div style={{fontSize:12,color:C.muted}}>{lang==="ja"?"まだ記録なし":lang==="ko"?"아직 기록 없음":"No meals logged yet"}</div>
+                    ):
+                    dayMeals.map((m,i)=>(
+                      <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid "+C.dim}}>
+                        <div>
+                          <div style={{fontSize:13,color:C.text}}>{m.name}</div>
+                          <div style={{fontSize:10,color:C.muted}}>{m.cal}kcal · P:{m.protein}g · C:{m.carbs}g · F:{m.fat}g</div>
+                        </div>
+                        {(mealDate===today||mealDate<today)&&<button onClick={()=>{
+                          if(mealDate===today){
+                            const u=meals.filter((_,ii)=>ii!==i);
+                            setMeals(u);
+                            const uh={...mealHist,[today]:u};
+                            setMealHist(uh);
+                            syncMealHistory(uh);
+                          } else {
+                            const old2=mealHist[mealDate]||[];
+                            const u=old2.filter((_,ii)=>ii!==i);
+                            const uh={...mealHist,[mealDate]:u};
+                            setMealHist(uh);
+                            syncMealHistory(uh);
+                          }
+                        }} style={{background:"none",border:"none",color:C.muted,fontSize:14,cursor:"pointer"}}>✕</button>}
                       </div>
                     ))}
                   </div>
-                </div>
-              );
-            })()}
+                );
+              })()}
 
-            {/* Meal scan */}
-            {(mealDate===today||mealDate<today)&&(
-              <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
-                <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text,marginBottom:8}}>{lang==="ja"?"食事スキャン":lang==="ko"?"식사 스캔":"MEAL SCANNER"}</div>
-                {scannedMeal ? (
-                  <div>
-                    <div style={{fontSize:11,color:C.muted,marginBottom:6}}>{lang==="ja"?"※AIによる推定値です。参考としてご利用ください。":lang==="ko"?"※AI 추정값입니다. 참고용으로 활용하세요.":"※ AI estimates — values are approximate for reference only."}</div>
-                    <div style={{background:C.surface,borderRadius:10,padding:"10px 12px",marginBottom:8,border:"1px solid "+C.green+"30"}}>
-                      <div style={{fontFamily:"Bebas Neue",fontSize:13,color:C.green,marginBottom:4}}>✅ {lang==="ja"?"食事を検出":"MEAL DETECTED"}</div>
-                      <div style={{fontSize:13,color:C.text,fontWeight:700}}>{scannedMeal.name}</div>
-                      <div style={{fontSize:11,color:C.muted}}>{scannedMeal.cal}kcal · P:{scannedMeal.protein}g · C:{scannedMeal.carbs}g · F:{scannedMeal.fat}g</div>
+              {/* ── 未来の献立プランニング ─────────────────────── */}
+              {mealDate > today && (
+                <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid #a855f730",marginBottom:12}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                    <span style={{fontSize:18}}>🔮</span>
+                    <div style={{fontFamily:"Bebas Neue",fontSize:13,letterSpacing:1,color:"#a855f7"}}>
+                      {lang==="ja"?"献立プランニング":lang==="ko"?"식단 플래닝":"MEAL PLAN"}
                     </div>
-                    <div style={{display:"flex",gap:8}}>
+                    {futureMenus[mealDate] && (
                       <button onClick={()=>{
-                        const entry={...scannedMeal,dateKey:today,id:Date.now()};
-                        const updMeals=[...meals,entry];
-                        setMeals(updMeals);
-                        const updHist={...mealHist,[today]:updMeals};
-                        setMealHist(updHist);
-                        syncMealHistory(updHist);
-                        setScannedMeal(null);
-                      }} style={{flex:1,background:C.green,border:"none",borderRadius:10,padding:"10px 0",color:"#000",fontSize:12,fontWeight:700,cursor:"pointer"}}>{lang==="ja"?"記録する":lang==="ko"?"기록하기":"Add to log"}</button>
-                      <button onClick={()=>setScannedMeal(null)} style={{flex:1,background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"10px 0",color:C.muted,fontSize:12,cursor:"pointer"}}>{lang==="ja"?"キャンセル":lang==="ko"?"취소":"Cancel"}</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <input type="file" accept="image/*" capture="environment" id="meal-scan-input" style={{display:"none"}} onChange={handleMealScan}/>
-                    {isPro ? (<button onClick={()=>document.getElementById("meal-scan-input")?.click()} style={{width:"100%",background:C.surface,border:"2px dashed "+C.border,borderRadius:12,padding:"16px 0",color:C.muted,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-                      {analyzing ? (lang==="ja"?"解析中...":lang==="ko"?"분석 중...":"Analyzing...") : ("📸 "+(lang==="ja"?"写真で食事を記録":lang==="ko"?"사진으로 식사 기록":"Scan your meal"))}
-                    </button>) : (<button onClick={()=>setShowUpgrade(true)} style={{width:"100%",background:C.surface,border:"2px dashed "+C.border,borderRadius:12,padding:"16px 0",color:C.pro,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>🔒 {lang==="ja"?"食事スキャン（PRO）":lang==="ko"?"식사 스캔 (PRO)":"Meal Scan (PRO)"}</button>)}
-                    {!isPro&&<div style={{fontSize:10,color:C.muted,textAlign:"center",marginTop:6}}>{lang==="ja"?"AIスキャン機能はPROのみ":lang==="ko"?"AI 스캔은 PRO 전용":"AI scan — PRO only"}</div>}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Meal list */}
-            {(()=>{
-              const dayMeals=mealDate===today?meals:(mealHist[mealDate]||[]);
-              return(
-                <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid "+C.border}}>
-                  <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text,marginBottom:8}}>{lang==="ja"?"食事記録":lang==="ko"?"식사 기록":"MEAL LOG"}</div>
-                  {dayMeals.length===0?(
-                    mealDate >= today && weeklyPlan ? (()=>{
-                      // 未来/今日の場合はweeklyPlanの食事提案を表示
-                      const dayOffset = Math.round((new Date(mealDate+"T00:00:00") - new Date(today+"T00:00:00")) / 86400000);
-                      const planDay = weeklyPlan.days?.[dayOffset];
-                      if (!planDay) return <div style={{fontSize:12,color:C.muted}}>{lang==="ja"?"まだ記録なし":lang==="ko"?"아직 기록 없음":"No meals logged yet"}</div>;
-                      return (
-                        <div>
-                          <div style={{fontSize:10,color:C.muted,marginBottom:8}}>{lang==="ja"?"📋 今日の食事プラン":lang==="ko"?"📋 식사 계획":"📋 Meal Plan"}</div>
-                          {[
-                            {label:lang==="ja"?"朝":lang==="ko"?"아침":"Morning", val:planDay.meal?.morning},
-                            {label:lang==="ja"?"昼":lang==="ko"?"점심":"Lunch",   val:planDay.meal?.lunch},
-                            {label:lang==="ja"?"夜":lang==="ko"?"저녁":"Dinner",  val:planDay.meal?.dinner},
-                            {label:lang==="ja"?"間食":lang==="ko"?"간식":"Snack", val:planDay.meal?.snack},
-                          ].map((m,i)=>(
-                            <div key={i} style={{display:"flex",gap:8,padding:"6px 0",borderBottom:"1px solid "+C.dim}}>
-                              <div style={{fontSize:11,fontWeight:700,color:C.green,minWidth:24,flexShrink:0}}>{m.label}</div>
-                              <div style={{fontSize:11,color:C.text}}>{m.val}</div>
-                            </div>
-                          ))}
-                          <div style={{fontSize:10,color:C.muted,marginTop:6}}>{lang==="ja"?"目標 ":lang==="ko"?"목표 ":"Target "}{planDay.kcal}kcal / {lang==="ja"?"タンパク質":lang==="ko"?"단백질":"Protein"} {planDay.protein}g</div>
-                        </div>
-                      );
-                    })()
-                  : <div style={{fontSize:12,color:C.muted}}>{lang==="ja"?"まだ記録なし":lang==="ko"?"아직 기록 없음":"No meals logged yet"}</div>
-                  ):
-                  dayMeals.map((m,i)=>(
-                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid "+C.dim}}>
-                      <div>
-                        <div style={{fontSize:13,color:C.text}}>{m.name}</div>
-                        <div style={{fontSize:10,color:C.muted}}>{m.cal}kcal · P:{m.protein}g · C:{m.carbs}g · F:{m.fat}g</div>
-                      </div>
-                      {(mealDate===today||mealDate<today)&&<button onClick={()=>{
-                        if(mealDate===today){
-                          const u=meals.filter((_,ii)=>ii!==i);
-                          setMeals(u);
-                          const uh={...mealHist,[today]:u};
-                          setMealHist(uh);
-                          syncMealHistory(uh);
-                        } else {
-                          const old2=mealHist[mealDate]||[];
-                          const u=old2.filter((_,ii)=>ii!==i);
-                          const uh={...mealHist,[mealDate]:u};
-                          setMealHist(uh);
-                          syncMealHistory(uh);
-                        }
-                      }} style={{background:"none",border:"none",color:C.muted,fontSize:14,cursor:"pointer"}}>✕</button>}
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
-
-            {/* ── 未来の献立プランニング ─────────────────────── */}
-            {mealDate > today && (
-              <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid #a855f730",marginBottom:12}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                  <span style={{fontSize:18}}>🔮</span>
-                  <div style={{fontFamily:"Bebas Neue",fontSize:13,letterSpacing:1,color:"#a855f7"}}>
-                    {lang==="ja"?"献立プランニング":lang==="ko"?"식단 플래닝":"MEAL PLAN"}
-                  </div>
-                  {futureMenus[mealDate] && (
-                    <button onClick={()=>{
-                      const updated = {...futureMenus};
-                      delete updated[mealDate];
-                      setFutureMenus(updated);
-                      lsSet("mb_future_menus", updated);
-                    }} style={{marginLeft:"auto",background:"none",border:"none",color:C.muted,fontSize:11,cursor:"pointer"}}>
-                      {lang==="ja"?"リセット":lang==="ko"?"초기화":"Reset"}
-                    </button>
-                  )}
-                </div>
-
-                {/* 先回り提案バナー（翌日のみ・未生成時） */}
-                {!futureMenus[mealDate] && mealDate === (()=>{const d=new Date(today+"T00:00:00");d.setDate(d.getDate()+1);return d.toISOString().slice(0,10);})() && (
-                  <div style={{background:"rgba(168,85,247,0.08)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:10,padding:"10px 12px",marginBottom:10,display:"flex",alignItems:"flex-start",gap:8}}>
-                    <span style={{fontSize:16,flexShrink:0}}>💡</span>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:11,fontWeight:700,color:"#a855f7",marginBottom:2}}>
-                        {lang==="ja"?"明日の献立、まだ決めてない？":lang==="ko"?"내일 식단, 아직 안 정했어?":"Haven't planned tomorrow's meals yet?"}
-                      </div>
-                      <div style={{fontSize:10,color:C.muted,marginBottom:8}}>
-                        {lang==="ja"?"今から決めておくと明日の食事で迷わない。"+coach.name+"が提案するよ。":
-                         lang==="ko"?"지금 정해두면 내일 식사 고민 없어. "+coach.name+"이 제안할게.":
-                         "Plan now and you won't have to think tomorrow. "+coach.name+" will suggest."}
-                      </div>
-                      <button onClick={async ()=>{
-                        if(menuLoading||!canChat) return;
-                        setMenuLoading(true);
-                        const prompt = lang==="ja"
-                          ? "明日の1日の献立を提案して。普通の人でも作れる・買える現実的な食材で、朝・昼・夜の3食。各食事にカロリーとタンパク質を書いて。"
-                          : lang==="ko"
-                          ? "내일 하루 식단 제안해줘. 일반인이 만들거나 살 수 있는 현실적인 재료로, 아침·점심·저녁 3끼. 각 식사에 칼로리와 단백질 써줘."
-                          : "Suggest tomorrow's full day meals. Use realistic everyday ingredients anyone can buy or cook. Include breakfast, lunch, dinner with calories and protein for each.";
-                        await sendChat(prompt, async (updater)=>{
-                          const hist = typeof updater === "function" ? updater([]) : updater;
-                          const lastMsg = hist[hist.length-1];
-                          if(lastMsg?.role==="assistant") {
-                            const updated = {...futureMenus, [mealDate]: lastMsg.text};
-                            setFutureMenus(updated);
-                            lsSet("mb_future_menus", updated);
-                          }
-                          setNutChatHist(updater);
-                        }, nutChatHist);
-                        setMenuLoading(false);
-                      }} style={{background:"linear-gradient(135deg,#7c3aed,#a855f7)",border:"none",borderRadius:8,padding:"6px 14px",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>
-                        {menuLoading?"...":(lang==="ja"?"今すぐ提案してもらう":lang==="ko"?"지금 바로 제안받기":"Get tomorrow's plan now")}
+                        const updated = {...futureMenus};
+                        delete updated[mealDate];
+                        setFutureMenus(updated);
+                        lsSet("mb_future_menus", updated);
+                      }} style={{marginLeft:"auto",background:"none",border:"none",color:C.muted,fontSize:11,cursor:"pointer"}}>
+                        {lang==="ja"?"リセット":lang==="ko"?"초기화":"Reset"}
                       </button>
-                    </div>
+                    )}
                   </div>
-                )}
 
-                {/* 保存済み献立を表示 */}
-                {futureMenus[mealDate] ? (
-                  <div>
-                    <div style={{fontSize:11,color:C.muted,marginBottom:8}}>
-                      {lang==="ja"?"📋 この日の献立プラン":lang==="ko"?"📋 이날의 식단 플랜":"📋 Meal plan for this day"}
-                    </div>
-                    <div style={{background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid #a855f720",fontSize:12,color:C.text,lineHeight:1.7,whiteSpace:"pre-wrap"}}>
-                      {futureMenus[mealDate]}
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <div style={{fontSize:11,color:C.muted,marginBottom:10}}>
-                      {lang==="ja"?"条件を選んでAIに献立を作ってもらおう":lang==="ko"?"조건을 선택해 AI에게 식단을 만들어 달라고 하세요":"Pick a condition and let AI build your meal plan"}
-                    </div>
-                    {/* クイック条件ボタン */}
-                    <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
-                      {[
-                        {ja:"🏪 コンビニだけで",en:"🏪 Convenience store only",ko:"🏪 편의점만으로"},
-                        {ja:"💴 予算800円以内",en:"💴 Under ¥800 budget",ko:"💴 800엔 이하"},
-                        {ja:"🍺 飲み会がある日",en:"🍺 Drinking party day",ko:"🍺 술자리 있는 날"},
-                        {ja:"⚡ 時短・簡単",en:"⚡ Quick & easy",ko:"⚡ 빠르고 간단"},
-                        {ja:"💪 トレーニング前後",en:"💪 Around workout",ko:"💪 운동 전후"},
-                        {ja:"🏠 普通に自炊",en:"🏠 Home cooking",ko:"🏠 집밥"},
-                      ].map((q,i)=>(
-                        <button key={i} onClick={async ()=>{
+                  {/* 先回り提案バナー（翌日のみ・未生成時） */}
+                  {!futureMenus[mealDate] && mealDate === (()=>{const d=new Date(today+"T00:00:00");d.setDate(d.getDate()+1);return d.toISOString().slice(0,10);})() && (
+                    <div style={{background:"rgba(168,85,247,0.08)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:10,padding:"10px 12px",marginBottom:10,display:"flex",alignItems:"flex-start",gap:8}}>
+                      <span style={{fontSize:16,flexShrink:0}}>💡</span>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:11,fontWeight:700,color:"#a855f7",marginBottom:2}}>
+                          {lang==="ja"?"明日の献立、まだ決めてない？":lang==="ko"?"내일 식단, 아직 안 정했어?":"Haven't planned tomorrow's meals yet?"}
+                        </div>
+                        <div style={{fontSize:10,color:C.muted,marginBottom:8}}>
+                          {lang==="ja"?"今から決めておくと明日の食事で迷わない。"+coach.name+"が提案するよ。":
+                           lang==="ko"?"지금 정해두면 내일 식사 고민 없어. "+coach.name+"이 제안할게.":
+                           "Plan now and you won't have to think tomorrow. "+coach.name+" will suggest."}
+                        </div>
+                        <button onClick={async ()=>{
                           if(menuLoading||!canChat) return;
                           setMenuLoading(true);
-                          const cond = q[lang]||q.en;
-                          const dateLabel = new Date(mealDate+"T00:00:00").toLocaleDateString(
-                            lang==="ja"?"ja-JP":lang==="ko"?"ko-KR":"en-US",{month:"short",day:"numeric"}
-                          );
                           const prompt = lang==="ja"
-                            ? dateLabel+"の1日の献立を作って。条件："+cond+"。朝・昼・夜で各1品ずつ、一般的な食材で現実的な価格帯で。各食事にカロリーとタンパク質gも書いて。"
+                            ? "明日の1日の献立を提案して。普通の人でも作れる・買える現実的な食材で、朝・昼・夜の3食。各食事にカロリーとタンパク質を書いて。"
                             : lang==="ko"
-                            ? dateLabel+" 하루 식단 짜줘. 조건: "+cond+". 아침·점심·저녁 각 1개씩, 일반 식재료로 현실적인 가격으로. 각 식사에 칼로리와 단백질g도 써줘."
-                            : "Create a meal plan for "+dateLabel+". Condition: "+cond+". One meal for breakfast, lunch, dinner. Use realistic everyday ingredients. Include calories and protein for each meal.";
+                            ? "내일 하루 식단 제안해줘. 일반인이 만들거나 살 수 있는 현실적인 재료로, 아침·점심·저녁 3끼. 각 식사에 칼로리와 단백질 써줘."
+                            : "Suggest tomorrow's full day meals. Use realistic everyday ingredients anyone can buy or cook. Include breakfast, lunch, dinner with calories and protein for each.";
                           await sendChat(prompt, async (updater)=>{
                             const hist = typeof updater === "function" ? updater([]) : updater;
                             const lastMsg = hist[hist.length-1];
@@ -5232,32 +5185,88 @@ function App() {
                             setNutChatHist(updater);
                           }, nutChatHist);
                           setMenuLoading(false);
-                        }} style={{padding:"7px 12px",background:C.surface,border:"1px solid "+C.border,borderRadius:20,fontSize:11,color:C.text,cursor:menuLoading||!canChat?"not-allowed":"pointer",opacity:menuLoading||!canChat?0.5:1}}>
-                          {q[lang]||q.en}
+                        }} style={{background:"linear-gradient(135deg,#7c3aed,#a855f7)",border:"none",borderRadius:8,padding:"6px 14px",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+                          {menuLoading?"...":(lang==="ja"?"今すぐ提案してもらう":lang==="ko"?"지금 바로 제안받기":"Get tomorrow's plan now")}
                         </button>
-                      ))}
+                      </div>
                     </div>
-                    {menuLoading && (
-                      <div style={{textAlign:"center",padding:"12px 0",color:"#a855f7",fontSize:12}}>
-                        {lang==="ja"?"献立を考えています...":lang==="ko"?"식단 구성 중...":"Building your meal plan..."}
-                      </div>
-                    )}
-                    {!canChat && (
-                      <div style={{fontSize:10,color:C.muted,textAlign:"center"}}>
-                        {lang==="ja"?"本日のチャット回数に達しました":lang==="ko"?"오늘 채팅 한도에 도달":lang==="de"?"Tageslimit erreicht":"Daily chat limit reached"}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
 
-            {/* ── 栄養相談チャット ────────────────────────────── */}
-            <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid "+C.border,marginTop:12}}>
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                <span style={{fontSize:18}}>🥗</span>
-                <div style={{fontFamily:"Bebas Neue",fontSize:13,letterSpacing:1,color:C.text}}>
-                  {lang==="ja"?"栄養・食事の相談":lang==="ko"?"영양·식사 상담":"Nutrition Chat"}
+                  {/* 保存済み献立を表示 */}
+                  {futureMenus[mealDate] ? (
+                    <div>
+                      <div style={{fontSize:11,color:C.muted,marginBottom:8}}>
+                        {lang==="ja"?"📋 この日の献立プラン":lang==="ko"?"📋 이날의 식단 플랜":"📋 Meal plan for this day"}
+                      </div>
+                      <div style={{background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid #a855f720",fontSize:12,color:C.text,lineHeight:1.7,whiteSpace:"pre-wrap"}}>
+                        {futureMenus[mealDate]}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{fontSize:11,color:C.muted,marginBottom:10}}>
+                        {lang==="ja"?"条件を選んでAIに献立を作ってもらおう":lang==="ko"?"조건을 선택해 AI에게 식단을 만들어 달라고 하세요":"Pick a condition and let AI build your meal plan"}
+                      </div>
+                      {/* クイック条件ボタン */}
+                      <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+                        {[
+                          {ja:"🏪 コンビニだけで",en:"🏪 Convenience store only",ko:"🏪 편의점만으로"},
+                          {ja:"💴 予算800円以内",en:"💴 Under ¥800 budget",ko:"💴 800엔 이하"},
+                          {ja:"🍺 飲み会がある日",en:"🍺 Drinking party day",ko:"🍺 술자리 있는 날"},
+                          {ja:"⚡ 時短・簡単",en:"⚡ Quick & easy",ko:"⚡ 빠르고 간단"},
+                          {ja:"💪 トレーニング前後",en:"💪 Around workout",ko:"💪 운동 전후"},
+                          {ja:"🏠 普通に自炊",en:"🏠 Home cooking",ko:"🏠 집밥"},
+                        ].map((q,i)=>(
+                          <button key={i} onClick={async ()=>{
+                            if(menuLoading||!canChat) return;
+                            setMenuLoading(true);
+                            const cond = q[lang]||q.en;
+                            const dateLabel = new Date(mealDate+"T00:00:00").toLocaleDateString(
+                              lang==="ja"?"ja-JP":lang==="ko"?"ko-KR":"en-US",{month:"short",day:"numeric"}
+                            );
+                            const prompt = lang==="ja"
+                              ? dateLabel+"の1日の献立を作って。条件："+cond+"。朝・昼・夜で各1品ずつ、一般的な食材で現実的な価格帯で。各食事にカロリーとタンパク質gも書いて。"
+                              : lang==="ko"
+                              ? dateLabel+" 하루 식단 짜줘. 조건: "+cond+". 아침·점심·저녁 각 1개씩, 일반 식재료로 현실적인 가격으로. 각 식사에 칼로리와 단백질g도 써줘."
+                              : "Create a meal plan for "+dateLabel+". Condition: "+cond+". One meal for breakfast, lunch, dinner. Use realistic everyday ingredients. Include calories and protein for each meal.";
+                            await sendChat(prompt, async (updater)=>{
+                              const hist = typeof updater === "function" ? updater([]) : updater;
+                              const lastMsg = hist[hist.length-1];
+                              if(lastMsg?.role==="assistant") {
+                                const updated = {...futureMenus, [mealDate]: lastMsg.text};
+                                setFutureMenus(updated);
+                                lsSet("mb_future_menus", updated);
+                              }
+                              setNutChatHist(updater);
+                            }, nutChatHist);
+                            setMenuLoading(false);
+                          }} style={{padding:"7px 12px",background:C.surface,border:"1px solid "+C.border,borderRadius:20,fontSize:11,color:C.text,cursor:menuLoading||!canChat?"not-allowed":"pointer",opacity:menuLoading||!canChat?0.5:1}}>
+                            {q[lang]||q.en}
+                          </button>
+                        ))}
+                      </div>
+                      {menuLoading && (
+                        <div style={{textAlign:"center",padding:"12px 0",color:"#a855f7",fontSize:12}}>
+                          {lang==="ja"?"献立を考えています...":lang==="ko"?"식단 구성 중...":"Building your meal plan..."}
+                        </div>
+                      )}
+                      {!canChat && (
+                        <div style={{fontSize:10,color:C.muted,textAlign:"center"}}>
+                          {lang==="ja"?"本日のチャット回数に達しました":lang==="ko"?"오늘 채팅 한도에 도달":lang==="de"?"Tageslimit erreicht":"Daily chat limit reached"}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              </>
+            )}
+            {nutView === "chat" && (
+              <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid "+C.border,marginTop:12}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                  <span style={{fontSize:18}}>🥗</span>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:13,letterSpacing:1,color:C.text}}>
+                    {lang==="ja"?"栄養・食事の相談":lang==="ko"?"영양·식사 상담":"Nutrition Chat"}
                 </div>
                 <span style={{fontSize:10,background:C.proBg,color:C.pro,borderRadius:8,padding:"1px 6px",marginLeft:"auto"}}>
                   {lang==="ja"?"利用回数に含まれます":lang==="ko"?"이용 횟수에 포함":"counts toward limit"}
