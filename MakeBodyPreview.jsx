@@ -4185,7 +4185,7 @@ function App() {
                         ))}
                         {todayPlan.meal?.budget && (
                           <div style={{fontSize:10,color:C.muted,textAlign:"right",marginTop:2}}>
-                            {lang==="ja"?"目安予算 ":"예상 예산 ":"Est. budget "}{lang==="ja"?"¥":lang==="ko"?"₩":"$"}{todayPlan.meal.budget}
+                            {lang==="ja"?"目安予算 ¥":lang==="ko"?"예상 예산 ₩":"Est. budget $"}{todayPlan.meal.budget}
                           </div>
                         )}
                       </div>
