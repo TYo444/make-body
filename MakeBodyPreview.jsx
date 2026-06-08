@@ -5325,7 +5325,6 @@ function App() {
             )}
           </div>
         )}
-
       </div>
 
       {/* Bottom nav */}
