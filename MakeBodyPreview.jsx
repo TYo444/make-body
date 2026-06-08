@@ -109,6 +109,146 @@ const LANGS = [
   { code:"es", label:"Español",  flag:"🇪🇸" },
 ];
 
+
+
+// ============================================================
+// ルールベース週間プラン生成（AI API不使用・回数消費なし）
+// ============================================================
+function generateWeeklyPlan(profile, coachId, lang) {
+  const gender  = profile?.gender || "male";
+  const level   = profile?.fitnessLevel || "beginner";
+  const days    = parseInt(profile?.daysPerWeek) || 3;
+  const isMale  = gender !== "female";
+  const kcal    = profile?.targetCalories || (isMale ? 2000 : 1600);
+  const protein = profile?.targetProtein  || (isMale ? 120  : 80);
+
+  // 週に何日トレーニングするか → 曜日割り当て
+  // days=3→月水金, days=4→月火木金, days=5→月火水木金, days=6→月〜土
+  const trainDays = {
+    2:[1,4], 3:[1,3,5], 4:[1,2,4,5], 5:[1,2,3,4,5], 6:[1,2,3,4,5,6]
+  }[days] || [1,3,5];
+
+  // 種目プール（初心者:1-2種目, 中級:2-3種目, 上級:3種目）
+  const maxEx = level==="beginner"?2:level==="intermediate"?2:3;
+
+  const EXERCISES = {
+    upper_male: [
+      {ja:"腕立て伏せ",ko:"푸쉬업",en:"Push-up",       sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
+      {ja:"チンアップ",ko:"턱걸이",en:"Chin-up",        sets:2, reps:{beginner:3,intermediate:6,advanced:10}},
+      {ja:"ダンベルロウ",ko:"덤벨 로우",en:"DB Row",     sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+      {ja:"ショルダープレス",ko:"숄더프레스",en:"Shoulder Press", sets:2, reps:{beginner:8,intermediate:10,advanced:12}},
+    ],
+    lower_male: [
+      {ja:"スクワット",ko:"스쿼트",en:"Squat",           sets:2, reps:{beginner:10,intermediate:15,advanced:20}},
+      {ja:"ランジ",ko:"런지",en:"Lunge",                 sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
+      {ja:"デッドリフト",ko:"데드리프트",en:"Deadlift",   sets:2, reps:{beginner:6,intermediate:8,advanced:10}},
+    ],
+    core_male: [
+      {ja:"プランク",ko:"플랭크",en:"Plank",             sets:2, reps:{beginner:20,intermediate:30,advanced:45}, unit:"sec"},
+      {ja:"クランチ",ko:"크런치",en:"Crunch",             sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+    ],
+    upper_female: [
+      {ja:"膝つき腕立て",ko:"무릎 푸쉬업",en:"Knee Push-up", sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
+      {ja:"ダンベルロウ",ko:"덤벨 로우",en:"DB Row",     sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+      {ja:"ラテラルレイズ",ko:"레터럴 레이즈",en:"Lateral Raise", sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+    ],
+    lower_female: [
+      {ja:"スクワット",ko:"스쿼트",en:"Squat",           sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+      {ja:"ヒップリフト",ko:"힙 리프트",en:"Hip Lift",   sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+      {ja:"サイドレッグレイズ",ko:"사이드레그레이즈",en:"Side Leg Raise", sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+    ],
+    core_female: [
+      {ja:"プランク",ko:"플랭크",en:"Plank",             sets:2, reps:{beginner:15,intermediate:25,advanced:40}, unit:"sec"},
+      {ja:"バイシクルクランチ",ko:"바이시클 크런치",en:"Bicycle Crunch", sets:2, reps:{beginner:10,intermediate:15,advanced:20}},
+    ],
+  };
+
+  const upper = isMale ? EXERCISES.upper_male : EXERCISES.upper_female;
+  const lower = isMale ? EXERCISES.lower_male : EXERCISES.lower_female;
+  const core  = isMale ? EXERCISES.core_male  : EXERCISES.core_female;
+
+  function pickEx(pool, count) {
+    return pool.slice(0, count).map(e => ({
+      name: lang==="ja"?e.ja:lang==="ko"?e.ko:e.en,
+      sets: e.sets,
+      reps: e.reps[level]||e.reps.beginner,
+      unit: e.unit||"reps",
+    }));
+  }
+
+  // コーチ別メッセージ
+  const COACH_MSGS = {
+    bro:     {ja:["今日も絶対やる。迷ってる暇なし。","1種目でいい。まず始めろ。","お前ならできる。動け。","今日の汗が明日の体を作る。","諦めた瞬間が本当の失敗だ。","休息も鍛錬のうち。回復しろ。","今週もやり切ろう。"],ko:["오늘도 반드시 하자.","한 종목만 해. 시작해.","너라면 할 수 있어. 움직여."],en:["Let's go, no excuses.","Just start, one exercise.","You got this. Move now.","Today's sweat builds tomorrow.","Never quit. That's failure.","Rest is training too.","Finish the week strong."]},
+    sis:     {ja:["無理しないで、できる範囲でOK。","一緒に頑張ろう、応援してるよ。","小さくても続けることが大事。","今日も来てくれてありがとう。","体の声を聞きながら進めてね。","休むことも大切な一歩。","今週も頑張ったね。"],ko:["무리하지 않아도 돼.","함께 힘내자, 응원해.","작아도 계속하는 게 중요해."],en:["Don't push too hard, do what you can.","I'm rooting for you today.","Small steps matter most.","Thanks for showing up today.","Listen to your body.","Rest is a step forward too.","You did great this week."]},
+    science: {ja:["今日のメニューは科学的に最適化済みです。","筋肥大には漸進性過負荷が必要です。","継続が最大の筋肉刺激です。","回復も鍛錬の一部です。","フォームが全てです。","栄養と睡眠で回復を最大化。","週の総負荷が成長を決めます。"],ko:["오늘 메뉴는 과학적으로 최적화.","근비대엔 점진적 과부하가 필요.","지속이 최대의 자극."],en:["Today's menu is science-backed.","Progressive overload drives growth.","Consistency is the best stimulus.","Recovery is part of training.","Form is everything.","Nutrition and sleep maximize gains.","Weekly volume determines progress."]},
+    yoga:    {ja:["呼吸を意識して、丁寧に動こう。","体の声を聞きながら進めてね。","今日の自分を受け入れながら動こう。","ゆっくりでも確実に進んでいます。","心と体のバランスを大切に。","今日も自分を大切に。","一週間お疲れさまでした。"],ko:["호흡에 집중하며 천천히.","몸의 소리를 들으며.","오늘의 나를 받아들이며."],en:["Focus on breath, move mindfully.","Listen to your body.","Accept today's self as you move.","Slow and steady progress.","Balance mind and body.","Take care of yourself today.","Great week, well done."]},
+    kpop:    {ja:["K-POPアイドルのように美しいフォームで。","見せる体を作ろう、今日も丁寧に。","細マッチョへの道は継続にあり。","姿勢と見た目を意識して動こう。","フォームが美しさを作る。","回復でさらに輝く体に。","今週の努力が体に現れる。"],ko:["K팝 아이돌처럼 아름다운 폼으로.","보여주는 몸을 만들자.","슬림핏의 길은 지속에 있어."],en:["Move with K-pop idol precision.","Build the look you want.","The lean path is consistency.","Posture and form create beauty.","Form creates aesthetics.","Recovery makes you shine more.","This week's effort shows."]},
+    doctor:  {ja:["安全第一。無理のない範囲で。","今日のメニューは科学的根拠に基づいています。","健康的な体づくりには継続が鍵。","痛みを感じたらすぐに中止を。","水分補給を忘れずに。","回復を軽視しないでください。","一週間の積み重ねが大切です。"],ko:["안전 제일. 무리하지 말고.","오늘 메뉴는 과학적 근거 기반.","지속이 건강한 몸의 열쇠."],en:["Safety first, no overexertion.","Evidence-based menu today.","Consistency is key to health.","Stop if you feel pain.","Stay hydrated.","Don't neglect recovery.","Cumulative effort is what counts."]},
+  };
+
+  // 食事プール（コンビニ・スーパー・自炊で現実的なもの）
+  const MEALS_M = {
+    ja:[
+      {morning:"卵2個＋ご飯1膳＋味噌汁",lunch:"鶏むね肉定食（150g）＋野菜",dinner:"豆腐＋鮭or サバ＋野菜炒め",snack:"ギリシャヨーグルト or プロテイン",budget:1800},
+      {morning:"納豆ご飯＋卵焼き＋味噌汁",lunch:"サラダチキン＋おにぎり2個",dinner:"豚バラ野菜炒め＋ご飯",snack:"バナナ＋プロテイン",budget:1500},
+      {morning:"全粒粉トースト＋目玉焼き＋牛乳",lunch:"ツナサラダ＋玄米おにぎり",dinner:"鶏もも塩焼き＋サラダ＋ご飯",snack:"ナッツ一握り",budget:1600},
+    ],
+    ko:[
+      {morning:"계란 2개+밥+된장국",lunch:"닭가슴살 정식（150g）+채소",dinner:"두부+연어or고등어+채소볶음",snack:"그릭 요거트 or 프로틴",budget:18000},
+      {morning:"낫토밥+계란말이+된장국",lunch:"샐러드치킨+주먹밥 2개",dinner:"돼지고기채소볶음+밥",snack:"바나나+프로틴",budget:15000},
+    ],
+    en:[
+      {morning:"2 eggs + rice + miso soup",lunch:"Chicken breast meal（150g）+ veggies",dinner:"Tofu + salmon/mackerel + stir-fry",snack:"Greek yogurt or protein shake",budget:15},
+      {morning:"Whole wheat toast + egg + milk",lunch:"Tuna salad + brown rice ball",dinner:"Grilled chicken thigh + salad + rice",snack:"Handful of nuts",budget:13},
+    ],
+  };
+  const MEALS_F = {
+    ja:[
+      {morning:"ヨーグルト＋バナナ＋全粒粉トースト",lunch:"鶏むねサラダ＋玄米おにぎり1個",dinner:"豆腐ハンバーグ＋蒸し野菜＋味噌汁",snack:"ナッツ一握り or フルーツ",budget:1600},
+      {morning:"スムージー（豆乳＋バナナ＋ほうれん草）",lunch:"サラダチキン＋コンビニサラダ",dinner:"鮭塩焼き＋豆腐＋野菜スープ",snack:"ギリシャヨーグルト",budget:1400},
+      {morning:"卵トースト＋サラダ＋牛乳",lunch:"ツナおにぎり＋野菜スープ",dinner:"蒸し鶏＋蒸し野菜＋ご飯少なめ",snack:"フルーツ（りんごetc）",budget:1300},
+    ],
+    ko:[
+      {morning:"요거트+바나나+통밀토스트",lunch:"닭가슴살 샐러드+현미 주먹밥",dinner:"두부 햄버그+찐 채소+된장국",snack:"견과류 한 줌 or 과일",budget:14000},
+    ],
+    en:[
+      {morning:"Yogurt + banana + whole wheat toast",lunch:"Chicken salad + brown rice ball",dinner:"Tofu patty + steamed veg + miso soup",snack:"Nuts or fruit",budget:12},
+      {morning:"Smoothie（soy milk + banana + spinach）",lunch:"Canned tuna + convenience store salad",dinner:"Steamed salmon + tofu + veggie soup",snack:"Greek yogurt",budget:11},
+    ],
+  };
+
+  const mealPool = (isMale ? MEALS_M : MEALS_F)[lang] || (isMale ? MEALS_M : MEALS_F)["en"];
+  const msgPool  = (COACH_MSGS[coachId] || COACH_MSGS["bro"])[lang] || (COACH_MSGS[coachId] || COACH_MSGS["bro"])["en"];
+
+  // 7日分プランを生成
+  const weekPlan = [];
+  for (let d = 0; d < 7; d++) {
+    const dow    = (new Date().getDay() + d) % 7;
+    const isTrain = trainDays.includes(dow);
+    let workout = [];
+    if (isTrain) {
+      const trainIdx = trainDays.indexOf(dow);
+      // 上半身・下半身・コアを順番に
+      if (trainIdx % 3 === 0) workout = pickEx(upper, maxEx);
+      else if (trainIdx % 3 === 1) workout = pickEx(lower, maxEx);
+      else workout = [...pickEx(core, 1), ...pickEx(upper, 1)];
+    }
+    const meal = mealPool[d % mealPool.length];
+    const msg  = msgPool[d % msgPool.length];
+    weekPlan.push({
+      dayOffset: d,
+      dow,
+      isRest: !isTrain,
+      workout,
+      meal,
+      coachMsg: msg,
+      kcal,
+      protein,
+    });
+  }
+  return weekPlan;
+}
+
 const PERSONAS = [
   {
     id:"bro", emoji:"💪", name:"Rex",
@@ -2706,10 +2846,35 @@ function App() {
   const [menuLoading, setMenuLoading] = useState(false);
   const [nutChatHist, setNutChatHist] = useState(lsGet("mb_nut_chat", []));
   const [nutChatIn, setNutChatIn]     = useState("");
+  const [weeklyPlan, setWeeklyPlan]   = useState(lsGet("mb_weekly_plan", null));
 
   useEffect(() => {
     if (nutChatHist.length > 0) lsSet("mb_nut_chat", nutChatHist.slice(-50));
   }, [nutChatHist]);
+
+  // profile/coachが揃ったら週間プランを生成（毎週月曜or初回）
+  useEffect(() => {
+    if (!profile) return;
+    const today = todayKey();
+    const monday = (() => {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(d.setDate(diff)).toISOString().slice(0,10);
+    })();
+    const saved = lsGet("mb_weekly_plan", null);
+    // 保存済みプランが今週のものならそのまま使用
+    if (saved && saved.weekStart === monday) {
+      setWeeklyPlan(saved);
+      return;
+    }
+    // 新規生成
+    const coachId = profile?.coachId || "bro";
+    const plan = generateWeeklyPlan(profile, coachId, lang);
+    const planData = { weekStart: monday, days: plan };
+    setWeeklyPlan(planData);
+    lsSet("mb_weekly_plan", planData);
+  }, [profile?.coachId, profile?.fitnessLevel, profile?.daysPerWeek, profile?.gender]);
   const [analyzing, setAnalyzing] = useState(false);
   const [scannedMeal, setScannedMeal] = useState(null);
   const [mealHist, setMealHist] = useState({}); // { dateKey: [meals] }
@@ -3493,7 +3658,7 @@ function App() {
         (isPro ? "PRO: 90-day plans, body predictions, timeline simulations, weekly check-ins. FUTURE SIM: weight=" + (profile?.currentWeightKg||70) + "kg targetBf=" + (profile?.bodyGoal?.targetBf||12) + "% streak=" + streak + "d - give realistic timeline estimates with encouragement." : "FREE: Short tips only. Full coaching requires PRO.") + "\n" +
         pCtx + "\n" + fitCtx + "\n" + nutCtx + "\n" +
         "Today: Cals " + totCal + "/" + calGoal + ", Protein " + totPro + "g, Mood:" + MOODS[mood] + ", Streak:" + streak + "d.\n" +
-        (isPersonal ? "IMPORTANT: This message has emotional/personal content. Lead with empathy and human warmth FIRST. Do not jump to fitness advice. Ask a follow-up question about how they feel. Only offer fitness/nutrition if they bring it up or after emotional connection is made. " : "") + (isNutrition ? "Use batch cooking. " : "") + (lateNight ? "LATE NIGHT: Be extra warm, no workout push." : "") + "\nWhen providing a workout plan, you MUST include SCHEDULE lines in EXACTLY this format (one per exercise, after your message):\nSCHEDULE: [Exercise Name] | [sets]x[reps]\nExample: SCHEDULE: Squat | 3x10\nSCHEDULE: Push-up | 3x15";
+        (isPersonal ? "IMPORTANT: This message has emotional/personal content. Lead with empathy and human warmth FIRST. Do not jump to fitness advice. Ask a follow-up question about how they feel. Only offer fitness/nutrition if they bring it up or after emotional connection is made. " : "") + (isNutrition ? "Use batch cooking. " : "") + (lateNight ? "LATE NIGHT: Be extra warm, no workout push." : "") + "\nIMPORTANT ROLE: You are NOT here to generate workout menus from scratch. The user already has a daily plan shown on their home screen. Your role is to help them ADJUST and CONSULT about that plan. When they say things like: I can't go to the gym / my knee hurts / I want something lighter / I'm at a convenience store — you adapt the plan. Be concise and practical.\nWhen you DO provide specific exercises (for adjustment), include SCHEDULE lines: SCHEDULE: [Exercise Name] | [sets]x[reps]";
     try {
       const apiUrl = "/api/chat";
       const messages = [
@@ -3947,6 +4112,165 @@ function App() {
                 ))
               )}
             </div>
+            {/* ── 今日のプラン（ルールベース・API不使用） ── */}
+            {(()=>{
+              const todayPlan = weeklyPlan?.days?.[0];
+              if (!todayPlan) return null;
+              return (
+                <div style={{background:C.card,borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid "+C.border}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                    <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text}}>
+                      {lang==="ja"?"📋 今日のプラン":lang==="ko"?"📋 오늘의 플랜":"📋 TODAY'S PLAN"}
+                    </div>
+                    <div style={{fontSize:10,color:C.muted}}>
+                      {new Date().toLocaleDateString(lang==="ja"?"ja-JP":lang==="ko"?"ko-KR":"en-US",{weekday:"short",month:"short",day:"numeric"})}
+                    </div>
+                  </div>
+
+                  {/* コーチメッセージ */}
+                  <div style={{background:coach.bg,border:"1px solid "+coach.color+"40",borderRadius:10,padding:"10px 12px",marginBottom:10,fontSize:12,color:coach.color,fontWeight:600,lineHeight:1.5}}>
+                    {coach.emoji} {todayPlan.coachMsg}
+                  </div>
+
+                  {/* トレーニング */}
+                  <div style={{marginBottom:10}}>
+                    <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:6}}>
+                      💪 {lang==="ja"?"今日のトレーニング":lang==="ko"?"오늘의 트레이닝":"TODAY'S WORKOUT"}
+                    </div>
+                    {todayPlan.isRest ? (
+                      <div style={{fontSize:12,color:C.muted,padding:"8px 10px",background:C.surface,borderRadius:8,border:"1px solid "+C.border}}>
+                        🛌 {lang==="ja"?"今日は休息日。しっかり回復しよう。":lang==="ko"?"오늘은 휴식일. 잘 회복하자.":"Rest day. Recover well."}
+                      </div>
+                    ) : (
+                      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                        {todayPlan.workout.map((ex,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:C.surface,borderRadius:8,border:"1px solid "+C.border}}>
+                            <div style={{fontSize:12,fontWeight:600,color:C.text}}>{ex.name}</div>
+                            <div style={{fontSize:12,color:coach.color,fontWeight:700}}>
+                              {ex.sets}×{ex.reps}{ex.unit==="sec"?(lang==="ja"?"秒":lang==="ko"?"초":"s"):(lang==="ja"?"回":lang==="ko"?"회":"reps")}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 食事 - 無料はkcal/タンパク質のみ、PRO/Trialは詳細 */}
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:6}}>
+                      🍽️ {lang==="ja"?"今日の食事目安":lang==="ko"?"오늘의 식사 목표":"TODAY'S NUTRITION"}
+                    </div>
+                    <div style={{display:"flex",gap:6,marginBottom: (isPro||cl.isTrial)?8:0}}>
+                      <div style={{flex:1,background:C.surface,borderRadius:8,padding:"8px",textAlign:"center",border:"1px solid "+C.border}}>
+                        <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"目標kcal":lang==="ko"?"목표 kcal":"Target kcal"}</div>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:18,color:C.green}}>{todayPlan.kcal}</div>
+                      </div>
+                      <div style={{flex:1,background:C.surface,borderRadius:8,padding:"8px",textAlign:"center",border:"1px solid "+C.border}}>
+                        <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"タンパク質":lang==="ko"?"단백질":"Protein"}</div>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:18,color:"#f59e0b"}}>{todayPlan.protein}g</div>
+                      </div>
+                    </div>
+                    {(isPro||cl.isTrial) ? (
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                        {[
+                          {label:lang==="ja"?"朝":lang==="ko"?"아침":"Morning", val:todayPlan.meal?.morning},
+                          {label:lang==="ja"?"昼":lang==="ko"?"점심":"Lunch",   val:todayPlan.meal?.lunch},
+                          {label:lang==="ja"?"夜":lang==="ko"?"저녁":"Dinner",  val:todayPlan.meal?.dinner},
+                          {label:lang==="ja"?"間食":lang==="ko"?"간식":"Snack", val:todayPlan.meal?.snack},
+                        ].map((m,i)=>(
+                          <div key={i} style={{display:"flex",gap:8,alignItems:"flex-start",padding:"6px 10px",background:C.surface,borderRadius:7,border:"1px solid "+C.border}}>
+                            <div style={{fontSize:10,fontWeight:700,color:C.green,minWidth:24,flexShrink:0}}>{m.label}</div>
+                            <div style={{fontSize:11,color:C.text,lineHeight:1.4}}>{m.val}</div>
+                          </div>
+                        ))}
+                        {todayPlan.meal?.budget && (
+                          <div style={{fontSize:10,color:C.muted,textAlign:"right",marginTop:2}}>
+                            {lang==="ja"?"目安予算 ":"예상 예산 ":"Est. budget "}{lang==="ja"?"¥":lang==="ko"?"₩":"$"}{todayPlan.meal.budget}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{marginTop:6,padding:"8px 10px",background:C.greenGlow,borderRadius:8,border:"1px solid "+C.green+"40",fontSize:11,color:C.green,cursor:"pointer"}} onClick={()=>setShowUpgrade(true)}>
+                        🔒 {lang==="ja"?"朝昼夜の具体的な食事メニューはトライアルまたはPROで":lang==="ko"?"아침점심저녁 구체적 식사는 트라이얼/PRO에서":"Detailed meal plan available in Trial or PRO"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── 翌日以降プレビュー（Trial=今週、PRO=来週まで、無料=ロック） ── */}
+            {weeklyPlan?.days && (
+              <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
+                <div style={{fontFamily:"Bebas Neue",fontSize:13,letterSpacing:1,color:C.text,marginBottom:10}}>
+                  {lang==="ja"?"📅 今後のプラン":lang==="ko"?"📅 앞으로의 플랜":"📅 UPCOMING PLAN"}
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  {weeklyPlan.days.slice(1, isPro?14:cl.isTrial?7:2).map((day,i)=>{
+                    const dateObj = new Date();
+                    dateObj.setDate(dateObj.getDate() + i + 1);
+                    const label = dateObj.toLocaleDateString(lang==="ja"?"ja-JP":lang==="ko"?"ko-KR":"en-US",{weekday:"short",month:"numeric",day:"numeric"});
+                    return (
+                      <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:C.surface,borderRadius:8,border:"1px solid "+C.border}}>
+                        <div style={{fontSize:11,color:C.muted,minWidth:60}}>{label}</div>
+                        <div style={{flex:1,marginLeft:8}}>
+                          {day.isRest ? (
+                            <span style={{fontSize:11,color:C.muted}}>🛌 {lang==="ja"?"休息":lang==="ko"?"휴식":"Rest"}</span>
+                          ) : (
+                            <span style={{fontSize:11,color:C.text}}>{day.workout.map(e=>e.name).join("・")}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {!isPro && !cl.isTrial && (
+                    <div style={{padding:"10px 12px",background:C.greenGlow,borderRadius:8,border:"1px solid "+C.green+"40",cursor:"pointer",textAlign:"center"}} onClick={()=>setShowUpgrade(true)}>
+                      <div style={{fontSize:12,color:C.green,fontWeight:700}}>
+                        🔒 {lang==="ja"?"トライアルで今週分、PROで来週まで見れる":lang==="ko"?"트라이얼로 이번 주, PRO로 다음 주까지":"Trial unlocks this week, PRO unlocks next week"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── 週次レビュー（PRO・日曜のみ） ── */}
+            {isPro && new Date().getDay() === 0 && (()=>{
+              const workoutLog  = lsGet("mb_workout_log", {});
+              const weightLog2  = lsGet("mb_weight_log",  {});
+              const weekDates   = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return d.toISOString().slice(0,10);});
+              const workoutDone = weekDates.filter(d=>workoutLog[d]?.done).length;
+              const weightArr   = weekDates.map(d=>weightLog2[d]).filter(Boolean);
+              const weightDiff  = weightArr.length>=2 ? (weightArr[0]-weightArr[weightArr.length-1]).toFixed(1) : null;
+              const achRate     = Math.round((workoutDone/6)*100);
+              return (
+                <div style={{background:"linear-gradient(135deg,"+coach.bg+","+C.card+")",borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid "+coach.color+"30"}}>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:coach.color,marginBottom:10}}>
+                    {lang==="ja"?"📊 今週のレビュー":lang==="ko"?"📊 이번 주 리뷰":"📊 WEEKLY REVIEW"}
+                  </div>
+                  <div style={{display:"flex",gap:8,marginBottom:8}}>
+                    <div style={{flex:1,background:C.card,borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid "+C.border}}>
+                      <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"達成率":lang==="ko"?"달성률":"Achievement"}</div>
+                      <div style={{fontFamily:"Bebas Neue",fontSize:22,color:achRate>=70?C.green:achRate>=50?"#f59e0b":"#ef4444"}}>{achRate}%</div>
+                    </div>
+                    <div style={{flex:1,background:C.card,borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid "+C.border}}>
+                      <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"筋トレ":lang==="ko"?"근력운동":"Workouts"}</div>
+                      <div style={{fontFamily:"Bebas Neue",fontSize:22,color:C.text}}>{workoutDone}<span style={{fontSize:12}}>/6</span></div>
+                    </div>
+                    {weightDiff && (
+                      <div style={{flex:1,background:C.card,borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid "+C.border}}>
+                        <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"体重変化":lang==="ko"?"체중 변화":"Weight"}</div>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:22,color:parseFloat(weightDiff)<0?C.green:"#f59e0b"}}>{weightDiff>0?"+":""}{weightDiff}kg</div>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{fontSize:11,color:coach.color,fontWeight:600,lineHeight:1.5}}>
+                    {achRate>=70?(lang==="ja"?"今週も素晴らしかった！来週もこの調子で。":lang==="ko"?"이번 주도 훌륭했어! 다음 주도 이대로.":"Great week! Keep it up next week."):achRate>=40?(lang==="ja"?"半分できた。来週はもう少し頑張ろう。":lang==="ko"?"절반 달성. 다음 주엔 조금 더 해보자.":"Halfway there. Push a bit more next week."):(lang==="ja"?"来週はまず1日だけでいい。小さく始めよう。":lang==="ko"?"다음 주엔 하루만 해도 돼. 작게 시작하자.":"Next week, just one day. Start small.")}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Body stats */}
             <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
               <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text,marginBottom:10}}>{lang==="ja"?"体組成":lang==="ko"?"체성분":"BODY COMPOSITION"}</div>
