@@ -4144,10 +4144,16 @@ function App() {
                     ) : (
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
                         {todayPlan.workout.map((ex,i)=>(
-                          <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:C.surface,borderRadius:8,border:"1px solid "+C.border}}>
+                          <div key={i} onClick={()=>setCounterM({exercise:ex.name,sets:ex.sets,reps:ex.reps})}
+                            style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:C.surface,borderRadius:8,border:"1px solid "+C.border,cursor:"pointer",transition:"background 0.15s"}}
+                            onMouseEnter={e=>e.currentTarget.style.background=C.greenGlow}
+                            onMouseLeave={e=>e.currentTarget.style.background=C.surface}>
                             <div style={{fontSize:12,fontWeight:600,color:C.text}}>{ex.name}</div>
-                            <div style={{fontSize:12,color:coach.color,fontWeight:700}}>
-                              {ex.sets}×{ex.reps}{ex.unit==="sec"?(lang==="ja"?"秒":lang==="ko"?"초":"s"):(lang==="ja"?"回":lang==="ko"?"회":"reps")}
+                            <div style={{display:"flex",alignItems:"center",gap:8}}>
+                              <div style={{fontSize:12,color:coach.color,fontWeight:700}}>
+                                {ex.sets}×{ex.reps}{ex.unit==="sec"?(lang==="ja"?"秒":lang==="ko"?"초":"s"):(lang==="ja"?"回":lang==="ko"?"회":"reps")}
+                              </div>
+                              <div style={{fontSize:10,color:C.green,fontWeight:700}}>▶ START</div>
                             </div>
                           </div>
                         ))}
