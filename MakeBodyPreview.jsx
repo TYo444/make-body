@@ -5323,11 +5323,8 @@ function App() {
               )}
               </div>
             )}
-      </div>
-      </div>
-      </div>
-      </div>
-      </div>
+          </div>
+        )}
 
       {/* Bottom nav */}
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:C.surface,borderTop:"1px solid "+C.border,display:"flex",zIndex:100}}>
