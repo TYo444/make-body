@@ -5321,7 +5321,8 @@ function App() {
                   {lang==="ja"?"本日の相談回数に達しました":lang==="ko"?"오늘 채팅 한도에 도달했습니다":"Daily chat limit reached"}
                 </div>
               )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
