@@ -607,6 +607,259 @@ function playRepBeep(isLast=false) {
   } catch(e) {}
 }
 
+function generateWeeklyPlan(profile, coachId, lang) {
+  const gender  = profile?.gender || "male";
+  const level   = profile?.fitnessLevel || "beginner";
+  const days    = parseInt(profile?.daysPerWeek) || 3;
+  const isMale  = gender !== "female";
+  const kcal    = profile?.targetCalories || (isMale ? 2000 : 1600);
+  const protein = profile?.targetProtein  || (isMale ? 120  : 80);
+
+  // 週に何日トレーニングするか → 曜日割り当て
+  // days=3→月水金, days=4→月火木金, days=5→月火水木金, days=6→月〜土
+  const trainDays = {
+    2:[1,4], 3:[1,3,5], 4:[1,2,4,5], 5:[1,2,3,4,5], 6:[1,2,3,4,5,6]
+  }[days] || [1,3,5];
+
+  // 種目プール（初心者:1-2種目, 中級:2-3種目, 上級:3種目）
+  const maxEx = level==="beginner"?2:level==="intermediate"?2:3;
+
+  const EXERCISES = {
+    upper_male: [
+      {ja:"腕立て伏せ",ko:"푸쉬업",en:"Push-up",       sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
+      {ja:"チンアップ",ko:"턱걸이",en:"Chin-up",        sets:2, reps:{beginner:3,intermediate:6,advanced:10}},
+      {ja:"ダンベルロウ",ko:"덤벨 로우",en:"DB Row",     sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+      {ja:"ショルダープレス",ko:"숄더프레스",en:"Shoulder Press", sets:2, reps:{beginner:8,intermediate:10,advanced:12}},
+    ],
+    lower_male: [
+      {ja:"スクワット",ko:"스쿼트",en:"Squat",           sets:2, reps:{beginner:10,intermediate:15,advanced:20}},
+      {ja:"ランジ",ko:"런지",en:"Lunge",                 sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
+      {ja:"デッドリフト",ko:"데드리프트",en:"Deadlift",   sets:2, reps:{beginner:6,intermediate:8,advanced:10}},
+    ],
+    core_male: [
+      {ja:"プランク",ko:"플랭크",en:"Plank",             sets:2, reps:{beginner:20,intermediate:30,advanced:45}, unit:"sec"},
+      {ja:"クランチ",ko:"크런치",en:"Crunch",             sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+    ],
+    upper_female: [
+      {ja:"膝つき腕立て",ko:"무릎 푸쉬업",en:"Knee Push-up", sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
+      {ja:"ダンベルロウ",ko:"덤벨 로우",en:"DB Row",     sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+      {ja:"ラテラルレイズ",ko:"레터럴 레이즈",en:"Lateral Raise", sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+    ],
+    lower_female: [
+      {ja:"スクワット",ko:"스쿼트",en:"Squat",           sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+      {ja:"ヒップリフト",ko:"힙 리프트",en:"Hip Lift",   sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+      {ja:"サイドレッグレイズ",ko:"사이드레그레이즈",en:"Side Leg Raise", sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+    ],
+    core_female: [
+      {ja:"プランク",ko:"플랭크",en:"Plank",             sets:2, reps:{beginner:15,intermediate:25,advanced:40}, unit:"sec"},
+      {ja:"バイシクルクランチ",ko:"바이시클 크런치",en:"Bicycle Crunch", sets:2, reps:{beginner:10,intermediate:15,advanced:20}},
+    ],
+  };
+
+  const upper = isMale ? EXERCISES.upper_male : EXERCISES.upper_female;
+  const lower = isMale ? EXERCISES.lower_male : EXERCISES.lower_female;
+  const core  = isMale ? EXERCISES.core_male  : EXERCISES.core_female;
+
+  function pickEx(pool, count) {
+    return pool.slice(0, count).map(e => ({
+      name: lang==="ja"?e.ja:lang==="ko"?e.ko:e.en,
+      sets: e.sets,
+      reps: e.reps[level]||e.reps.beginner,
+      unit: e.unit||"reps",
+    }));
+  }
+
+  // コーチ別メッセージ
+  const COACH_MSGS = {
+    bro:     {ja:["今日も絶対やる。迷ってる暇なし。","1種目でいい。まず始めろ。","お前ならできる。動け。","今日の汗が明日の体を作る。","諦めた瞬間が本当の失敗だ。","休息も鍛錬のうち。回復しろ。","今週もやり切ろう。"],ko:["오늘도 반드시 하자.","한 종목만 해. 시작해.","너라면 할 수 있어. 움직여."],en:["Let's go, no excuses.","Just start, one exercise.","You got this. Move now.","Today's sweat builds tomorrow.","Never quit. That's failure.","Rest is training too.","Finish the week strong."]},
+    sis:     {ja:["無理しないで、できる範囲でOK。","一緒に頑張ろう、応援してるよ。","小さくても続けることが大事。","今日も来てくれてありがとう。","体の声を聞きながら進めてね。","休むことも大切な一歩。","今週も頑張ったね。"],ko:["무리하지 않아도 돼.","함께 힘내자, 응원해.","작아도 계속하는 게 중요해."],en:["Don't push too hard, do what you can.","I'm rooting for you today.","Small steps matter most.","Thanks for showing up today.","Listen to your body.","Rest is a step forward too.","You did great this week."]},
+    science: {ja:["今日のメニューは科学的に最適化済みです。","筋肥大には漸進性過負荷が必要です。","継続が最大の筋肉刺激です。","回復も鍛錬の一部です。","フォームが全てです。","栄養と睡眠で回復を最大化。","週の総負荷が成長を決めます。"],ko:["오늘 메뉴는 과학적으로 최적화.","근비대엔 점진적 과부하가 필요.","지속이 최대의 자극."],en:["Today's menu is science-backed.","Progressive overload drives growth.","Consistency is the best stimulus.","Recovery is part of training.","Form is everything.","Nutrition and sleep maximize gains.","Weekly volume determines progress."]},
+    yoga:    {ja:["呼吸を意識して、丁寧に動こう。","体の声を聞きながら進めてね。","今日の自分を受け入れながら動こう。","ゆっくりでも確実に進んでいます。","心と体のバランスを大切に。","今日も自分を大切に。","一週間お疲れさまでした。"],ko:["호흡에 집중하며 천천히.","몸의 소리를 들으며.","오늘의 나를 받아들이며."],en:["Focus on breath, move mindfully.","Listen to your body.","Accept today's self as you move.","Slow and steady progress.","Balance mind and body.","Take care of yourself today.","Great week, well done."]},
+    kpop:    {ja:["K-POPアイドルのように美しいフォームで。","見せる体を作ろう、今日も丁寧に。","細マッチョへの道は継続にあり。","姿勢と見た目を意識して動こう。","フォームが美しさを作る。","回復でさらに輝く体に。","今週の努力が体に現れる。"],ko:["K팝 아이돌처럼 아름다운 폼으로.","보여주는 몸을 만들자.","슬림핏의 길은 지속에 있어."],en:["Move with K-pop idol precision.","Build the look you want.","The lean path is consistency.","Posture and form create beauty.","Form creates aesthetics.","Recovery makes you shine more.","This week's effort shows."]},
+    doctor:  {ja:["安全第一。無理のない範囲で。","今日のメニューは科学的根拠に基づいています。","健康的な体づくりには継続が鍵。","痛みを感じたらすぐに中止を。","水分補給を忘れずに。","回復を軽視しないでください。","一週間の積み重ねが大切です。"],ko:["안전 제일. 무리하지 말고.","오늘 메뉴는 과학적 근거 기반.","지속이 건강한 몸의 열쇠."],en:["Safety first, no overexertion.","Evidence-based menu today.","Consistency is key to health.","Stop if you feel pain.","Stay hydrated.","Don't neglect recovery.","Cumulative effort is what counts."]},
+  };
+
+  // 食事プール（コンビニ・スーパー・自炊で現実的なもの）
+  const MEALS_M = {
+    ja:[
+      {morning:"卵2個＋ご飯1膳＋味噌汁",lunch:"鶏むね肉定食（150g）＋野菜",dinner:"豆腐＋鮭or サバ＋野菜炒め",snack:"ギリシャヨーグルト or プロテイン",budget:1800},
+      {morning:"納豆ご飯＋卵焼き＋味噌汁",lunch:"サラダチキン＋おにぎり2個",dinner:"豚バラ野菜炒め＋ご飯",snack:"バナナ＋プロテイン",budget:1500},
+      {morning:"全粒粉トースト＋目玉焼き＋牛乳",lunch:"ツナサラダ＋玄米おにぎり",dinner:"鶏もも塩焼き＋サラダ＋ご飯",snack:"ナッツ一握り",budget:1600},
+    ],
+    ko:[
+      {morning:"계란 2개+밥+된장국",lunch:"닭가슴살 정식（150g）+채소",dinner:"두부+연어or고등어+채소볶음",snack:"그릭 요거트 or 프로틴",budget:18000},
+      {morning:"낫토밥+계란말이+된장국",lunch:"샐러드치킨+주먹밥 2개",dinner:"돼지고기채소볶음+밥",snack:"바나나+프로틴",budget:15000},
+    ],
+    en:[
+      {morning:"2 eggs + rice + miso soup",lunch:"Chicken breast meal（150g）+ veggies",dinner:"Tofu + salmon/mackerel + stir-fry",snack:"Greek yogurt or protein shake",budget:15},
+      {morning:"Whole wheat toast + egg + milk",lunch:"Tuna salad + brown rice ball",dinner:"Grilled chicken thigh + salad + rice",snack:"Handful of nuts",budget:13},
+    ],
+  };
+  const MEALS_F = {
+    ja:[
+      {morning:"ヨーグルト＋バナナ＋全粒粉トースト",lunch:"鶏むねサラダ＋玄米おにぎり1個",dinner:"豆腐ハンバーグ＋蒸し野菜＋味噌汁",snack:"ナッツ一握り or フルーツ",budget:1600},
+      {morning:"スムージー（豆乳＋バナナ＋ほうれん草）",lunch:"サラダチキン＋コンビニサラダ",dinner:"鮭塩焼き＋豆腐＋野菜スープ",snack:"ギリシャヨーグルト",budget:1400},
+      {morning:"卵トースト＋サラダ＋牛乳",lunch:"ツナおにぎり＋野菜スープ",dinner:"蒸し鶏＋蒸し野菜＋ご飯少なめ",snack:"フルーツ（りんごetc）",budget:1300},
+    ],
+    ko:[
+      {morning:"요거트+바나나+통밀토스트",lunch:"닭가슴살 샐러드+현미 주먹밥",dinner:"두부 햄버그+찐 채소+된장국",snack:"견과류 한 줌 or 과일",budget:14000},
+    ],
+    en:[
+      {morning:"Yogurt + banana + whole wheat toast",lunch:"Chicken salad + brown rice ball",dinner:"Tofu patty + steamed veg + miso soup",snack:"Nuts or fruit",budget:12},
+      {morning:"Smoothie（soy milk + banana + spinach）",lunch:"Canned tuna + convenience store salad",dinner:"Steamed salmon + tofu + veggie soup",snack:"Greek yogurt",budget:11},
+    ],
+  };
+
+  const mealPool = (isMale ? MEALS_M : MEALS_F)[lang] || (isMale ? MEALS_M : MEALS_F)["en"];
+  const msgPool  = (COACH_MSGS[coachId] || COACH_MSGS["bro"])[lang] || (COACH_MSGS[coachId] || COACH_MSGS["bro"])["en"];
+
+  // 7日分プランを生成
+  const weekPlan = [];
+  for (let d = 0; d < 7; d++) {
+    const dow    = (new Date().getDay() + d) % 7;
+    const isTrain = trainDays.includes(dow);
+    let workout = [];
+    if (isTrain) {
+      const trainIdx = trainDays.indexOf(dow);
+      // 上半身・下半身・コアを順番に
+      if (trainIdx % 3 === 0) workout = pickEx(upper, maxEx);
+      else if (trainIdx % 3 === 1) workout = pickEx(lower, maxEx);
+      else workout = [...pickEx(core, 1), ...pickEx(upper, 1)];
+    }
+    const meal = mealPool[d % mealPool.length];
+    const msg  = msgPool[d % msgPool.length];
+    weekPlan.push({
+      dayOffset: d,
+      dow,
+      isRest: !isTrain,
+      workout,
+      meal,
+      coachMsg: msg,
+      kcal,
+      protein,
+    });
+  }
+  return weekPlan;
+}
+
+const PERSONAS = [
+  {
+    id:"bro", emoji:"💪", name:"Rex",
+    color:"#ff4444", glow:"rgba(255,68,68,0.2)", bg:"rgba(255,68,68,0.06)",
+    intensity:"high",
+    en:"Hype Coach", ja:"体育会系コーチ", zh:"热血教练", ko:"체육계 코치",
+    tag:{ ja:"🔥 強度高め", en:"🔥 High intensity", ko:"🔥 강도 높음", zh:"🔥 高强度" },
+    sub:{ ja:"熱血・体育会系（厳しめ）", en:"Loud & intense — tough love", ko:"열혈·체육계（엄격함）", zh:"热血·体育系（严格）" },
+    desc:{ en:"Loud, intense, tough love. Won't let you quit.", ja:"熱血・体育会系。絶対諦めさせない。", zh:"热血激情，绝不让你放弃。", ko:"열혈, 강도 높은 사랑. 절대 포기 못하게." },
+    style:"INTENSE hype coach. Loud, energetic, uses caps for emphasis. Tough love. Celebrates PRs hard. Never accepts excuses.",
+    repsMulti:1.2, setsBonus:1,
+  },
+  {
+    id:"sister", emoji:"🌸", name:"Mia",
+    color:"#ff6b9d", glow:"rgba(255,107,157,0.2)", bg:"rgba(255,107,157,0.06)",
+    intensity:"low",
+    en:"Big Sister", ja:"優しい姉系コーチ", zh:"温柔姐姐", ko:"다정한 언니",
+    tag:{ ja:"💆 優しめ", en:"💆 Gentle pace", ko:"💆 부드러움", zh:"💆 温和节奏" },
+    sub:{ ja:"温かく寄り添う（優しめ）", en:"Warm & supportive — easy pace", ko:"따뜻한 응원（부드러움）", zh:"温暖支持（温和）" },
+    desc:{ en:"Warm, supportive, always in your corner.", ja:"温かく寄り添う。親友のようなトレーナー。", zh:"温暖支持，像最好的朋友一样。", ko:"따뜻하고 든든한 지원." },
+    style:"Warm nurturing big sister energy. Supportive and empathetic. Celebrates small wins. Never judges.",
+    repsMulti:0.85, setsBonus:0,
+  },
+  {
+    id:"kpop", emoji:"⭐", name:"Kai",
+    color:"#a855f7", glow:"rgba(168,85,247,0.2)", bg:"rgba(168,85,247,0.06)",
+    intensity:"mid",
+    en:"K-pop Trainer", ja:"韓国アイドル系コーチ", zh:"韩系教练", ko:"K-POP 트레이너",
+    tag:{ ja:"💅 スタイル重視", en:"💅 Aesthetic focus", ko:"💅 스타일 중심", zh:"💅 外形导向" },
+    sub:{ ja:"細マッチョ・韓国アイドル系（標準）", en:"Lean physique — idol-style training", ko:"슬림핏·K-pop 아이돌계（표준）", zh:"精瘦体型·韩流偶像系（标准）" },
+    desc:{ en:"Lean physique, aesthetics, trains like an idol.", ja:"細マッチョ重視。韓国アイドル式トレーニング。", zh:"精瘦体型，韩式偶像训练。", ko:"슬림한 체형. 한국 아이돌식 훈련." },
+    style:"Clean aesthetic precise coach. Focused on lean physique, posture. Calm confident energy. References K-pop idol training.",
+    repsMulti:1.0, setsBonus:0,
+  },
+  {
+    id:"drill", emoji:"😤", name:"Drake",
+    color:"#ff8c00", glow:"rgba(255,140,0,0.2)", bg:"rgba(255,140,0,0.06)",
+    intensity:"high",
+    en:"Drill Coach", ja:"スパルタコーチ", zh:"严格教练", ko:"스파르타 코치",
+    tag:{ ja:"💢 スパルタ", en:"💢 Spartan mode", ko:"💢 스파르타", zh:"💢 斯巴达模式" },
+    sub:{ ja:"スパルタ・言い訳NG（かなり厳しめ）", en:"No excuses — maximum output", ko:"스파르타·변명 없음（매우 엄격）", zh:"斯巴达·不接受借口（非常严格）" },
+    desc:{ en:"No excuses. No BS. High standards.", ja:"言い訳NG。厳しく追い込む。", zh:"没有借口，严格要求。", ko:"변명 없음. 높은 기준." },
+    style:"Strict no-nonsense drill coach. Will push hard and call out laziness. High standards. Demands commitment.",
+    repsMulti:1.3, setsBonus:1,
+  },
+  {
+    id:"gyaru", emoji:"✨", name:"Yuna",
+    color:"#ff69b4", glow:"rgba(255,105,180,0.2)", bg:"rgba(255,105,180,0.06)",
+    intensity:"low",
+    en:"Hype Queen", ja:"ギャル系コーチ", zh:"辣妹教练", ko:"갸루 코치",
+    tag:{ ja:"🎉 楽しく続ける", en:"🎉 Fun & hype", ko:"🎉 즐기면서", zh:"🎉 快乐健身" },
+    sub:{ ja:"超ポジティブ・楽しくフィットネス（優しめ）", en:"Super positive — fitness is a party", ko:"초긍정·즐겁게 피트니스（부드러움）", zh:"超正能量·健身像派对（温和）" },
+    desc:{ en:"Super hype, fun, makes fitness a party.", ja:"超ハイテンション。楽しくフィットネス！", zh:"超级活力，让健身像派对！", ko:"초고에너지. 운동을 파티처럼!" },
+    style:"Super energetic gyaru-style. Trendy slang, lots of enthusiasm. Makes everything fun. Fitness is a vibe not a chore.",
+    repsMulti:0.85, setsBonus:0,
+  },
+  {
+    id:"science", emoji:"🧬", name:"Dr. Lee",
+    color:"#00bfff", glow:"rgba(0,191,255,0.2)", bg:"rgba(0,191,255,0.06)",
+    intensity:"mid",
+    en:"Science Coach", ja:"理論派コーチ", zh:"科学教练", ko:"이론파 코치",
+    tag:{ ja:"🔬 科学的根拠あり", en:"🔬 Evidence-based", ko:"🔬 과학적 근거", zh:"🔬 有科学依据" },
+    sub:{ ja:"データ・根拠重視（標準）", en:"Data-driven — explains everything", ko:"데이터·근거 중심（표준）", zh:"数据驱动·解释一切（标准）" },
+    desc:{ en:"Evidence-based. Explains the why behind everything.", ja:"全て科学的根拠あり。なぜかを説明。", zh:"一切基于科学，解释背后的原因。", ko:"근거 기반. 모든 것의 이유를 설명." },
+    style:"Evidence-based analytical coach. Cites physiological reasons. Explains WHY behind every recommendation. Precise, methodical, loves data.",
+    repsMulti:1.0, setsBonus:0,
+  },
+];
+
+const BODY_GOALS = {
+  male: [
+    { id:"kpop",     title:"K-POP Idol",     ja:"K-POPアイドル系", ko:"K팝 아이돌형", zh:"K-POP偶像型",  bf:"8–13%",  targetBf:10, color:"#00bfff", ref:"韓国アイドル・K-POPスタイル" },
+    { id:"korean",   title:"Korean Actor",   ja:"韓国俳優系",      ko:"한국 배우형",  zh:"韩国演员型",   bf:"10–15%", targetBf:12, color:"#22c55e", ref:"韓国俳優・ドラマ俳優スタイル" },
+    { id:"lean",     title:"Lean & Toned",   ja:"細マッチョ",      ko:"슬림핏",      zh:"精实线条",    bf:"10–15%", targetBf:12, color:"#00bfff", ref:"細マッチョ・スリムフィット" },
+    { id:"athletic", title:"Athletic",       ja:"アスリート体型",   ko:"운동선수형",   zh:"运动型",      bf:"8–12%",  targetBf:10, color:"#f59e0b", ref:"マラソン・サッカー選手スタイル" },
+    { id:"muscular", title:"Muscular",       ja:"マッスル",        ko:"머슬형",      zh:"肌肉型",      bf:"6–10%",  targetBf:8,  color:"#ef4444", ref:"フィジーク・格闘家スタイル" },
+  ],
+  other: [
+    { id:"kpop",     title:"K-POP Idol",     ja:"K-POPアイドル系", ko:"K팝 아이돌형", zh:"K-POP偶像型",  bf:"8–13%",  targetBf:10, color:"#00bfff", ref:"韓国アイドル・K-POPスタイル" },
+    { id:"lean",     title:"Lean & Toned",   ja:"細マッチョ",      ko:"슬림핏",      zh:"精实线条",    bf:"10–15%", targetBf:12, color:"#00bfff", ref:"細マッチョ・スリムフィット" },
+    { id:"toned",    title:"Toned",          ja:"引き締め",        ko:"탄탄형",      zh:"紧致型",      bf:"18–23%", targetBf:19, color:"#22c55e", ref:"トーンアップ・引き締め" },
+    { id:"athletic", title:"Athletic",       ja:"アスリート体型",   ko:"운동선수형",   zh:"运动型",      bf:"8–12%",  targetBf:10, color:"#f59e0b", ref:"マラソン・サッカー選手スタイル" },
+    { id:"strong",   title:"Strong",         ja:"強い体",          ko:"강한 체형",   zh:"强健型",      bf:"16–21%", targetBf:18, color:"#ef4444", ref:"クロスフィット・アスリート" },
+  ],
+  female: [
+    { id:"kpop_girl", title:"K-POP Girl",    ja:"K-POP Girl系",   ko:"K팝 걸형",    zh:"K-POP女团型", bf:"15–20%", targetBf:17, color:"#ec4899", ref:"韓国ガールズグループスタイル" },
+    { id:"slim",      title:"Slim & Fit",    ja:"スリム",          ko:"슬림핏",      zh:"苗条型",      bf:"18–23%", targetBf:20, color:"#8b5cf6", ref:"モデル・スリムフィット" },
+    { id:"toned",     title:"Toned",         ja:"引き締め",        ko:"탄탄형",      zh:"紧致型",      bf:"18–23%", targetBf:19, color:"#22c55e", ref:"トーンアップ・引き締め" },
+    { id:"curvy",     title:"Curvy & Fit",   ja:"グラマー",        ko:"글래머형",    zh:"曲线型",      bf:"22–27%", targetBf:23, color:"#f59e0b", ref:"ヘルシーグラマー" },
+    { id:"strong",    title:"Strong",        ja:"強い体",          ko:"강한 체형",   zh:"强健型",      bf:"16–21%", targetBf:18, color:"#ef4444", ref:"クロスフィット・アスリート" },
+  ],
+};
+
+const LIFE_GOALS = [
+  { id:"confidence", emoji:"🦁", en:"Build unshakeable confidence", ja:"絶対的な自信をつけたい", ko:"흔들리지 않는 자신감 갖기", zh:"建立不可动摇的自信" },
+  { id:"energy",     emoji:"⚡", en:"Have more energy every day",   ja:"毎日もっとエネルギーが欲しい", ko:"매일 더 많은 에너지 갖기", zh:"每天拥有更多活力" },
+  { id:"appearance", emoji:"🔥", en:"Look my absolute best",        ja:"最高の見た目になりたい", ko:"최고의 외모 만들기", zh:"让自己看起来最好" },
+  { id:"health",     emoji:"❤️", en:"Improve long-term health",     ja:"長期的な健康を手に入れたい", ko:"장기적인 건강 개선", zh:"改善长期健康" },
+  { id:"strength",   emoji:"💪", en:"Get noticeably stronger",      ja:"明らかに強くなりたい", ko:"눈에 띄게 강해지기", zh:"变得明显更强壮" },
+  { id:"habits",     emoji:"🧠", en:"Build consistent habits",      ja:"習慣を作りたい", ko:"꾸준한 습관 만들기", zh:"建立一致的习惯" },
+];
+
+const AGE_GROUPS = [
+  { id:"teens",    en:"Under 20",  ja:"20歳未満",  ko:"20세 미만", zh:"20岁以下", range:"<20" },
+  { id:"twenties", en:"20s",       ja:"20代",      ko:"20대",      zh:"20多岁",   range:"20-29" },
+  { id:"thirties", en:"30s",       ja:"30代",      ko:"30대",      zh:"30多岁",   range:"30-39" },
+  { id:"forties",  en:"40s",       ja:"40代",      ko:"40대",      zh:"40多岁",   range:"40-49" },
+  { id:"fifty",    en:"50+",       ja:"50代以上",  ko:"50대 이상", zh:"50岁以上", range:"50+" },
+];
+
+const FITNESS_LEVELS = [
+  { id:"beginner", en:"Beginner",     ja:"初心者（ほぼ運動なし）",   ko:"초보자（거의 운동 없음）", zh:"初学者（几乎不运动）" },
+  { id:"some",     en:"Some exp.",    ja:"経験あり（週1-2回）",      ko:"경험 있음（주 1-2회）",    zh:"有经验（每周1-2次）" },
+  { id:"regular",  en:"Regular",     ja:"定期的（週3-4回）",        ko:"규칙적（주 3-4회）",       zh:"定期运动（每周3-4次）" },
+  { id:"advanced", en:"Advanced",    ja:"上級者（週5回以上）",      ko:"고급자（주 5회 이상）",    zh:"高级（每周5次以上）" },
+];
+
+
 function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose }) {
   const CD_START = 5;
   const guide   = getExGuide(exercise, lang, profile?.gender);
@@ -2671,6 +2924,7 @@ function App() {
 
   const [meals, setMeals]       = useState([]);
   const [mealDate, setMealDate]   = useState(todayKey());
+  const [weeklyPlan, setWeeklyPlan]   = useState(lsGet("mb_weekly_plan", null));
   const [nutView, setNutView]     = useState("calendar");
   const [futureMenus, setFutureMenus] = useState(() => lsGet("mb_future_menus", {}));
   const [menuLoading, setMenuLoading] = useState(false);
@@ -3695,6 +3949,62 @@ function App() {
   { id:"nutrition", label:{ en:"Nutrition", ja:"栄養",     ko:"영양",    zh:"营养",   de:"Ernährung",  fr:"Nutrition",  es:"Nutrición" } },
   { id:"progress",  label:{ en:"Progress",  ja:"進捗",     ko:"진행",    zh:"进展",   de:"Fortschritt",fr:"Progrès",    es:"Progreso"  } },
 ];
+  useEffect(() => {
+    if (nutChatHist.length > 0) lsSet("mb_nut_chat", nutChatHist.slice(-50));
+  }, [nutChatHist]);
+
+
+  useEffect(() => {
+    if (!profile) return;
+    const today = todayKey();
+    const monday = (() => {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(d.setDate(diff)).toISOString().slice(0,10);
+    })();
+    const saved = lsGet("mb_weekly_plan", null);
+    // 保存済みプランが今週のものならそのまま使用
+    if (saved && saved.weekStart === monday) {
+      setWeeklyPlan(saved);
+      return;
+    }
+    // 新規生成
+    const coachId = profile?.coachId || "bro";
+    const plan = generateWeeklyPlan(profile, coachId, lang);
+    const planData = { weekStart: monday, days: plan };
+    setWeeklyPlan(planData);
+    lsSet("mb_weekly_plan", planData);
+
+    // scheduleにも週間プランを追加（既存の手動追加分は保持）
+    const existingSchedule = lsGet("mb_schedule", []);
+    // 今週の自動生成分を削除して再追加
+    const manualItems = existingSchedule.filter(s => !s.isAutoGen);
+    const autoItems = [];
+    plan.forEach((day, i) => {
+      if (day.isRest || day.workout.length === 0) return;
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const dk = d.toISOString().slice(0,10);
+      day.workout.forEach(ex => {
+        autoItems.push({
+          id: Date.now() + Math.random(),
+          dateKey: dk,
+          exercise: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          done: false,
+          missed: false,
+          note: "",
+          isAutoGen: true,
+        });
+      });
+    });
+    const newSchedule = [...manualItems, ...autoItems];
+    setSchedule(newSchedule);
+    lsSet("mb_schedule", newSchedule);
+  }, [profile?.coachId, profile?.fitnessLevel, profile?.daysPerWeek, profile?.gender]);
+
   return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#e8f8ef 0%,#f0fdf4 50%,#e0f2fe 100%)",fontFamily:"DM Sans, sans-serif",maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column"}}>
       <style>{FONTS}</style>
