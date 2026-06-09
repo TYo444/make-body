@@ -2727,6 +2727,14 @@ function Onboarding({ lang, setLang, onComplete }) {
   );
 }
 
+const TAB_NAV = [
+  { id:"home",      label:{ en:"Home",      ja:"ホーム",    ko:"홈",      zh:"首页",   de:"Start",      fr:"Accueil",    es:"Inicio"    } },
+  { id:"coach",     label:{ en:"Training",  ja:"トレーニング", ko:"트레이닝", zh:"训练",  de:"Training",   fr:"Training",   es:"Entreno"   } },
+  { id:"nutrition", label:{ en:"Nutrition", ja:"栄養",     ko:"영양",    zh:"营养",   de:"Ernährung",  fr:"Nutrition",  es:"Nutrición" } },
+  { id:"progress",  label:{ en:"Progress",  ja:"進捗",     ko:"진행",    zh:"进展",   de:"Fortschritt",fr:"Progrès",    es:"Progreso"  } },
+];
+  useEffect(() => {
+
 function App() {
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [authStep, setAuthStep] = useState("loading"); // loading|signin|app
@@ -3825,13 +3833,6 @@ function App() {
     } catch(err) { setAnalyzing(false); }
   }
 
-  const TAB_NAV = [
-  { id:"home",      label:{ en:"Home",      ja:"ホーム",    ko:"홈",      zh:"首页",   de:"Start",      fr:"Accueil",    es:"Inicio"    } },
-  { id:"coach",     label:{ en:"Training",  ja:"トレーニング", ko:"트레이닝", zh:"训练",  de:"Training",   fr:"Training",   es:"Entreno"   } },
-  { id:"nutrition", label:{ en:"Nutrition", ja:"栄養",     ko:"영양",    zh:"营养",   de:"Ernährung",  fr:"Nutrition",  es:"Nutrición" } },
-  { id:"progress",  label:{ en:"Progress",  ja:"進捗",     ko:"진행",    zh:"进展",   de:"Fortschritt",fr:"Progrès",    es:"Progreso"  } },
-];
-  useEffect(() => {
     if (nutChatHist.length > 0) lsSet("mb_nut_chat", nutChatHist.slice(-50));
   }, [nutChatHist]);
 
