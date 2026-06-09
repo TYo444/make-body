@@ -5022,8 +5022,6 @@ function App() {
           </div>
         )}
 
-      </div>
-
       {/* Bottom nav */}
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:C.surface,borderTop:"1px solid "+C.border,display:"flex",zIndex:100}}>
         {TAB_NAV.map(t2=>(
@@ -5035,7 +5033,17 @@ function App() {
       </div>
 
       {/* Modals */}
-      {counterM&&<WorkoutCounter exercise={counterM.exercise} sets={counterM.sets} reps={counterM.reps} lang={lang} coach={coach} profile={profile} onClose={()=>setCounterM(null)}/>}
+      {counterM&&<WorkoutCounter exercise={counterM.exercise} sets={counterM.sets} reps={counterM.reps} lang={lang} coach={coach} profile={profile} onClose={(completed)=>{
+        if(completed){
+          const dk=today;
+          const updated=schedule.map(s=>s.dateKey===dk&&s.exercise===counterM.exercise&&!s.done?{...s,done:true}:s);
+          setSchedule(updated);syncWorkoutHistory(updated);
+          const doneKey="mb_done_"+dk;
+          const doneList=lsGet(doneKey,[]);
+          if(!doneList.includes(counterM.exercise))lsSet(doneKey,[...doneList,counterM.exercise]);
+        }
+        setCounterM(null);
+      }}/>}
       {showTrialPaywall&&<TrialEndPaywall
         lang={lang} cl={cl} coach={coach} profile={profile}
         onUpgrade={()=>{ setShowTrialPaywall(false); setShowUpgrade(true); }}
