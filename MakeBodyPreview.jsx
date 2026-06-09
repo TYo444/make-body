@@ -3849,7 +3849,7 @@ function App() {
     const plan = generateWeeklyPlan(profile, coachId, lang);
     const planData = { weekStart: monday, days: plan };
     setWeeklyPlan(planData); lsSet("mb_weekly_plan", planData);
-  }, [profile?.coachId, profile?.fitnessLevel, profile?.daysPerWeek, profile?.gender]);
+  }, [profile]);
 
   return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#e8f8ef 0%,#f0fdf4 50%,#e0f2fe 100%)",fontFamily:"DM Sans, sans-serif",maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column"}}>
