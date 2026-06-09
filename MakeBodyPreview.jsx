@@ -2733,7 +2733,6 @@ const TAB_NAV = [
   { id:"nutrition", label:{ en:"Nutrition", ja:"栄養",     ko:"영양",    zh:"营养",   de:"Ernährung",  fr:"Nutrition",  es:"Nutrición" } },
   { id:"progress",  label:{ en:"Progress",  ja:"進捗",     ko:"진행",    zh:"进展",   de:"Fortschritt",fr:"Progrès",    es:"Progreso"  } },
 ];
-  useEffect(() => {
 
 function App() {
   const [showLangPicker, setShowLangPicker] = useState(false);
