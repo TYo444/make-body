@@ -2776,6 +2776,27 @@ function App() {
   const [streak, setStreak]       = useState(0);
   const [confScore, setConfScore] = useState(0);
   const [resetCountdown, setResetCountdown] = useState("");
+  const [coachMsgFixed, setCoachMsgFixed] = useState(null); // 固定メッセージ
+  const [calDate, setCalDate]   = useState(new Date());
+  const [calFilter, setCalFilter] = useState("all"); // all|done|planned|missed
+
+  const [meals, setMeals]       = useState([]);
+  const [mealDate, setMealDate]   = useState(todayKey());
+  const [weeklyPlan, setWeeklyPlan]   = useState(lsGet("mb_weekly_plan", null));
+  const [nutView, setNutView]     = useState("calendar");
+  const [futureMenus, setFutureMenus] = useState(() => lsGet("mb_future_menus", {}));
+  const [menuLoading, setMenuLoading] = useState(false);
+  const [nutChatHist, setNutChatHist] = useState([]);
+  const [nutChatIn, setNutChatIn]     = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [scannedMeal, setScannedMeal] = useState(null);
+  const [mealHist, setMealHist] = useState({}); // { dateKey: [meals] }
+
+  const [showCancelFb, setShowCancelFb] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+
+  const chatEndRef = useRef(null);
+
 
   // UTC リセットカウントダウン（1分ごとに更新）
   useEffect(() => {
@@ -2807,26 +2828,6 @@ function App() {
     return () => clearInterval(timer);
   }, [isPro]);
 
-  const [coachMsgFixed, setCoachMsgFixed] = useState(null); // 固定メッセージ
-  const [calDate, setCalDate]   = useState(new Date());
-  const [calFilter, setCalFilter] = useState("all"); // all|done|planned|missed
-
-  const [meals, setMeals]       = useState([]);
-  const [mealDate, setMealDate]   = useState(todayKey());
-  const [weeklyPlan, setWeeklyPlan]   = useState(lsGet("mb_weekly_plan", null));
-  const [nutView, setNutView]     = useState("calendar");
-  const [futureMenus, setFutureMenus] = useState(() => lsGet("mb_future_menus", {}));
-  const [menuLoading, setMenuLoading] = useState(false);
-  const [nutChatHist, setNutChatHist] = useState([]);
-  const [nutChatIn, setNutChatIn]     = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [scannedMeal, setScannedMeal] = useState(null);
-  const [mealHist, setMealHist] = useState({}); // { dateKey: [meals] }
-
-  const [showCancelFb, setShowCancelFb] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
-
-  const chatEndRef = useRef(null);
 
   const MOODS = ["😔","😐","🙂","😊","🔥"];
   const coach = PERSONAS.find(p => p.id === profile?.coachId) || PERSONAS[0];
