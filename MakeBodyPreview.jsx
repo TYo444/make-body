@@ -742,55 +742,6 @@ function generateWeeklyPlan(profile, coachId, lang) {
   return weekPlan;
 }
 
-const BODY_GOALS = {
-  male: [
-    { id:"kpop",     title:"K-POP Idol",     ja:"K-POPアイドル系", ko:"K팝 아이돌형", zh:"K-POP偶像型",  bf:"8–13%",  targetBf:10, color:"#00bfff", ref:"韓国アイドル・K-POPスタイル" },
-    { id:"korean",   title:"Korean Actor",   ja:"韓国俳優系",      ko:"한국 배우형",  zh:"韩国演员型",   bf:"10–15%", targetBf:12, color:"#22c55e", ref:"韓国俳優・ドラマ俳優スタイル" },
-    { id:"lean",     title:"Lean & Toned",   ja:"細マッチョ",      ko:"슬림핏",      zh:"精实线条",    bf:"10–15%", targetBf:12, color:"#00bfff", ref:"細マッチョ・スリムフィット" },
-    { id:"athletic", title:"Athletic",       ja:"アスリート体型",   ko:"운동선수형",   zh:"运动型",      bf:"8–12%",  targetBf:10, color:"#f59e0b", ref:"マラソン・サッカー選手スタイル" },
-    { id:"muscular", title:"Muscular",       ja:"マッスル",        ko:"머슬형",      zh:"肌肉型",      bf:"6–10%",  targetBf:8,  color:"#ef4444", ref:"フィジーク・格闘家スタイル" },
-  ],
-  other: [
-    { id:"kpop",     title:"K-POP Idol",     ja:"K-POPアイドル系", ko:"K팝 아이돌형", zh:"K-POP偶像型",  bf:"8–13%",  targetBf:10, color:"#00bfff", ref:"韓国アイドル・K-POPスタイル" },
-    { id:"lean",     title:"Lean & Toned",   ja:"細マッチョ",      ko:"슬림핏",      zh:"精实线条",    bf:"10–15%", targetBf:12, color:"#00bfff", ref:"細マッチョ・スリムフィット" },
-    { id:"toned",    title:"Toned",          ja:"引き締め",        ko:"탄탄형",      zh:"紧致型",      bf:"18–23%", targetBf:19, color:"#22c55e", ref:"トーンアップ・引き締め" },
-    { id:"athletic", title:"Athletic",       ja:"アスリート体型",   ko:"운동선수형",   zh:"运动型",      bf:"8–12%",  targetBf:10, color:"#f59e0b", ref:"マラソン・サッカー選手スタイル" },
-    { id:"strong",   title:"Strong",         ja:"強い体",          ko:"강한 체형",   zh:"强健型",      bf:"16–21%", targetBf:18, color:"#ef4444", ref:"クロスフィット・アスリート" },
-  ],
-  female: [
-    { id:"kpop_girl", title:"K-POP Girl",    ja:"K-POP Girl系",   ko:"K팝 걸형",    zh:"K-POP女团型", bf:"15–20%", targetBf:17, color:"#ec4899", ref:"韓国ガールズグループスタイル" },
-    { id:"slim",      title:"Slim & Fit",    ja:"スリム",          ko:"슬림핏",      zh:"苗条型",      bf:"18–23%", targetBf:20, color:"#8b5cf6", ref:"モデル・スリムフィット" },
-    { id:"toned",     title:"Toned",         ja:"引き締め",        ko:"탄탄형",      zh:"紧致型",      bf:"18–23%", targetBf:19, color:"#22c55e", ref:"トーンアップ・引き締め" },
-    { id:"curvy",     title:"Curvy & Fit",   ja:"グラマー",        ko:"글래머형",    zh:"曲线型",      bf:"22–27%", targetBf:23, color:"#f59e0b", ref:"ヘルシーグラマー" },
-    { id:"strong",    title:"Strong",        ja:"強い体",          ko:"강한 체형",   zh:"强健型",      bf:"16–21%", targetBf:18, color:"#ef4444", ref:"クロスフィット・アスリート" },
-  ],
-};
-
-const LIFE_GOALS = [
-  { id:"confidence", emoji:"🦁", en:"Build unshakeable confidence", ja:"絶対的な自信をつけたい", ko:"흔들리지 않는 자신감 갖기", zh:"建立不可动摇的自信" },
-  { id:"energy",     emoji:"⚡", en:"Have more energy every day",   ja:"毎日もっとエネルギーが欲しい", ko:"매일 더 많은 에너지 갖기", zh:"每天拥有更多活力" },
-  { id:"appearance", emoji:"🔥", en:"Look my absolute best",        ja:"最高の見た目になりたい", ko:"최고의 외모 만들기", zh:"让自己看起来最好" },
-  { id:"health",     emoji:"❤️", en:"Improve long-term health",     ja:"長期的な健康を手に入れたい", ko:"장기적인 건강 개선", zh:"改善长期健康" },
-  { id:"strength",   emoji:"💪", en:"Get noticeably stronger",      ja:"明らかに強くなりたい", ko:"눈에 띄게 강해지기", zh:"变得明显更强壮" },
-  { id:"habits",     emoji:"🧠", en:"Build consistent habits",      ja:"習慣を作りたい", ko:"꾸준한 습관 만들기", zh:"建立一致的习惯" },
-];
-
-const AGE_GROUPS = [
-  { id:"teens",    en:"Under 20",  ja:"20歳未満",  ko:"20세 미만", zh:"20岁以下", range:"<20" },
-  { id:"twenties", en:"20s",       ja:"20代",      ko:"20대",      zh:"20多岁",   range:"20-29" },
-  { id:"thirties", en:"30s",       ja:"30代",      ko:"30대",      zh:"30多岁",   range:"30-39" },
-  { id:"forties",  en:"40s",       ja:"40代",      ko:"40대",      zh:"40多岁",   range:"40-49" },
-  { id:"fifty",    en:"50+",       ja:"50代以上",  ko:"50대 이상", zh:"50岁以上", range:"50+" },
-];
-
-const FITNESS_LEVELS = [
-  { id:"beginner", en:"Beginner",     ja:"初心者（ほぼ運動なし）",   ko:"초보자（거의 운동 없음）", zh:"初学者（几乎不运动）" },
-  { id:"some",     en:"Some exp.",    ja:"経験あり（週1-2回）",      ko:"경험 있음（주 1-2회）",    zh:"有经验（每周1-2次）" },
-  { id:"regular",  en:"Regular",     ja:"定期的（週3-4回）",        ko:"규칙적（주 3-4회）",       zh:"定期运动（每周3-4次）" },
-  { id:"advanced", en:"Advanced",    ja:"上級者（週5回以上）",      ko:"고급자（주 5회 이상）",    zh:"高级（每周5次以上）" },
-];
-
-
 function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose }) {
   const CD_START = 5;
   const guide   = getExGuide(exercise, lang, profile?.gender);
