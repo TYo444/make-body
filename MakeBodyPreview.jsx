@@ -2671,6 +2671,7 @@ function App() {
 
   const [meals, setMeals]       = useState([]);
   const [mealDate, setMealDate]   = useState(todayKey());
+  const [nutView, setNutView]     = useState("calendar");
   const [futureMenus, setFutureMenus] = useState(() => lsGet("mb_future_menus", {}));
   const [menuLoading, setMenuLoading] = useState(false);
   const [nutChatHist, setNutChatHist] = useState([]);
@@ -3823,7 +3824,9 @@ function App() {
               );
             })()}
 
-                        {/* Today's workout */}
+
+
+            {/* Today's workout */}
             <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                 <div>
@@ -3856,6 +3859,186 @@ function App() {
                 ))
               )}
             </div>
+            {/* ── 今日のプラン（ルールベース・API不使用） ── */}
+            {(()=>{
+              const todayPlan = weeklyPlan?.days?.[0];
+              if (!todayPlan) return null;
+              return (
+                <div style={{background:C.card,borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid "+C.border}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                    <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text}}>
+                      {lang==="ja"?"📋 今日のプラン":lang==="ko"?"📋 오늘의 플랜":"📋 TODAY'S PLAN"}
+                    </div>
+                    <div style={{fontSize:10,color:C.muted}}>
+                      {new Date().toLocaleDateString(lang==="ja"?"ja-JP":lang==="ko"?"ko-KR":"en-US",{weekday:"short",month:"short",day:"numeric"})}
+                    </div>
+                  </div>
+
+                  {/* コーチメッセージ */}
+                  <div style={{background:coach.bg,border:"1px solid "+coach.color+"40",borderRadius:10,padding:"10px 12px",marginBottom:10,fontSize:12,color:coach.color,fontWeight:600,lineHeight:1.5}}>
+                    {coach.emoji} {todayPlan.coachMsg}
+                  </div>
+
+                  {/* トレーニング */}
+                  <div style={{marginBottom:10}}>
+                    <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:6}}>
+                      💪 {lang==="ja"?"今日のトレーニング":lang==="ko"?"오늘의 트레이닝":"TODAY'S WORKOUT"}
+                    </div>
+                    {todayPlan.isRest ? (
+                      <div style={{fontSize:12,color:C.muted,padding:"8px 10px",background:C.surface,borderRadius:8,border:"1px solid "+C.border}}>
+                        🛌 {lang==="ja"?"今日は休息日。しっかり回復しよう。":lang==="ko"?"오늘은 휴식일. 잘 회복하자.":"Rest day. Recover well."}
+                      </div>
+                    ) : (
+                      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                        {(()=>{
+                          const doneList = lsGet("mb_done_"+today, []);
+                          return todayPlan.workout.map((ex,i)=>{
+                            const isDone = doneList.includes(ex.name);
+                            return (
+                              <div key={i}
+                                onClick={()=>!isDone&&setCounterM({exercise:ex.name,sets:ex.sets,reps:ex.reps})}
+                                style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:isDone?"rgba(34,197,94,0.08)":C.surface,borderRadius:8,border:"1px solid "+(isDone?C.green+"40":C.border),cursor:isDone?"default":"pointer",opacity:isDone?0.7:1,transition:"all 0.2s"}}>
+                                <div style={{fontSize:12,fontWeight:600,color:isDone?C.muted:C.text,textDecoration:isDone?"line-through":"none"}}>
+                                  {isDone?"✅ ":""}{ex.name}
+                                </div>
+                                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                  <div style={{fontSize:12,color:isDone?C.muted:coach.color,fontWeight:700}}>
+                                    {ex.sets}×{ex.reps}{ex.unit==="sec"?(lang==="ja"?"秒":lang==="ko"?"초":"s"):(lang==="ja"?"回":lang==="ko"?"회":"reps")}
+                                  </div>
+                                  {!isDone&&<div style={{fontSize:10,color:C.green,fontWeight:700}}>▶ START</div>}
+                                  {isDone&&<div style={{fontSize:10,color:C.green,fontWeight:700}}>{lang==="ja"?"完了":lang==="ko"?"완료":"Done"}</div>}
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 食事 - 無料はkcal/タンパク質のみ、PRO/Trialは詳細 */}
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:6}}>
+                      🍽️ {lang==="ja"?"今日の食事目安":lang==="ko"?"오늘의 식사 목표":"TODAY'S NUTRITION"}
+                    </div>
+                    <div style={{display:"flex",gap:6,marginBottom: (isPro||cl.isTrial)?8:0}}>
+                      <div style={{flex:1,background:C.surface,borderRadius:8,padding:"8px",textAlign:"center",border:"1px solid "+C.border}}>
+                        <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"目標kcal":lang==="ko"?"목표 kcal":"Target kcal"}</div>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:18,color:C.green}}>{todayPlan.kcal}</div>
+                      </div>
+                      <div style={{flex:1,background:C.surface,borderRadius:8,padding:"8px",textAlign:"center",border:"1px solid "+C.border}}>
+                        <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"タンパク質":lang==="ko"?"단백질":"Protein"}</div>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:18,color:"#f59e0b"}}>{todayPlan.protein}g</div>
+                      </div>
+                    </div>
+                    {(isPro||cl.isTrial) ? (
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                        {[
+                          {label:lang==="ja"?"朝":lang==="ko"?"아침":"Morning", val:todayPlan.meal?.morning},
+                          {label:lang==="ja"?"昼":lang==="ko"?"점심":"Lunch",   val:todayPlan.meal?.lunch},
+                          {label:lang==="ja"?"夜":lang==="ko"?"저녁":"Dinner",  val:todayPlan.meal?.dinner},
+                          {label:lang==="ja"?"間食":lang==="ko"?"간식":"Snack", val:todayPlan.meal?.snack},
+                        ].map((m,i)=>(
+                          <div key={i} style={{display:"flex",gap:8,alignItems:"flex-start",padding:"6px 10px",background:C.surface,borderRadius:7,border:"1px solid "+C.border}}>
+                            <div style={{fontSize:10,fontWeight:700,color:C.green,minWidth:24,flexShrink:0}}>{m.label}</div>
+                            <div style={{fontSize:11,color:C.text,lineHeight:1.4}}>{m.val}</div>
+                          </div>
+                        ))}
+                        {todayPlan.meal?.budget && (
+                          <div style={{fontSize:10,color:C.muted,textAlign:"right",marginTop:2}}>
+                            {lang==="ja"?"目安予算 ¥":lang==="ko"?"예상 예산 ₩":"Est. budget $"}{todayPlan.meal.budget}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{marginTop:6}}>
+                        {Math.max(0,Math.round((todayPlan.protein)-totPro)) > 10 && (
+                          <div style={{fontSize:11,color:"#60a5fa",marginBottom:6,padding:"6px 10px",background:"rgba(96,165,250,0.08)",borderRadius:8}}>
+                            💡 {lang==="ja"?"タンパク質あと"+Math.max(0,Math.round(todayPlan.protein-totPro))+"g不足 → サラダチキン1個でほぼ補えます":lang==="ko"?"단백질 "+Math.max(0,Math.round(todayPlan.protein-totPro))+"g 부족 → 닭가슴살 1개 추천":"Protein "+Math.max(0,Math.round(todayPlan.protein-totPro))+"g short → try chicken breast"}
+                          </div>
+                        )}
+                        <div style={{padding:"8px 10px",background:C.greenGlow,borderRadius:8,border:"1px solid "+C.green+"40",fontSize:11,color:C.green,cursor:"pointer"}} onClick={()=>setShowUpgrade(true)}>
+                          🔒 {lang==="ja"?"朝昼夜の具体的な食事メニューはトライアルまたはPROで":lang==="ko"?"아침점심저녁 구체적 식사는 트라이얼/PRO에서":"Detailed meal plan available in Trial or PRO"}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── 翌日以降プレビュー（Trial=今週、PRO=来週まで、無料=ロック） ── */}
+            {weeklyPlan?.days && (
+              <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
+                <div style={{fontFamily:"Bebas Neue",fontSize:13,letterSpacing:1,color:C.text,marginBottom:10}}>
+                  {lang==="ja"?"📅 今後のプラン":lang==="ko"?"📅 앞으로의 플랜":"📅 UPCOMING PLAN"}
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  {weeklyPlan.days.slice(1, isPro?14:cl.isTrial?7:2).map((day,i)=>{
+                    const dateObj = new Date();
+                    dateObj.setDate(dateObj.getDate() + i + 1);
+                    const label = dateObj.toLocaleDateString(lang==="ja"?"ja-JP":lang==="ko"?"ko-KR":"en-US",{weekday:"short",month:"numeric",day:"numeric"});
+                    return (
+                      <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:C.surface,borderRadius:8,border:"1px solid "+C.border}}>
+                        <div style={{fontSize:11,color:C.muted,minWidth:60}}>{label}</div>
+                        <div style={{flex:1,marginLeft:8}}>
+                          {day.isRest ? (
+                            <span style={{fontSize:11,color:C.muted}}>🛌 {lang==="ja"?"休息":lang==="ko"?"휴식":"Rest"}</span>
+                          ) : (
+                            <span style={{fontSize:11,color:C.text}}>{day.workout.map(e=>e.name).join("・")}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {!isPro && !cl.isTrial && (
+                    <div style={{padding:"10px 12px",background:C.greenGlow,borderRadius:8,border:"1px solid "+C.green+"40",cursor:"pointer",textAlign:"center"}} onClick={()=>setShowUpgrade(true)}>
+                      <div style={{fontSize:12,color:C.green,fontWeight:700}}>
+                        🔒 {lang==="ja"?"トライアルで今週分、PROで来週まで見れる":lang==="ko"?"트라이얼로 이번 주, PRO로 다음 주까지":"Trial unlocks this week, PRO unlocks next week"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── 週次レビュー（PRO・日曜のみ） ── */}
+            {isPro && new Date().getDay() === 0 && (()=>{
+              const workoutLog  = lsGet("mb_workout_log", {});
+              const weightLog2  = lsGet("mb_weight_log",  {});
+              const weekDates   = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return d.toISOString().slice(0,10);});
+              const workoutDone = weekDates.filter(d=>workoutLog[d]?.done).length;
+              const weightArr   = weekDates.map(d=>weightLog2[d]).filter(Boolean);
+              const weightDiff  = weightArr.length>=2 ? (weightArr[0]-weightArr[weightArr.length-1]).toFixed(1) : null;
+              const achRate     = Math.round((workoutDone/6)*100);
+              return (
+                <div style={{background:"linear-gradient(135deg,"+coach.bg+","+C.card+")",borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid "+coach.color+"30"}}>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:coach.color,marginBottom:10}}>
+                    {lang==="ja"?"📊 今週のレビュー":lang==="ko"?"📊 이번 주 리뷰":"📊 WEEKLY REVIEW"}
+                  </div>
+                  <div style={{display:"flex",gap:8,marginBottom:8}}>
+                    <div style={{flex:1,background:C.card,borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid "+C.border}}>
+                      <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"達成率":lang==="ko"?"달성률":"Achievement"}</div>
+                      <div style={{fontFamily:"Bebas Neue",fontSize:22,color:achRate>=70?C.green:achRate>=50?"#f59e0b":"#ef4444"}}>{achRate}%</div>
+                    </div>
+                    <div style={{flex:1,background:C.card,borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid "+C.border}}>
+                      <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"筋トレ":lang==="ko"?"근력운동":"Workouts"}</div>
+                      <div style={{fontFamily:"Bebas Neue",fontSize:22,color:C.text}}>{workoutDone}<span style={{fontSize:12}}>/6</span></div>
+                    </div>
+                    {weightDiff && (
+                      <div style={{flex:1,background:C.card,borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid "+C.border}}>
+                        <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"体重変化":lang==="ko"?"체중 변화":"Weight"}</div>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:22,color:parseFloat(weightDiff)<0?C.green:"#f59e0b"}}>{weightDiff>0?"+":""}{weightDiff}kg</div>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{fontSize:11,color:coach.color,fontWeight:600,lineHeight:1.5}}>
+                    {achRate>=70?(lang==="ja"?"今週も素晴らしかった！来週もこの調子で。":lang==="ko"?"이번 주도 훌륭했어! 다음 주도 이대로.":"Great week! Keep it up next week."):achRate>=40?(lang==="ja"?"半分できた。来週はもう少し頑張ろう。":lang==="ko"?"절반 달성. 다음 주엔 조금 더 해보자.":"Halfway there. Push a bit more next week."):(lang==="ja"?"来週はまず1日だけでいい。小さく始めよう。":lang==="ko"?"다음 주엔 하루만 해도 돼. 작게 시작하자.":"Next week, just one day. Start small.")}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Body stats */}
             <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
               <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text,marginBottom:10}}>{lang==="ja"?"体組成":lang==="ko"?"체성분":"BODY COMPOSITION"}</div>
@@ -3865,13 +4048,42 @@ function App() {
                   <div style={{fontFamily:"Bebas Neue",fontSize:22,color:C.green}}>{profile.currentWeightKg}<span style={{fontSize:12,fontWeight:400}}> kg</span></div>
                 </div>
                 <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
-                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"目標体重":lang==="ko"?"목표 체중":"Target"}</div>
-                  <div style={{fontFamily:"Bebas Neue",fontSize:22,color:coach.color}}>{profile.idealWeightKg || "—"}<span style={{fontSize:12,fontWeight:400}}> kg</span></div>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>
+                    {profile?.gender==="female"
+                      ? (lang==="ja"?"目標体重":lang==="ko"?"목표 체중":"Goal Weight")
+                      : (lang==="ja"?"目標体脂肪":lang==="ko"?"목표 체지방":"Goal BF%")}
+                  </div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:22,color:coach.color}}>
+                    {profile?.gender==="female"
+                      ? (profile.idealWeightKg || "—")
+                      : (profile?.bodyGoal?.targetBf || "—")}
+                    <span style={{fontSize:12,fontWeight:400}}>{profile?.gender==="female"?" kg":"%"}</span>
+                  </div>
                 </div>
                 <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
                   <div style={{fontSize:10,color:C.muted,marginBottom:2}}>BMI</div>
                   <div style={{fontFamily:"Bebas Neue",fontSize:22,color:bmiCat(profile.bmi||22).color}}>{profile.bmi||"—"}</div>
                   <div style={{fontSize:9,color:bmiCat(profile.bmi||22).color}}>{bmiCat(profile.bmi||22).label}</div>
+                </div>
+              </div>
+              {/* 追加情報行 */}
+              <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"目標まで":lang==="ko"?"목표까지":"To Goal"}</div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:20,color:profile.currentWeightKg>profile.idealWeightKg?"#ef4444":C.green}}>
+                    {profile.idealWeightKg ? (Math.abs(profile.currentWeightKg - profile.idealWeightKg).toFixed(1)) : "—"}<span style={{fontSize:11,fontWeight:400}}> kg</span>
+                  </div>
+                  <div style={{fontSize:9,color:C.muted}}>{profile.currentWeightKg>profile.idealWeightKg?(lang==="ja"?"減量":lang==="ko"?"감량":"lose"):(lang==="ja"?"増量":lang==="ko"?"증량":"gain")}</div>
+                </div>
+                <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"推定体脂肪":lang==="ko"?"체지방 추정":"Est. Body Fat"}</div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:20,color:C.text}}>{profile.estCurrentBf||"—"}<span style={{fontSize:11,fontWeight:400}}>%</span></div>
+                  <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"推定値":lang==="ko"?"추정값":"estimate"}</div>
+                </div>
+                <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"カロリー目標":lang==="ko"?"칼로리 목표":"Cal Target"}</div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:20,color:C.text}}>{calGoal}<span style={{fontSize:11,fontWeight:400}}> kcal</span></div>
+                  <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"1日の目標":lang==="ko"?"일일 목표":"daily goal"}</div>
                 </div>
               </div>
               {/* Weight log input */}
@@ -3883,7 +4095,14 @@ function App() {
                   const updated = {...weightLog, [today]: w};
                   setWeightLog(updated);
                   syncWeightHistory(updated);
-                  setProfile(p=>({...p, currentWeightKg: w}));
+                  // BMI再計算
+                  const h = profile?.heightCm ? profile.heightCm / 100 : 1.7;
+                  const newBmi = Math.round((w / (h * h)) * 10) / 10;
+                  // 推定体脂肪率再計算（Deurenberg式）
+                  const ageNum = profile?.ageGroup ? parseInt(profile.ageGroup) || 30 : 30;
+                  const isMale = (profile?.gender || "male") === "male";
+                  const newBf = Math.round((1.20 * newBmi + 0.23 * ageNum - (isMale ? 16.2 : 5.4)) * 10) / 10;
+                  setProfile(p=>({...p, currentWeightKg: w, bmi: newBmi, estCurrentBf: Math.max(5, newBf)}));
                   setWeightInput("");
                 }} style={{background:C.green,border:"none",borderRadius:8,padding:"8px 14px",color:"#000",fontSize:12,fontWeight:700,cursor:"pointer"}}>
                   {lang==="ja"?"記録":lang==="ko"?"기록":"Log"}
@@ -3961,10 +4180,13 @@ function App() {
                             const isToday=dk===today;
                             const hasMeals=mealHist[dk]?.length>0;
                             return(
-                              <div key={di} onClick={()=>{setCalDate(new Date(dk));setCalFilter("all");}} style={{background:isToday?coach.bg:total>0?C.green+"08":"transparent",borderRadius:8,padding:"5px 0",textAlign:"center",cursor:"pointer",border:"1px solid "+isToday?coach.color:total>0?C.green+"20":C.border}}>
-                                <div style={{fontSize:11,color:isToday?coach.color:total>0?C.green:C.muted,fontWeight:isToday?700:400}}>{d}</div>
-                                {total>0&&<div style={{fontSize:8,color:done===total?C.green:C.muted}}>{done}/{total}</div>}
-                                {hasMeals&&<div style={{fontSize:7,color:"#f97316"}}>•</div>}
+                              <div key={di} onClick={()=>{setCalDate(new Date(dk));setCalFilter("all");}} style={{background:isToday?coach.bg:done===total&&total>0?"rgba(34,197,94,0.1)":"transparent",borderRadius:8,padding:"5px 0",textAlign:"center",cursor:"pointer",border:"1px solid "+(isToday?coach.color:done===total&&total>0?C.green+"40":total>0?C.border:C.dim)}}>
+                                <div style={{fontSize:11,color:isToday?coach.color:done===total&&total>0?C.green:total>0?C.text:C.muted,fontWeight:isToday||total>0?700:400}}>{d}</div>
+                                <div style={{display:"flex",justifyContent:"center",gap:2,marginTop:1}}>
+                                  {done>0&&<div style={{width:5,height:5,borderRadius:"50%",background:C.green}}/>}
+                                  {(total-done)>0&&dk>=today&&<div style={{width:5,height:5,borderRadius:"50%",background:coach.color+"80"}}/>}
+                                  {(total-done)>0&&dk<today&&<div style={{width:5,height:5,borderRadius:"50%",background:"#ef4444"}}/>}
+                                </div>
                               </div>
                             );
                           })}
@@ -3995,6 +4217,11 @@ function App() {
                       </div>
                     ));
                   })()}
+                {/* 凡例 */}
+                <div style={{display:"flex",gap:12,marginTop:8,fontSize:10,color:C.muted}}>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:C.green}}/>{lang==="ja"?"完了":lang==="ko"?"완료":"Done"}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:coach.color+"80"}}/>{lang==="ja"?"予定":lang==="ko"?"예정":"Scheduled"}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:"#ef4444"}}/>{lang==="ja"?"未完了":lang==="ko"?"미완료":"Missed"}</div>
                 </div>
               </div>
             )}
@@ -4011,11 +4238,17 @@ function App() {
                   </div>
                 </div>
                 {/* Chat history */}
-                <div style={{minHeight:200,marginBottom:12}}>
+                <div
+                  ref={el => { if (el && chatHist.length > 0 && !userScrolledUp.current) el.scrollTop = el.scrollHeight; }}
+                  onScroll={e => {
+                    const el = e.target;
+                    userScrolledUp.current = el.scrollTop < el.scrollHeight - el.clientHeight - 50;
+                  }}
+                  style={{minHeight:120,maxHeight:420,overflowY:"auto",marginBottom:12,scrollBehavior:"smooth"}}>
                   {chatHist.map((msg,i)=>(
                     <div key={i} style={{marginBottom:10,display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start"}}>
                       <div style={{maxWidth:"84%",background:msg.role==="user"?coach.color:C.card,borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",padding:"10px 14px",border:msg.role==="user"?"none":"1px solid "+C.border}}>
-                        <div style={{fontSize:13,color:msg.role==="user"?"#000":C.white,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{msg.text}</div>
+                        <div style={{fontSize:13,color:msg.role==="user"?"#000":C.text,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{msg.text}</div>
                       </div>
                     </div>
                   ))}
@@ -4116,6 +4349,7 @@ function App() {
                 </div>
                 <div style={{fontSize:10,color:C.muted,textAlign:"right",marginTop:4}}>{cl.used}/{cl.limit} {lang==="ja"?"回使用":lang==="ko"?"회 사용":"used"}</div>
               </div>
+            )}
             )}
           </div>
         )}
@@ -4380,8 +4614,18 @@ function App() {
           <div style={{animation:"fadeIn .3s ease"}}>
             <TrialProgressBanner cl={cl} lang={lang} coach={coach} profile={profile} onUpgrade={()=>setShowUpgrade(true)}/>
 
-            {/* ── カレンダーグリッド ── */}
-            {(()=>{
+            {/* ── ビュー切り替え ── */}
+            <div style={{display:"flex",gap:6,marginBottom:12}}>
+              {[["calendar",lang==="ja"?"📅 カレンダー":"📅 Calendar"],
+                ["chat",lang==="ja"?"💬 相談":"💬 Chat"],
+                ["scan",lang==="ja"?"📷 スキャン":"📷 Scan"]].map(([v,label])=>(
+                <button key={v} onClick={()=>setNutView(v)} style={{flex:1,padding:"8px 0",borderRadius:10,border:"2px solid "+(nutView===v?"#22c55e":C.border),background:nutView===v?"rgba(34,197,94,0.1)":"transparent",color:nutView===v?"#22c55e":C.muted,fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {nutView === "calendar" && (()=>{
               const selDate = new Date(mealDate+"T00:00:00");
               const calYear = selDate.getFullYear();
               const calMonth = selDate.getMonth();
@@ -4468,6 +4712,8 @@ function App() {
               );
             })()}
 
+            {nutView === "calendar" && (
+            <>
             {/* 選択中の日付ラベル */}
             <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
               <div style={{fontFamily:"Bebas Neue",fontSize:15,letterSpacing:1,color:C.text}}>
@@ -4724,7 +4970,10 @@ function App() {
                 )}
               </div>
             )}
+            </>
+            )}
 
+            {nutView === "chat" && (
             {/* ── 栄養相談チャット ────────────────────────────── */}
             <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid "+C.border,marginTop:12}}>
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
