@@ -4054,6 +4054,12 @@ function App() {
 
                   {/* トレーニング */}
                   <div style={{marginBottom:10}}>
+                    {todayPlan.coachMsg && (
+                      <div style={{background:"rgba(34,197,94,0.06)",borderRadius:10,padding:"8px 12px",marginBottom:10,borderLeft:"3px solid "+coach.color}}>
+                        <div style={{fontSize:11,color:coach.color,fontWeight:700,marginBottom:2}}>{coach.emoji} {coach.name}</div>
+                        <div style={{fontSize:12,color:C.text,lineHeight:1.6}}>「{todayPlan.coachMsg}」</div>
+                      </div>
+                    )}
                     <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:6}}>
                       💪 {lang==="ja"?"今日のトレーニング":lang==="ko"?"오늘의 트레이닝":"TODAY'S WORKOUT"}
                     </div>
@@ -4355,12 +4361,10 @@ function App() {
                             return(
                               <div key={di} onClick={()=>{setCalDate(new Date(dk));setCalFilter("all");}} style={{background:isToday?coach.bg:done===total&&total>0?"rgba(34,197,94,0.1)":"transparent",borderRadius:8,padding:"5px 0",textAlign:"center",cursor:"pointer",border:"1px solid "+(isToday?coach.color:done===total&&total>0?C.green+"40":total>0?C.border:C.dim)}}>
                                 <div style={{fontSize:11,color:isToday?coach.color:done===total&&total>0?C.green:total>0?C.text:C.muted,fontWeight:isToday||total>0?700:400}}>{d}</div>
-                                <div style={{display:"flex",justifyContent:"center",gap:2,marginTop:1}}>
-                                  {done>0&&<div style={{width:5,height:5,borderRadius:"50%",background:C.green}}/>}
-                                  {(total-done)>0&&dk>=today&&<div style={{width:5,height:5,borderRadius:"50%",background:coach.color+"80"}}/>}
-                                  {(total-done)>0&&dk<today&&<div style={{width:5,height:5,borderRadius:"50%",background:"#ef4444"}}/>}
+                                <div style={{display:"flex",justifyContent:"center",gap:2,marginTop:2}}>
+                                  {Array.from({length:done}).map((_,i)=><div key={"d"+i} style={{width:5,height:5,borderRadius:"50%",background:C.green}}/>)}
+                                  {Array.from({length:total-done}).map((_,i)=><div key={"u"+i} style={{width:5,height:5,borderRadius:"50%",background:"#d1d5db"}}/>)}
                                 </div>
-                                {total>0&&<div style={{fontSize:8,color:done===total?C.green:C.muted}}>{done}/{total}</div>}
                                 {hasMeals&&<div style={{fontSize:7,color:"#f97316"}}>•</div>}
                               </div>
                             );
