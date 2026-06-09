@@ -3836,55 +3836,18 @@ function App() {
   }, [nutChatHist]);
 
 
+  // 週間プランを生成（毎週月曜or初回）
   useEffect(() => {
     if (!profile) return;
-    const today = todayKey();
-    const monday = (() => {
-      const d = new Date();
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(d.setDate(diff)).toISOString().slice(0,10);
-    })();
+    const d = new Date(); const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(new Date().setDate(diff)).toISOString().slice(0,10);
     const saved = lsGet("mb_weekly_plan", null);
-    // 保存済みプランが今週のものならそのまま使用
-    if (saved && saved.weekStart === monday) {
-      setWeeklyPlan(saved);
-      return;
-    }
-    // 新規生成
+    if (saved && saved.weekStart === monday) { setWeeklyPlan(saved); return; }
     const coachId = profile?.coachId || "bro";
     const plan = generateWeeklyPlan(profile, coachId, lang);
     const planData = { weekStart: monday, days: plan };
-    setWeeklyPlan(planData);
-    lsSet("mb_weekly_plan", planData);
-
-    // scheduleにも週間プランを追加（既存の手動追加分は保持）
-    const existingSchedule = lsGet("mb_schedule", []);
-    // 今週の自動生成分を削除して再追加
-    const manualItems = existingSchedule.filter(s => !s.isAutoGen);
-    const autoItems = [];
-    plan.forEach((day, i) => {
-      if (day.isRest || day.workout.length === 0) return;
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      const dk = d.toISOString().slice(0,10);
-      day.workout.forEach(ex => {
-        autoItems.push({
-          id: Date.now() + Math.random(),
-          dateKey: dk,
-          exercise: ex.name,
-          sets: ex.sets,
-          reps: ex.reps,
-          done: false,
-          missed: false,
-          note: "",
-          isAutoGen: true,
-        });
-      });
-    });
-    const newSchedule = [...manualItems, ...autoItems];
-    setSchedule(newSchedule);
-    lsSet("mb_schedule", newSchedule);
+    setWeeklyPlan(planData); lsSet("mb_weekly_plan", planData);
   }, [profile?.coachId, profile?.fitnessLevel, profile?.daysPerWeek, profile?.gender]);
 
   return (
