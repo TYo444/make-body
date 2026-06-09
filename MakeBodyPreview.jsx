@@ -4397,7 +4397,7 @@ function App() {
                   {chatHist.map((msg,i)=>(
                     <div key={i} style={{marginBottom:10,display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start"}}>
                       <div style={{maxWidth:"84%",background:msg.role==="user"?coach.color:C.card,borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",padding:"10px 14px",border:msg.role==="user"?"none":"1px solid "+C.border}}>
-                        <div style={{fontSize:13,color:msg.role==="user"?"#000":C.white,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{msg.text}</div>
+                        <div style={{fontSize:13,color:msg.role==="user"?"#fff":C.text,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{msg.text}</div>
                       </div>
                     </div>
                   ))}
@@ -4765,8 +4765,9 @@ function App() {
             {/* ── ビュー切り替え ── */}
             <div style={{display:"flex",gap:6,marginBottom:12}}>
               {[["calendar",lang==="ja"?"📅 カレンダー":"📅 Cal"],
-                ["chat",lang==="ja"?"💬 相談":"💬 Chat"]].map(([v,label])=>(
-                <button key={v} onClick={()=>setNutView(v)} style={{flex:1,padding:"8px 0",borderRadius:10,border:"2px solid "+(nutView===v?"#22c55e":C.border),background:nutView===v?"rgba(34,197,94,0.1)":"transparent",color:nutView===v?"#22c55e":C.muted,fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                ["chat",lang==="ja"?"💬 相談":"💬 Chat"],
+                ["scan",lang==="ja"?"📷 スキャン":"📷 Scan"]].map(([v,label])=>(
+                <button key={v} onClick={()=>setNutView(v==="scan"?"calendar":v)} style={{flex:1,padding:"8px 0",borderRadius:10,border:"2px solid "+(nutView===v?"#22c55e":C.border),background:nutView===v?"rgba(34,197,94,0.1)":"transparent",color:nutView===v?"#22c55e":C.muted,fontSize:11,fontWeight:600,cursor:"pointer"}}>
                   {label}
                 </button>
               ))}
@@ -5145,6 +5146,13 @@ function App() {
                 </div>
               )}
               {/* 入力欄 */}
+              {canChat && (
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+                  {(lang==="ja"?["今日のメニューは？","たんぱく質を増やすには？","夜食のおすすめは？","食べすぎたときは？"]:["What to eat today?","How to get more protein?","Good evening snack?","Ate too much, now what?"]).map(q=>(
+                    <button key={q} onClick={()=>{sendChat(q,setNutChatHist,nutChatHist);}} style={{fontSize:11,padding:"5px 10px",borderRadius:20,border:"1px solid "+C.border,background:C.surface,color:C.text,cursor:"pointer"}}>{q}</button>
+                  ))}
+                </div>
+              )}
               {canChat ? (
                 <div style={{display:"flex",gap:8}}>
                   <input
