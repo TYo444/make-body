@@ -109,6 +109,146 @@ const LANGS = [
   { code:"es", label:"Español",  flag:"🇪🇸" },
 ];
 
+
+
+// ============================================================
+// ルールベース週間プラン生成（AI API不使用・回数消費なし）
+// ============================================================
+function generateWeeklyPlan(profile, coachId, lang) {
+  const gender  = profile?.gender || "male";
+  const level   = profile?.fitnessLevel || "beginner";
+  const days    = parseInt(profile?.daysPerWeek) || 3;
+  const isMale  = gender !== "female";
+  const kcal    = profile?.targetCalories || (isMale ? 2000 : 1600);
+  const protein = profile?.targetProtein  || (isMale ? 120  : 80);
+
+  // 週に何日トレーニングするか → 曜日割り当て
+  // days=3→月水金, days=4→月火木金, days=5→月火水木金, days=6→月〜土
+  const trainDays = {
+    2:[1,4], 3:[1,3,5], 4:[1,2,4,5], 5:[1,2,3,4,5], 6:[1,2,3,4,5,6]
+  }[days] || [1,3,5];
+
+  // 種目プール（初心者:1-2種目, 中級:2-3種目, 上級:3種目）
+  const maxEx = level==="beginner"?2:level==="intermediate"?2:3;
+
+  const EXERCISES = {
+    upper_male: [
+      {ja:"腕立て伏せ",ko:"푸쉬업",en:"Push-up",       sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
+      {ja:"チンアップ",ko:"턱걸이",en:"Chin-up",        sets:2, reps:{beginner:3,intermediate:6,advanced:10}},
+      {ja:"ダンベルロウ",ko:"덤벨 로우",en:"DB Row",     sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+      {ja:"ショルダープレス",ko:"숄더프레스",en:"Shoulder Press", sets:2, reps:{beginner:8,intermediate:10,advanced:12}},
+    ],
+    lower_male: [
+      {ja:"スクワット",ko:"스쿼트",en:"Squat",           sets:2, reps:{beginner:10,intermediate:15,advanced:20}},
+      {ja:"ランジ",ko:"런지",en:"Lunge",                 sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
+      {ja:"デッドリフト",ko:"데드리프트",en:"Deadlift",   sets:2, reps:{beginner:6,intermediate:8,advanced:10}},
+    ],
+    core_male: [
+      {ja:"プランク",ko:"플랭크",en:"Plank",             sets:2, reps:{beginner:20,intermediate:30,advanced:45}, unit:"sec"},
+      {ja:"クランチ",ko:"크런치",en:"Crunch",             sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+    ],
+    upper_female: [
+      {ja:"膝つき腕立て",ko:"무릎 푸쉬업",en:"Knee Push-up", sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
+      {ja:"ダンベルロウ",ko:"덤벨 로우",en:"DB Row",     sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+      {ja:"ラテラルレイズ",ko:"레터럴 레이즈",en:"Lateral Raise", sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+    ],
+    lower_female: [
+      {ja:"スクワット",ko:"스쿼트",en:"Squat",           sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+      {ja:"ヒップリフト",ko:"힙 리프트",en:"Hip Lift",   sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+      {ja:"サイドレッグレイズ",ko:"사이드레그레이즈",en:"Side Leg Raise", sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
+    ],
+    core_female: [
+      {ja:"プランク",ko:"플랭크",en:"Plank",             sets:2, reps:{beginner:15,intermediate:25,advanced:40}, unit:"sec"},
+      {ja:"バイシクルクランチ",ko:"바이시클 크런치",en:"Bicycle Crunch", sets:2, reps:{beginner:10,intermediate:15,advanced:20}},
+    ],
+  };
+
+  const upper = isMale ? EXERCISES.upper_male : EXERCISES.upper_female;
+  const lower = isMale ? EXERCISES.lower_male : EXERCISES.lower_female;
+  const core  = isMale ? EXERCISES.core_male  : EXERCISES.core_female;
+
+  function pickEx(pool, count) {
+    return pool.slice(0, count).map(e => ({
+      name: lang==="ja"?e.ja:lang==="ko"?e.ko:e.en,
+      sets: e.sets,
+      reps: e.reps[level]||e.reps.beginner,
+      unit: e.unit||"reps",
+    }));
+  }
+
+  // コーチ別メッセージ
+  const COACH_MSGS = {
+    bro:     {ja:["今日も絶対やる。迷ってる暇なし。","1種目でいい。まず始めろ。","お前ならできる。動け。","今日の汗が明日の体を作る。","諦めた瞬間が本当の失敗だ。","休息も鍛錬のうち。回復しろ。","今週もやり切ろう。"],ko:["오늘도 반드시 하자.","한 종목만 해. 시작해.","너라면 할 수 있어. 움직여."],en:["Let's go, no excuses.","Just start, one exercise.","You got this. Move now.","Today's sweat builds tomorrow.","Never quit. That's failure.","Rest is training too.","Finish the week strong."]},
+    sis:     {ja:["無理しないで、できる範囲でOK。","一緒に頑張ろう、応援してるよ。","小さくても続けることが大事。","今日も来てくれてありがとう。","体の声を聞きながら進めてね。","休むことも大切な一歩。","今週も頑張ったね。"],ko:["무리하지 않아도 돼.","함께 힘내자, 응원해.","작아도 계속하는 게 중요해."],en:["Don't push too hard, do what you can.","I'm rooting for you today.","Small steps matter most.","Thanks for showing up today.","Listen to your body.","Rest is a step forward too.","You did great this week."]},
+    science: {ja:["今日のメニューは科学的に最適化済みです。","筋肥大には漸進性過負荷が必要です。","継続が最大の筋肉刺激です。","回復も鍛錬の一部です。","フォームが全てです。","栄養と睡眠で回復を最大化。","週の総負荷が成長を決めます。"],ko:["오늘 메뉴는 과학적으로 최적화.","근비대엔 점진적 과부하가 필요.","지속이 최대의 자극."],en:["Today's menu is science-backed.","Progressive overload drives growth.","Consistency is the best stimulus.","Recovery is part of training.","Form is everything.","Nutrition and sleep maximize gains.","Weekly volume determines progress."]},
+    yoga:    {ja:["呼吸を意識して、丁寧に動こう。","体の声を聞きながら進めてね。","今日の自分を受け入れながら動こう。","ゆっくりでも確実に進んでいます。","心と体のバランスを大切に。","今日も自分を大切に。","一週間お疲れさまでした。"],ko:["호흡에 집중하며 천천히.","몸의 소리를 들으며.","오늘의 나를 받아들이며."],en:["Focus on breath, move mindfully.","Listen to your body.","Accept today's self as you move.","Slow and steady progress.","Balance mind and body.","Take care of yourself today.","Great week, well done."]},
+    kpop:    {ja:["K-POPアイドルのように美しいフォームで。","見せる体を作ろう、今日も丁寧に。","細マッチョへの道は継続にあり。","姿勢と見た目を意識して動こう。","フォームが美しさを作る。","回復でさらに輝く体に。","今週の努力が体に現れる。"],ko:["K팝 아이돌처럼 아름다운 폼으로.","보여주는 몸을 만들자.","슬림핏의 길은 지속에 있어."],en:["Move with K-pop idol precision.","Build the look you want.","The lean path is consistency.","Posture and form create beauty.","Form creates aesthetics.","Recovery makes you shine more.","This week's effort shows."]},
+    doctor:  {ja:["安全第一。無理のない範囲で。","今日のメニューは科学的根拠に基づいています。","健康的な体づくりには継続が鍵。","痛みを感じたらすぐに中止を。","水分補給を忘れずに。","回復を軽視しないでください。","一週間の積み重ねが大切です。"],ko:["안전 제일. 무리하지 말고.","오늘 메뉴는 과학적 근거 기반.","지속이 건강한 몸의 열쇠."],en:["Safety first, no overexertion.","Evidence-based menu today.","Consistency is key to health.","Stop if you feel pain.","Stay hydrated.","Don't neglect recovery.","Cumulative effort is what counts."]},
+  };
+
+  // 食事プール（コンビニ・スーパー・自炊で現実的なもの）
+  const MEALS_M = {
+    ja:[
+      {morning:"卵2個＋ご飯1膳＋味噌汁",lunch:"鶏むね肉定食（150g）＋野菜",dinner:"豆腐＋鮭or サバ＋野菜炒め",snack:"ギリシャヨーグルト or プロテイン",budget:1800},
+      {morning:"納豆ご飯＋卵焼き＋味噌汁",lunch:"サラダチキン＋おにぎり2個",dinner:"豚バラ野菜炒め＋ご飯",snack:"バナナ＋プロテイン",budget:1500},
+      {morning:"全粒粉トースト＋目玉焼き＋牛乳",lunch:"ツナサラダ＋玄米おにぎり",dinner:"鶏もも塩焼き＋サラダ＋ご飯",snack:"ナッツ一握り",budget:1600},
+    ],
+    ko:[
+      {morning:"계란 2개+밥+된장국",lunch:"닭가슴살 정식（150g）+채소",dinner:"두부+연어or고등어+채소볶음",snack:"그릭 요거트 or 프로틴",budget:18000},
+      {morning:"낫토밥+계란말이+된장국",lunch:"샐러드치킨+주먹밥 2개",dinner:"돼지고기채소볶음+밥",snack:"바나나+프로틴",budget:15000},
+    ],
+    en:[
+      {morning:"2 eggs + rice + miso soup",lunch:"Chicken breast meal（150g）+ veggies",dinner:"Tofu + salmon/mackerel + stir-fry",snack:"Greek yogurt or protein shake",budget:15},
+      {morning:"Whole wheat toast + egg + milk",lunch:"Tuna salad + brown rice ball",dinner:"Grilled chicken thigh + salad + rice",snack:"Handful of nuts",budget:13},
+    ],
+  };
+  const MEALS_F = {
+    ja:[
+      {morning:"ヨーグルト＋バナナ＋全粒粉トースト",lunch:"鶏むねサラダ＋玄米おにぎり1個",dinner:"豆腐ハンバーグ＋蒸し野菜＋味噌汁",snack:"ナッツ一握り or フルーツ",budget:1600},
+      {morning:"スムージー（豆乳＋バナナ＋ほうれん草）",lunch:"サラダチキン＋コンビニサラダ",dinner:"鮭塩焼き＋豆腐＋野菜スープ",snack:"ギリシャヨーグルト",budget:1400},
+      {morning:"卵トースト＋サラダ＋牛乳",lunch:"ツナおにぎり＋野菜スープ",dinner:"蒸し鶏＋蒸し野菜＋ご飯少なめ",snack:"フルーツ（りんごetc）",budget:1300},
+    ],
+    ko:[
+      {morning:"요거트+바나나+통밀토스트",lunch:"닭가슴살 샐러드+현미 주먹밥",dinner:"두부 햄버그+찐 채소+된장국",snack:"견과류 한 줌 or 과일",budget:14000},
+    ],
+    en:[
+      {morning:"Yogurt + banana + whole wheat toast",lunch:"Chicken salad + brown rice ball",dinner:"Tofu patty + steamed veg + miso soup",snack:"Nuts or fruit",budget:12},
+      {morning:"Smoothie（soy milk + banana + spinach）",lunch:"Canned tuna + convenience store salad",dinner:"Steamed salmon + tofu + veggie soup",snack:"Greek yogurt",budget:11},
+    ],
+  };
+
+  const mealPool = (isMale ? MEALS_M : MEALS_F)[lang] || (isMale ? MEALS_M : MEALS_F)["en"];
+  const msgPool  = (COACH_MSGS[coachId] || COACH_MSGS["bro"])[lang] || (COACH_MSGS[coachId] || COACH_MSGS["bro"])["en"];
+
+  // 7日分プランを生成
+  const weekPlan = [];
+  for (let d = 0; d < 7; d++) {
+    const dow    = (new Date().getDay() + d) % 7;
+    const isTrain = trainDays.includes(dow);
+    let workout = [];
+    if (isTrain) {
+      const trainIdx = trainDays.indexOf(dow);
+      // 上半身・下半身・コアを順番に
+      if (trainIdx % 3 === 0) workout = pickEx(upper, maxEx);
+      else if (trainIdx % 3 === 1) workout = pickEx(lower, maxEx);
+      else workout = [...pickEx(core, 1), ...pickEx(upper, 1)];
+    }
+    const meal = mealPool[d % mealPool.length];
+    const msg  = msgPool[d % msgPool.length];
+    weekPlan.push({
+      dayOffset: d,
+      dow,
+      isRest: !isTrain,
+      workout,
+      meal,
+      coachMsg: msg,
+      kcal,
+      protein,
+    });
+  }
+  return weekPlan;
+}
+
 const PERSONAS = [
   {
     id:"bro", emoji:"💪", name:"Rex",
@@ -185,6 +325,13 @@ const BODY_GOALS = {
     { id:"lean",     title:"Lean & Toned",   ja:"細マッチョ",      ko:"슬림핏",      zh:"精实线条",    bf:"10–15%", targetBf:12, color:"#00bfff", ref:"細マッチョ・スリムフィット" },
     { id:"athletic", title:"Athletic",       ja:"アスリート体型",   ko:"운동선수형",   zh:"运动型",      bf:"8–12%",  targetBf:10, color:"#f59e0b", ref:"マラソン・サッカー選手スタイル" },
     { id:"muscular", title:"Muscular",       ja:"マッスル",        ko:"머슬형",      zh:"肌肉型",      bf:"6–10%",  targetBf:8,  color:"#ef4444", ref:"フィジーク・格闘家スタイル" },
+  ],
+  other: [
+    { id:"kpop",     title:"K-POP Idol",     ja:"K-POPアイドル系", ko:"K팝 아이돌형", zh:"K-POP偶像型",  bf:"8–13%",  targetBf:10, color:"#00bfff", ref:"韓国アイドル・K-POPスタイル" },
+    { id:"lean",     title:"Lean & Toned",   ja:"細マッチョ",      ko:"슬림핏",      zh:"精实线条",    bf:"10–15%", targetBf:12, color:"#00bfff", ref:"細マッチョ・スリムフィット" },
+    { id:"toned",    title:"Toned",          ja:"引き締め",        ko:"탄탄형",      zh:"紧致型",      bf:"18–23%", targetBf:19, color:"#22c55e", ref:"トーンアップ・引き締め" },
+    { id:"athletic", title:"Athletic",       ja:"アスリート体型",   ko:"운동선수형",   zh:"运动型",      bf:"8–12%",  targetBf:10, color:"#f59e0b", ref:"マラソン・サッカー選手スタイル" },
+    { id:"strong",   title:"Strong",         ja:"強い体",          ko:"강한 체형",   zh:"强健型",      bf:"16–21%", targetBf:18, color:"#ef4444", ref:"クロスフィット・アスリート" },
   ],
   female: [
     { id:"kpop_girl", title:"K-POP Girl",    ja:"K-POP Girl系",   ko:"K팝 걸형",    zh:"K-POP女团型", bf:"15–20%", targetBf:17, color:"#ec4899", ref:"韓国ガールズグループスタイル" },
@@ -611,7 +758,10 @@ function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose })
   const CD_START = 5;
   const guide   = getExGuide(exercise, lang, profile?.gender);
   const genderK = profile?.gender === "female" ? "female" : "male";
-  const imgSrc  = null; // exerciseImages removed for preview compatibility
+  const genderPrefix = (profile?.gender === "female") ? "female" : "male";
+  const exKey = guide?.key || "";
+  const imgKey = genderPrefix + "_" + exKey;
+  const imgSrc = (typeof EXERCISE_IMAGES !== "undefined" && EXERCISE_IMAGES[imgKey]) ? EXERCISE_IMAGES[imgKey] : null;
   const ar      = calcAdaptiveReps(profile, guide?.key);
   const tS      = ar.sets;
   const tR      = ar.reps;
@@ -813,7 +963,7 @@ function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose })
             <div style={{fontFamily:"Bebas Neue",fontSize:28,color:C.green,marginBottom:8}}>{L.done}</div>
             {cheer&&(<div style={{background:"linear-gradient(135deg,"+coach?.color+"20,"+coach?.color+"08)",borderRadius:12,padding:"10px 13px",marginBottom:16,border:"1px solid "+coach?.color+"25"}}><div style={{fontSize:13,color:coach?.color,fontWeight:700}}>{coach?.emoji} {cheer}</div></div>)}
             <div style={{fontSize:12,color:C.muted,marginBottom:22}}>{tS} sets x {tR} {L.reps} {L.comped}</div>
-            <button onClick={onClose} style={{background:C.green,border:"none",borderRadius:14,padding:"14px 40px",color:"#fff",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>{L.comp}</button>
+            <button onClick={()=>onClose(true)} style={{background:C.green,border:"none",borderRadius:14,padding:"14px 40px",color:"#fff",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>{L.comp}</button>
           </div>
         )}
       </div>
@@ -1410,6 +1560,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
   const [fl,  setFl]     = useState(profile?.fitnessLevel || "beginner");
   const [eq,  setEq]     = useState(profile?.equipment || "home");
   const [dp,  setDp]     = useState(profile?.daysPerWeek || 3);
+  const [gdr, setGdr]    = useState(profile?.gender || "male");
   const [notif, setNotif]   = useState(profile?.notifications ?? true);
   const [legal, setLegal]   = useState(null);
   const [section, setSection] = useState("main"); // main | feedback | data | account
@@ -1417,8 +1568,11 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
+  const [showCancelFeedback, setShowCancelFeedback] = useState(false);
+  const [cancelFeedbackMode, setCancelFeedbackMode] = useState(null);
+  const [showWithdrawDone, setShowWithdrawDone] = useState(false);
 
-  const goals = BODY_GOALS[profile?.gender || "male"];
+  const goals = BODY_GOALS[profile?.gender || "male"] || BODY_GOALS["male"];
   const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:en;
 
   function save() {
@@ -1426,7 +1580,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
     const newProfile = { ...profile, coachId:pid, fitnessLevel:fl, equipment:eq, daysPerWeek:dp,
       currentWeightKg:parseFloat(wt)||profile?.currentWeightKg,
       heightCm:parseFloat(ht)||profile?.heightCm,
-      bodyGoal:g, notifications:notif };
+      bodyGoal:g, notifications:notif, gender:gdr };
     if (onSave) onSave(newProfile);
     else setProfile(newProfile);
     onClose();
@@ -1888,6 +2042,18 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
 
         {/* 体格・頻度 */}
         <div style={{fontSize:10,color:C.muted,fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>{lbl("体格・頻度","체격·빈도","Body Stats & Frequency")}</div>
+        {/* 性別選択 */}
+        <div style={{marginBottom:10}}>
+          <div style={{fontSize:10,color:C.muted,marginBottom:6}}>{lbl("性別","성별","Gender")}</div>
+          <div style={{display:"flex",gap:6}}>
+            {[{id:"male",ja:"男性",ko:"남성",en:"Male"},{id:"female",ja:"女性",ko:"여성",en:"Female"},{id:"other",ja:"その他",ko:"기타",en:"Other"}].map(g=>(
+              <button key={g.id} onClick={()=>setGdr(g.id)}
+                style={{flex:1,padding:"8px 4px",borderRadius:8,border:"1.5px solid "+(gdr===g.id?C.green:C.border),background:gdr===g.id?C.greenGlow:"transparent",color:gdr===g.id?C.green:C.muted,fontSize:12,fontWeight:gdr===g.id?700:400,cursor:"pointer"}}>
+                {lbl(g.ja,g.ko,g.en)}
+              </button>
+            ))}
+          </div>
+        </div>
         <div style={{display:"flex",gap:8,marginBottom:10}}>
           <div style={{flex:1}}>
             <div style={{fontSize:10,color:C.muted,marginBottom:4}}>{lbl("体重 (kg)","체중 (kg)","Weight (kg)")}</div>
@@ -2622,7 +2788,15 @@ function App() {
   const [chatHist, setChatHist] = useState([]);
   const [chatIn, setChatIn]     = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [usageCache, setUsageCache] = useState(lsGet("mb_usage_cache", { remaining: 3, limit: 3, used: 0, isPro: false }));
+  const [usageCache, setUsageCache] = useState(() => {
+    const cached = lsGet("mb_usage_cache", { remaining: 3, limit: 3, used: 0, isPro: false });
+    // dayKeyが今日と違う場合はリセット（UTCベース）
+    const todayUTC = new Date().toISOString().slice(0, 10);
+    if (cached.dayKey && cached.dayKey !== todayUTC) {
+      return { remaining: cached.isPro ? 300 : 3, limit: cached.isPro ? 300 : 3, used: 0, isPro: cached.isPro || false, dayKey: todayUTC };
+    }
+    return cached;
+  });
 
   const [schedule, setSchedule] = useState([]);
   const [counterM, setCounterM] = useState(null); // {exercise, sets, reps}
@@ -2673,8 +2847,66 @@ function App() {
   const [mealDate, setMealDate]   = useState(todayKey());
   const [futureMenus, setFutureMenus] = useState(() => lsGet("mb_future_menus", {}));
   const [menuLoading, setMenuLoading] = useState(false);
-  const [nutChatHist, setNutChatHist] = useState([]);
+  const [nutChatHist, setNutChatHist] = useState(lsGet("mb_nut_chat", []));
   const [nutChatIn, setNutChatIn]     = useState("");
+  const [weeklyPlan, setWeeklyPlan]   = useState(lsGet("mb_weekly_plan", null));
+  const [nutView, setNutView]         = useState("calendar"); // calendar|chat|scan
+
+  useEffect(() => {
+    if (nutChatHist.length > 0) lsSet("mb_nut_chat", nutChatHist.slice(-50));
+  }, [nutChatHist]);
+
+  // profile/coachが揃ったら週間プランを生成（毎週月曜or初回）
+  useEffect(() => {
+    if (!profile) return;
+    const today = todayKey();
+    const monday = (() => {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(d.setDate(diff)).toISOString().slice(0,10);
+    })();
+    const saved = lsGet("mb_weekly_plan", null);
+    // 保存済みプランが今週のものならそのまま使用
+    if (saved && saved.weekStart === monday) {
+      setWeeklyPlan(saved);
+      return;
+    }
+    // 新規生成
+    const coachId = profile?.coachId || "bro";
+    const plan = generateWeeklyPlan(profile, coachId, lang);
+    const planData = { weekStart: monday, days: plan };
+    setWeeklyPlan(planData);
+    lsSet("mb_weekly_plan", planData);
+
+    // scheduleにも週間プランを追加（既存の手動追加分は保持）
+    const existingSchedule = lsGet("mb_schedule", []);
+    // 今週の自動生成分を削除して再追加
+    const manualItems = existingSchedule.filter(s => !s.isAutoGen);
+    const autoItems = [];
+    plan.forEach((day, i) => {
+      if (day.isRest || day.workout.length === 0) return;
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const dk = d.toISOString().slice(0,10);
+      day.workout.forEach(ex => {
+        autoItems.push({
+          id: Date.now() + Math.random(),
+          dateKey: dk,
+          exercise: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          done: false,
+          missed: false,
+          note: "",
+          isAutoGen: true,
+        });
+      });
+    });
+    const newSchedule = [...manualItems, ...autoItems];
+    setSchedule(newSchedule);
+    lsSet("mb_schedule", newSchedule);
+  }, [profile?.coachId, profile?.fitnessLevel, profile?.daysPerWeek, profile?.gender]);
   const [analyzing, setAnalyzing] = useState(false);
   const [scannedMeal, setScannedMeal] = useState(null);
   const [mealHist, setMealHist] = useState({}); // { dateKey: [meals] }
@@ -2840,6 +3072,9 @@ function App() {
             if (latestProf?.is_pro !== undefined) setIsPro(latestProf.is_pro);
             if (latestProf?.profile_data) {
               const pd = JSON.parse(latestProf.profile_data);
+              // nicknameが空の場合はキャッシュから復元
+              const cachedPd2 = lsGet("mb_profile", null);
+              if (!pd.nickname && cachedPd2?.nickname) pd.nickname = cachedPd2.nickname;
               setProfile(pd); setLang(pd.lang || "ja");
               lsSet("mb_profile", pd);
             }
@@ -2860,8 +3095,13 @@ function App() {
     })();
   }, []);
 
+  const userScrolledUp = useRef(false);
+  const chatContainerRef = useRef(null);
+
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!userScrolledUp.current) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [chatHist]);
 
   function updateStreak(saved) {
@@ -2919,16 +3159,16 @@ function App() {
       const res = authMode === "signup"
         ? await sb.signUp(authEmail, authPw)
         : await sb.signIn(authEmail, authPw);
-      if (res.error) {
-        const msg = res.error.message || "";
-        if (msg.includes("Invalid login") || msg.includes("invalid_credentials")) {
+      if (res.error || res.error_description || res.msg) {
+        const msg = res.error?.message || res.error_description || res.msg || res.error || "";
+        if (msg.includes("Invalid login") || msg.includes("invalid_credentials") || msg.includes("Invalid email") || msg.includes("Email not confirmed")) {
           setAuthErr(lang==="ja"?"メールアドレスまたはパスワードが間違っています。":lang==="ko"?"이메일 또는 비밀번호가 올바르지 않습니다.":"Invalid email or password.");
-        } else if (msg.includes("already registered") || msg.includes("already been registered")) {
+        } else if (msg.includes("already registered") || msg.includes("already been registered") || msg.includes("User already")) {
           setAuthErr(lang==="ja"?"このメールアドレスはすでに登録済みです。":lang==="ko"?"이미 등록된 이메일 주소입니다.":"This email is already registered.");
-        } else if (msg.includes("Password should")) {
+        } else if (msg.includes("Password should") || msg.includes("password")) {
           setAuthErr(lang==="ja"?"パスワードは6文字以上にしてください。":lang==="ko"?"비밀번호는 6자 이상이어야 합니다.":"Password must be at least 6 characters.");
         } else {
-          setAuthErr(lang==="ja"?"エラーが発生しました。再度お試しください。":lang==="ko"?"오류가 발생했습니다. 다시 시도해주세요.":"An error occurred. Please try again.");
+          setAuthErr((lang==="ja"?"エラー: ":lang==="ko"?"오류: ":"Error: ") + (msg || (lang==="ja"?"再度お試しください。":"Please try again.")));
         }
       }
       else if (res.session?.access_token || res.access_token) {
@@ -2943,6 +3183,9 @@ function App() {
         const prof = await sb.getProfile(res.user?.id, res.access_token);
         if (prof?.profile_data) {
           const pd = JSON.parse(prof.profile_data);
+          // nicknameが空の場合はlocalStorageのキャッシュから復元
+          const cachedPd = lsGet("mb_profile", null);
+          if (!pd.nickname && cachedPd?.nickname) pd.nickname = cachedPd.nickname;
           setProfile(pd); setLang(pd.lang || "en");
           setIsPro(prof.is_pro || false);  // ← Webhook/Supabase側のis_proのみ参照
           lsSet("mb_profile", pd);
@@ -2996,7 +3239,6 @@ function App() {
     } finally {
       setAuthLoading(false);
     }
-    setAuthLoading(false);
   }
 
   async function handleSignOut() {
@@ -3006,6 +3248,10 @@ function App() {
     setSbUser(null); lsSet("mb_sb_user", null);
     setProfile(null); lsSet("mb_profile", null);
     setChatHist([]); lsSet("mb_chat", []);
+    setNutChatHist([]); lsSet("mb_nut_chat", []);
+    // usageCacheはログアウトでもlocalStorageに保持（再ログイン後に復元するため）
+    // dayKeyが今日なら残す
+    lsSet("mb_usage_cache", usageCache);
     setAuthStep("signin");
     setShowSettings(false);
   }
@@ -3203,14 +3449,20 @@ function App() {
     setHist(newHist);
 
     // 楽観的にremaining-1（実際の判定はサーバー側）
-    const optimisticCache = { ...usageCache, remaining: Math.max(0, (usageCache.remaining ?? 1) - 1) };
+    const optimisticCache = { ...usageCache, remaining: Math.max(0, (usageCache.remaining ?? 1) - 1), used: (usageCache.used ?? 0) + 1 };
     setUsageCache(optimisticCache);
     lsSet("mb_usage_cache", optimisticCache);
 
     setAiLoading(true);
 
     // Build context
-    const pCtx = profile ? "User: "+profile.nickname+", "+profile.gender+", age: "+profile.ageGroup+", "+profile.heightCm+"cm, "+profile.currentWeightKg+"kg, BMI: "+profile.bmi+", body goal: "+profile.bodyGoal?.title+", target: "+profile.idealWeightKg+"kg" : "";
+    const isMaleUser = (profile?.gender || "male") === "male";
+    const genderCtx = isMaleUser
+      ? (lang==="ja"?"男性（体脂肪率・筋肉量重視）":"Male (focus: body fat%, muscle mass)")
+      : profile?.gender==="female"
+      ? (lang==="ja"?"女性（体型・体重バランス重視）":"Female (focus: body shape, weight balance)")
+      : "Other";
+    const pCtx = profile ? "User: "+profile.nickname+", gender:"+genderCtx+", age: "+profile.ageGroup+", "+profile.heightCm+"cm, "+profile.currentWeightKg+"kg, BMI: "+profile.bmi+", body fat: "+(profile.estCurrentBf||"est.")+"%, body goal: "+profile.bodyGoal?.title+", target: "+profile.idealWeightKg+"kg" : "";
     const loginHistCtx = lsGet("mb_login_history", []);
     const todayCtxKey = todayKey();
     const pastLogins = loginHistCtx.filter(d=>d<todayCtxKey);
@@ -3284,7 +3536,26 @@ function App() {
     // Free = short prompt for cost savings
     const isFreeLimited = !isPro && !cl.isFirstDay;
 
-    const sys = isFreeLimited
+    // 栄養タブ専用プロンプト
+    const nutLangInst = {
+      ja: "日本語で返答してください。",
+      ko: "한국어로 답변해 주세요.",
+      zh: "请用中文回答。",
+      de: "Bitte antworten Sie auf Deutsch.",
+      fr: "Veuillez répondre en français.",
+      es: "Por favor responde en español.",
+    }[lang] || "Reply in English.";
+
+    const nutSys = isFreeLimited
+      ? "You are a friendly nutrition coach. " + nutLangInst + " Keep answers to 3 sentences max. User: " + (profile?.nickname||"friend") + ", goal: " + (profile?.bodyGoal?.title||"healthy body") + ". Calories: " + totCal + "/" + calGoal + "kcal, Protein: " + totPro + "g. Avoid: " + (profile?.allergies?.join(",")||"none") + ". No medical advice."
+      : "You are a professional nutrition and dietitian coach. " + nutLangInst + "\n" +
+        "User profile: " + (profile?.nickname||"friend") + ", " + (profile?.gender||"") + ", " + (profile?.ageGroup||"") + ", " + (profile?.heightCm||"")+"cm, " + (profile?.currentWeightKg||"")+"kg, goal: " + (profile?.bodyGoal?.title||"healthy body") + ".\n" +
+        "Today's nutrition: Calories " + totCal + "/" + calGoal + "kcal, Protein: " + totPro + "g, Mood: " + MOODS[mood] + ".\n" +
+        "Allergies/avoid: " + (profile?.allergies?.join(",")||"none") + ".\n" +
+        "Meals today: " + nutCtx + "\n" +
+        "RULES: Specific food suggestions with portions. Practical and budget-friendly. Batch cooking when useful. Never diagnose. Max 4 sentences unless recipe requested. EMOJI: max 1-2 per reply.";
+
+    const sys = isNutChat ? nutSys : isFreeLimited
       ? "You are " + coach.name + ". " + lInst + " Warm helpful coach. Max 3 sentences unless plan requested. " + lgCtx + " User:" + (profile?.nickname||"") + ", goal:" + (profile?.bodyGoal?.title||"") + ". Mood:" + MOODS[mood] + ". Streak:" + streak + "d. EMOJI: Use sparingly — max 1-2 per reply, not at start/end of every sentence."
       : "You are " + coach.name + " " + coach.emoji + " — dedicated personal coach. " + lInst + "\n" +
         coach.style + "\n" +
@@ -3419,7 +3690,7 @@ function App() {
         (isPro ? "PRO: 90-day plans, body predictions, timeline simulations, weekly check-ins. FUTURE SIM: weight=" + (profile?.currentWeightKg||70) + "kg targetBf=" + (profile?.bodyGoal?.targetBf||12) + "% streak=" + streak + "d - give realistic timeline estimates with encouragement." : "FREE: Short tips only. Full coaching requires PRO.") + "\n" +
         pCtx + "\n" + fitCtx + "\n" + nutCtx + "\n" +
         "Today: Cals " + totCal + "/" + calGoal + ", Protein " + totPro + "g, Mood:" + MOODS[mood] + ", Streak:" + streak + "d.\n" +
-        (isPersonal ? "IMPORTANT: This message has emotional/personal content. Lead with empathy and human warmth FIRST. Do not jump to fitness advice. Ask a follow-up question about how they feel. Only offer fitness/nutrition if they bring it up or after emotional connection is made. " : "") + (isNutrition ? "Use batch cooking. " : "") + (lateNight ? "LATE NIGHT: Be extra warm, no workout push." : "");
+        (isPersonal ? "IMPORTANT: This message has emotional/personal content. Lead with empathy and human warmth FIRST. Do not jump to fitness advice. Ask a follow-up question about how they feel. Only offer fitness/nutrition if they bring it up or after emotional connection is made. " : "") + (isNutrition ? "Use batch cooking. " : "") + (lateNight ? "LATE NIGHT: Be extra warm, no workout push." : "") + "\nIMPORTANT ROLE: You are NOT here to generate workout menus from scratch. The user already has a daily plan shown on their home screen. Your role is to help them ADJUST and CONSULT about that plan. When they say things like: I can't go to the gym / my knee hurts / I want something lighter / I'm at a convenience store — you adapt the plan. Be concise and practical.\nWhen you DO provide specific exercises (for adjustment), include SCHEDULE lines: SCHEDULE: [Exercise Name] | [sets]x[reps]";
     try {
       const apiUrl = "/api/chat";
       const messages = [
@@ -3464,6 +3735,14 @@ function App() {
       const data = await r.json();
 
       // サーバーエラーレスポンス（401/500/feature_disabled等）をハンドル
+      if (r.status === 401) {
+        // トークン切れ → ログアウトしてログイン画面へ
+        lsSet("mb_sb_user", null);
+        setAiLoading(false);
+        alert(lang==="ja"?"セッションが切れました。再度ログインしてください。":lang==="ko"?"세션이 만료되었습니다. 다시 로그인해주세요.":"Session expired. Please log in again.");
+        setAuthStep("signin");
+        return;
+      }
       if (!r.ok || data.error) {
         const errText = data.message || data.error || "Error. Please try again.";
         setHist(h => [...h, { role: "assistant", text: errText }]);
@@ -3475,13 +3754,14 @@ function App() {
 
       // サーバーから返ってきた_usageでキャッシュを正確に更新（UTC基準）
       if (data.usage_info) {
+        const todayUTC = new Date().toISOString().slice(0,10);
         const serverCache = {
           remaining:  data.usage_info.remaining,
           used:       data.usage_info.used ?? usageCache.used,
           limit:      data.usage_info.limit,
           isPro:      data.usage_info.isPro,
-          dayKey:     usageCache.dayKey,
-          monthKey:   usageCache.monthKey,
+          dayKey:     todayUTC,
+          monthKey:   new Date().toISOString().slice(0,7),
         };
         setUsageCache(serverCache);
         lsSet("mb_usage_cache", serverCache);
@@ -3548,6 +3828,35 @@ function App() {
       <style dangerouslySetInnerHTML={{__html:"@keyframes spin{to{transform:rotate(360deg)}}"}}></style>
     </div>
   );
+  if (authStep === "signin" && showReset) return (
+    <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"DM Sans, sans-serif"}}>
+      <style>{FONTS}</style>
+      <div style={{width:"100%",maxWidth:360}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <div style={{fontFamily:"Bebas Neue",fontSize:38,letterSpacing:4,color:C.green}}>MAKE BODY</div>
+        </div>
+        <div style={{background:"#fff",borderRadius:20,padding:28,boxShadow:"0 4px 24px rgba(0,0,0,0.06)"}}>
+          {resetSent ? (
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:32,marginBottom:12}}>✅</div>
+              <div style={{fontWeight:700,fontSize:16,marginBottom:8}}>{lang==="ja"?"メールを送信しました":lang==="ko"?"이메일을 전송했습니다":"Email sent"}</div>
+              <div style={{fontSize:13,color:C.muted,marginBottom:20,lineHeight:1.6}}>{lang==="ja"?"パスワード再設定リンクをメールで送りました。メールをご確認ください。":lang==="ko"?"비밀번호 재설정 링크를 이메일로 전송했습니다.":"Check your email for the password reset link."}</div>
+              <button onClick={()=>setShowReset(false)} style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>{lang==="ja"?"ログイン画面へ戻る":lang==="ko"?"로그인으로 돌아가기":"Back to login"}</button>
+            </div>
+          ) : (
+            <>
+              <div style={{fontWeight:700,fontSize:18,marginBottom:6}}>{lang==="ja"?"パスワードを再設定":lang==="ko"?"비밀번호 재설정":"Reset password"}</div>
+              <div style={{fontSize:13,color:C.muted,marginBottom:20}}>{lang==="ja"?"登録済みのメールアドレスを入力してください":lang==="ko"?"등록된 이메일 주소를 입력해주세요":"Enter your registered email address"}</div>
+              <input value={resetEmail} onChange={e=>setResetEmail(e.target.value)} placeholder="Email" type="email" style={{width:"100%",background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",color:C.text,fontSize:14,marginBottom:16,boxSizing:"border-box"}}/>
+              <button onClick={handlePasswordReset} style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer",marginBottom:10}}>{lang==="ja"?"再設定リンクを送る":lang==="ko"?"재설정 링크 전송":"Send reset link"}</button>
+              <button onClick={()=>setShowReset(false)} style={{width:"100%",background:"none",border:"1px solid "+C.border,borderRadius:12,padding:"11px 0",color:C.muted,fontSize:13,cursor:"pointer"}}>{lang==="ja"?"キャンセル":lang==="ko"?"취소":"Cancel"}</button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   if (authStep === "signin") return (
     <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"DM Sans, sans-serif"}}>
       <style>{FONTS}</style>
@@ -3609,51 +3918,6 @@ function App() {
     </div>
   );
   // パスワードリセットモーダル
-  if (authStep === "signin" && showReset) return (
-    <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"DM Sans, sans-serif"}}>
-      <div style={{width:"100%",maxWidth:360}}>
-        <div style={{textAlign:"center",marginBottom:32}}>
-          <div style={{fontFamily:"Bebas Neue",fontSize:38,letterSpacing:4,color:C.green}}>MAKE BODY</div>
-        </div>
-        <div style={{background:"#fff",borderRadius:20,padding:28,boxShadow:"0 4px 24px rgba(0,0,0,0.06)"}}>
-          {resetSent ? (
-            <div style={{textAlign:"center"}}>
-              <div style={{fontSize:32,marginBottom:12}}>✅</div>
-              <div style={{fontWeight:700,fontSize:16,marginBottom:8,color:C.text}}>
-                {lang==="ja"?"メールを送信しました":lang==="ko"?"이메일을 전송했습니다":"Email sent"}
-              </div>
-              <div style={{fontSize:13,color:C.muted,marginBottom:20,lineHeight:1.6}}>
-                {lang==="ja"?"パスワード再設定リンクをメールで送りました。メールをご確認ください。":lang==="ko"?"비밀번호 재설정 링크를 이메일로 전송했습니다.":"Check your email for the password reset link."}
-              </div>
-              <button onClick={()=>setShowReset(false)} style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>
-                {lang==="ja"?"ログイン画面へ戻る":lang==="ko"?"로그인으로 돌아가기":"Back to login"}
-              </button>
-            </div>
-          ) : (
-            <>
-              <div style={{fontWeight:700,fontSize:18,marginBottom:6,color:C.text}}>
-                {lang==="ja"?"パスワードを再設定":lang==="ko"?"비밀번호 재설정":"Reset password"}
-              </div>
-              <div style={{fontSize:13,color:C.muted,marginBottom:20}}>
-                {lang==="ja"?"登録したメールアドレスを入力してください。":lang==="ko"?"등록한 이메일 주소를 입력해주세요.":"Enter your registered email address."}
-              </div>
-              <input value={resetEmail} onChange={e=>setResetEmail(e.target.value)}
-                placeholder="Email" type="email"
-                style={{width:"100%",background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",color:C.text,fontSize:14,marginBottom:16}}/>
-              <button onClick={handlePasswordReset}
-                style={{width:"100%",background:C.green,border:"none",borderRadius:12,padding:"13px 0",color:"#000",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer",marginBottom:10}}>
-                {lang==="ja"?"再設定リンクを送る":lang==="ko"?"재설정 링크 전송":"Send reset link"}
-              </button>
-              <button onClick={()=>setShowReset(false)}
-                style={{width:"100%",background:"none",border:"1px solid "+C.border,borderRadius:12,padding:"11px 0",color:C.muted,fontSize:13,cursor:"pointer"}}>
-                {lang==="ja"?"キャンセル":lang==="ko"?"취소":"Cancel"}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   if (!profile) return (
     <Onboarding lang={lang} setLang={setLang} onComplete={handleOnboardingComplete}/>
@@ -3823,7 +4087,9 @@ function App() {
               );
             })()}
 
-                        {/* Today's workout */}
+
+
+            {/* Today's workout */}
             <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                 <div>
@@ -3856,6 +4122,186 @@ function App() {
                 ))
               )}
             </div>
+            {/* ── 今日のプラン（ルールベース・API不使用） ── */}
+            {(()=>{
+              const todayPlan = weeklyPlan?.days?.[0];
+              if (!todayPlan) return null;
+              return (
+                <div style={{background:C.card,borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid "+C.border}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                    <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text}}>
+                      {lang==="ja"?"📋 今日のプラン":lang==="ko"?"📋 오늘의 플랜":"📋 TODAY'S PLAN"}
+                    </div>
+                    <div style={{fontSize:10,color:C.muted}}>
+                      {new Date().toLocaleDateString(lang==="ja"?"ja-JP":lang==="ko"?"ko-KR":"en-US",{weekday:"short",month:"short",day:"numeric"})}
+                    </div>
+                  </div>
+
+                  {/* コーチメッセージ */}
+                  <div style={{background:coach.bg,border:"1px solid "+coach.color+"40",borderRadius:10,padding:"10px 12px",marginBottom:10,fontSize:12,color:coach.color,fontWeight:600,lineHeight:1.5}}>
+                    {coach.emoji} {todayPlan.coachMsg}
+                  </div>
+
+                  {/* トレーニング */}
+                  <div style={{marginBottom:10}}>
+                    <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:6}}>
+                      💪 {lang==="ja"?"今日のトレーニング":lang==="ko"?"오늘의 트레이닝":"TODAY'S WORKOUT"}
+                    </div>
+                    {todayPlan.isRest ? (
+                      <div style={{fontSize:12,color:C.muted,padding:"8px 10px",background:C.surface,borderRadius:8,border:"1px solid "+C.border}}>
+                        🛌 {lang==="ja"?"今日は休息日。しっかり回復しよう。":lang==="ko"?"오늘은 휴식일. 잘 회복하자.":"Rest day. Recover well."}
+                      </div>
+                    ) : (
+                      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                        {(()=>{
+                          const doneList = lsGet("mb_done_"+today, []);
+                          return todayPlan.workout.map((ex,i)=>{
+                            const isDone = doneList.includes(ex.name);
+                            return (
+                              <div key={i}
+                                onClick={()=>!isDone&&setCounterM({exercise:ex.name,sets:ex.sets,reps:ex.reps})}
+                                style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:isDone?"rgba(34,197,94,0.08)":C.surface,borderRadius:8,border:"1px solid "+(isDone?C.green+"40":C.border),cursor:isDone?"default":"pointer",opacity:isDone?0.7:1,transition:"all 0.2s"}}>
+                                <div style={{fontSize:12,fontWeight:600,color:isDone?C.muted:C.text,textDecoration:isDone?"line-through":"none"}}>
+                                  {isDone?"✅ ":""}{ex.name}
+                                </div>
+                                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                  <div style={{fontSize:12,color:isDone?C.muted:coach.color,fontWeight:700}}>
+                                    {ex.sets}×{ex.reps}{ex.unit==="sec"?(lang==="ja"?"秒":lang==="ko"?"초":"s"):(lang==="ja"?"回":lang==="ko"?"회":"reps")}
+                                  </div>
+                                  {!isDone&&<div style={{fontSize:10,color:C.green,fontWeight:700}}>▶ START</div>}
+                                  {isDone&&<div style={{fontSize:10,color:C.green,fontWeight:700}}>{lang==="ja"?"完了":lang==="ko"?"완료":"Done"}</div>}
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 食事 - 無料はkcal/タンパク質のみ、PRO/Trialは詳細 */}
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:6}}>
+                      🍽️ {lang==="ja"?"今日の食事目安":lang==="ko"?"오늘의 식사 목표":"TODAY'S NUTRITION"}
+                    </div>
+                    <div style={{display:"flex",gap:6,marginBottom: (isPro||cl.isTrial)?8:0}}>
+                      <div style={{flex:1,background:C.surface,borderRadius:8,padding:"8px",textAlign:"center",border:"1px solid "+C.border}}>
+                        <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"目標kcal":lang==="ko"?"목표 kcal":"Target kcal"}</div>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:18,color:C.green}}>{todayPlan.kcal}</div>
+                      </div>
+                      <div style={{flex:1,background:C.surface,borderRadius:8,padding:"8px",textAlign:"center",border:"1px solid "+C.border}}>
+                        <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"タンパク質":lang==="ko"?"단백질":"Protein"}</div>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:18,color:"#f59e0b"}}>{todayPlan.protein}g</div>
+                      </div>
+                    </div>
+                    {(isPro||cl.isTrial) ? (
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                        {[
+                          {label:lang==="ja"?"朝":lang==="ko"?"아침":"Morning", val:todayPlan.meal?.morning},
+                          {label:lang==="ja"?"昼":lang==="ko"?"점심":"Lunch",   val:todayPlan.meal?.lunch},
+                          {label:lang==="ja"?"夜":lang==="ko"?"저녁":"Dinner",  val:todayPlan.meal?.dinner},
+                          {label:lang==="ja"?"間食":lang==="ko"?"간식":"Snack", val:todayPlan.meal?.snack},
+                        ].map((m,i)=>(
+                          <div key={i} style={{display:"flex",gap:8,alignItems:"flex-start",padding:"6px 10px",background:C.surface,borderRadius:7,border:"1px solid "+C.border}}>
+                            <div style={{fontSize:10,fontWeight:700,color:C.green,minWidth:24,flexShrink:0}}>{m.label}</div>
+                            <div style={{fontSize:11,color:C.text,lineHeight:1.4}}>{m.val}</div>
+                          </div>
+                        ))}
+                        {todayPlan.meal?.budget && (
+                          <div style={{fontSize:10,color:C.muted,textAlign:"right",marginTop:2}}>
+                            {lang==="ja"?"目安予算 ¥":lang==="ko"?"예상 예산 ₩":"Est. budget $"}{todayPlan.meal.budget}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{marginTop:6}}>
+                        {Math.max(0,Math.round((todayPlan.protein)-totPro)) > 10 && (
+                          <div style={{fontSize:11,color:"#60a5fa",marginBottom:6,padding:"6px 10px",background:"rgba(96,165,250,0.08)",borderRadius:8}}>
+                            💡 {lang==="ja"?"タンパク質あと"+Math.max(0,Math.round(todayPlan.protein-totPro))+"g不足 → サラダチキン1個でほぼ補えます":lang==="ko"?"단백질 "+Math.max(0,Math.round(todayPlan.protein-totPro))+"g 부족 → 닭가슴살 1개 추천":"Protein "+Math.max(0,Math.round(todayPlan.protein-totPro))+"g short → try chicken breast"}
+                          </div>
+                        )}
+                        <div style={{padding:"8px 10px",background:C.greenGlow,borderRadius:8,border:"1px solid "+C.green+"40",fontSize:11,color:C.green,cursor:"pointer"}} onClick={()=>setShowUpgrade(true)}>
+                          🔒 {lang==="ja"?"朝昼夜の具体的な食事メニューはトライアルまたはPROで":lang==="ko"?"아침점심저녁 구체적 식사는 트라이얼/PRO에서":"Detailed meal plan available in Trial or PRO"}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── 翌日以降プレビュー（Trial=今週、PRO=来週まで、無料=ロック） ── */}
+            {weeklyPlan?.days && (
+              <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
+                <div style={{fontFamily:"Bebas Neue",fontSize:13,letterSpacing:1,color:C.text,marginBottom:10}}>
+                  {lang==="ja"?"📅 今後のプラン":lang==="ko"?"📅 앞으로의 플랜":"📅 UPCOMING PLAN"}
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  {weeklyPlan.days.slice(1, isPro?14:cl.isTrial?7:2).map((day,i)=>{
+                    const dateObj = new Date();
+                    dateObj.setDate(dateObj.getDate() + i + 1);
+                    const label = dateObj.toLocaleDateString(lang==="ja"?"ja-JP":lang==="ko"?"ko-KR":"en-US",{weekday:"short",month:"numeric",day:"numeric"});
+                    return (
+                      <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:C.surface,borderRadius:8,border:"1px solid "+C.border}}>
+                        <div style={{fontSize:11,color:C.muted,minWidth:60}}>{label}</div>
+                        <div style={{flex:1,marginLeft:8}}>
+                          {day.isRest ? (
+                            <span style={{fontSize:11,color:C.muted}}>🛌 {lang==="ja"?"休息":lang==="ko"?"휴식":"Rest"}</span>
+                          ) : (
+                            <span style={{fontSize:11,color:C.text}}>{day.workout.map(e=>e.name).join("・")}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {!isPro && !cl.isTrial && (
+                    <div style={{padding:"10px 12px",background:C.greenGlow,borderRadius:8,border:"1px solid "+C.green+"40",cursor:"pointer",textAlign:"center"}} onClick={()=>setShowUpgrade(true)}>
+                      <div style={{fontSize:12,color:C.green,fontWeight:700}}>
+                        🔒 {lang==="ja"?"トライアルで今週分、PROで来週まで見れる":lang==="ko"?"트라이얼로 이번 주, PRO로 다음 주까지":"Trial unlocks this week, PRO unlocks next week"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── 週次レビュー（PRO・日曜のみ） ── */}
+            {isPro && new Date().getDay() === 0 && (()=>{
+              const workoutLog  = lsGet("mb_workout_log", {});
+              const weightLog2  = lsGet("mb_weight_log",  {});
+              const weekDates   = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return d.toISOString().slice(0,10);});
+              const workoutDone = weekDates.filter(d=>workoutLog[d]?.done).length;
+              const weightArr   = weekDates.map(d=>weightLog2[d]).filter(Boolean);
+              const weightDiff  = weightArr.length>=2 ? (weightArr[0]-weightArr[weightArr.length-1]).toFixed(1) : null;
+              const achRate     = Math.round((workoutDone/6)*100);
+              return (
+                <div style={{background:"linear-gradient(135deg,"+coach.bg+","+C.card+")",borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid "+coach.color+"30"}}>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:coach.color,marginBottom:10}}>
+                    {lang==="ja"?"📊 今週のレビュー":lang==="ko"?"📊 이번 주 리뷰":"📊 WEEKLY REVIEW"}
+                  </div>
+                  <div style={{display:"flex",gap:8,marginBottom:8}}>
+                    <div style={{flex:1,background:C.card,borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid "+C.border}}>
+                      <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"達成率":lang==="ko"?"달성률":"Achievement"}</div>
+                      <div style={{fontFamily:"Bebas Neue",fontSize:22,color:achRate>=70?C.green:achRate>=50?"#f59e0b":"#ef4444"}}>{achRate}%</div>
+                    </div>
+                    <div style={{flex:1,background:C.card,borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid "+C.border}}>
+                      <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"筋トレ":lang==="ko"?"근력운동":"Workouts"}</div>
+                      <div style={{fontFamily:"Bebas Neue",fontSize:22,color:C.text}}>{workoutDone}<span style={{fontSize:12}}>/6</span></div>
+                    </div>
+                    {weightDiff && (
+                      <div style={{flex:1,background:C.card,borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid "+C.border}}>
+                        <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"体重変化":lang==="ko"?"체중 변화":"Weight"}</div>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:22,color:parseFloat(weightDiff)<0?C.green:"#f59e0b"}}>{weightDiff>0?"+":""}{weightDiff}kg</div>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{fontSize:11,color:coach.color,fontWeight:600,lineHeight:1.5}}>
+                    {achRate>=70?(lang==="ja"?"今週も素晴らしかった！来週もこの調子で。":lang==="ko"?"이번 주도 훌륭했어! 다음 주도 이대로.":"Great week! Keep it up next week."):achRate>=40?(lang==="ja"?"半分できた。来週はもう少し頑張ろう。":lang==="ko"?"절반 달성. 다음 주엔 조금 더 해보자.":"Halfway there. Push a bit more next week."):(lang==="ja"?"来週はまず1日だけでいい。小さく始めよう。":lang==="ko"?"다음 주엔 하루만 해도 돼. 작게 시작하자.":"Next week, just one day. Start small.")}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Body stats */}
             <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
               <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text,marginBottom:10}}>{lang==="ja"?"体組成":lang==="ko"?"체성분":"BODY COMPOSITION"}</div>
@@ -3865,13 +4311,42 @@ function App() {
                   <div style={{fontFamily:"Bebas Neue",fontSize:22,color:C.green}}>{profile.currentWeightKg}<span style={{fontSize:12,fontWeight:400}}> kg</span></div>
                 </div>
                 <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
-                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"目標体重":lang==="ko"?"목표 체중":"Target"}</div>
-                  <div style={{fontFamily:"Bebas Neue",fontSize:22,color:coach.color}}>{profile.idealWeightKg || "—"}<span style={{fontSize:12,fontWeight:400}}> kg</span></div>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>
+                    {profile?.gender==="female"
+                      ? (lang==="ja"?"目標体重":lang==="ko"?"목표 체중":"Goal Weight")
+                      : (lang==="ja"?"目標体脂肪":lang==="ko"?"목표 체지방":"Goal BF%")}
+                  </div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:22,color:coach.color}}>
+                    {profile?.gender==="female"
+                      ? (profile.idealWeightKg || "—")
+                      : (profile?.bodyGoal?.targetBf || "—")}
+                    <span style={{fontSize:12,fontWeight:400}}>{profile?.gender==="female"?" kg":"%"}</span>
+                  </div>
                 </div>
                 <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
                   <div style={{fontSize:10,color:C.muted,marginBottom:2}}>BMI</div>
                   <div style={{fontFamily:"Bebas Neue",fontSize:22,color:bmiCat(profile.bmi||22).color}}>{profile.bmi||"—"}</div>
                   <div style={{fontSize:9,color:bmiCat(profile.bmi||22).color}}>{bmiCat(profile.bmi||22).label}</div>
+                </div>
+              </div>
+              {/* 追加情報行 */}
+              <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"目標まで":lang==="ko"?"목표까지":"To Goal"}</div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:20,color:profile.currentWeightKg>profile.idealWeightKg?"#ef4444":C.green}}>
+                    {profile.idealWeightKg ? (Math.abs(profile.currentWeightKg - profile.idealWeightKg).toFixed(1)) : "—"}<span style={{fontSize:11,fontWeight:400}}> kg</span>
+                  </div>
+                  <div style={{fontSize:9,color:C.muted}}>{profile.currentWeightKg>profile.idealWeightKg?(lang==="ja"?"減量":lang==="ko"?"감량":"lose"):(lang==="ja"?"増量":lang==="ko"?"증량":"gain")}</div>
+                </div>
+                <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"推定体脂肪":lang==="ko"?"체지방 추정":"Est. Body Fat"}</div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:20,color:C.text}}>{profile.estCurrentBf||"—"}<span style={{fontSize:11,fontWeight:400}}>%</span></div>
+                  <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"推定値":lang==="ko"?"추정값":"estimate"}</div>
+                </div>
+                <div style={{flex:1,background:C.surface,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{lang==="ja"?"カロリー目標":lang==="ko"?"칼로리 목표":"Cal Target"}</div>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:20,color:C.text}}>{calGoal}<span style={{fontSize:11,fontWeight:400}}> kcal</span></div>
+                  <div style={{fontSize:9,color:C.muted}}>{lang==="ja"?"1日の目標":lang==="ko"?"일일 목표":"daily goal"}</div>
                 </div>
               </div>
               {/* Weight log input */}
@@ -3883,7 +4358,14 @@ function App() {
                   const updated = {...weightLog, [today]: w};
                   setWeightLog(updated);
                   syncWeightHistory(updated);
-                  setProfile(p=>({...p, currentWeightKg: w}));
+                  // BMI再計算
+                  const h = profile?.heightCm ? profile.heightCm / 100 : 1.7;
+                  const newBmi = Math.round((w / (h * h)) * 10) / 10;
+                  // 推定体脂肪率再計算（Deurenberg式）
+                  const ageNum = profile?.ageGroup ? parseInt(profile.ageGroup) || 30 : 30;
+                  const isMale = (profile?.gender || "male") === "male";
+                  const newBf = Math.round((1.20 * newBmi + 0.23 * ageNum - (isMale ? 16.2 : 5.4)) * 10) / 10;
+                  setProfile(p=>({...p, currentWeightKg: w, bmi: newBmi, estCurrentBf: Math.max(5, newBf)}));
                   setWeightInput("");
                 }} style={{background:C.green,border:"none",borderRadius:8,padding:"8px 14px",color:"#000",fontSize:12,fontWeight:700,cursor:"pointer"}}>
                   {lang==="ja"?"記録":lang==="ko"?"기록":"Log"}
@@ -3961,10 +4443,13 @@ function App() {
                             const isToday=dk===today;
                             const hasMeals=mealHist[dk]?.length>0;
                             return(
-                              <div key={di} onClick={()=>{setCalDate(new Date(dk));setCalFilter("all");}} style={{background:isToday?coach.bg:total>0?C.green+"08":"transparent",borderRadius:8,padding:"5px 0",textAlign:"center",cursor:"pointer",border:"1px solid "+isToday?coach.color:total>0?C.green+"20":C.border}}>
-                                <div style={{fontSize:11,color:isToday?coach.color:total>0?C.green:C.muted,fontWeight:isToday?700:400}}>{d}</div>
-                                {total>0&&<div style={{fontSize:8,color:done===total?C.green:C.muted}}>{done}/{total}</div>}
-                                {hasMeals&&<div style={{fontSize:7,color:"#f97316"}}>•</div>}
+                              <div key={di} onClick={()=>{setCalDate(new Date(dk));setCalFilter("all");}} style={{background:isToday?coach.bg:done===total&&total>0?"rgba(34,197,94,0.1)":"transparent",borderRadius:8,padding:"5px 0",textAlign:"center",cursor:"pointer",border:"1px solid "+(isToday?coach.color:done===total&&total>0?C.green+"40":total>0?C.border:C.dim)}}>
+                                <div style={{fontSize:11,color:isToday?coach.color:done===total&&total>0?C.green:total>0?C.text:C.muted,fontWeight:isToday||total>0?700:400}}>{d}</div>
+                                <div style={{display:"flex",justifyContent:"center",gap:2,marginTop:1}}>
+                                  {done>0&&<div style={{width:5,height:5,borderRadius:"50%",background:C.green}}/>}
+                                  {(total-done)>0&&dk>=today&&<div style={{width:5,height:5,borderRadius:"50%",background:coach.color+"80"}}/>}
+                                  {(total-done)>0&&dk<today&&<div style={{width:5,height:5,borderRadius:"50%",background:"#ef4444"}}/>}
+                                </div>
                               </div>
                             );
                           })}
@@ -3995,6 +4480,11 @@ function App() {
                       </div>
                     ));
                   })()}
+                {/* 凡例 */}
+                <div style={{display:"flex",gap:12,marginTop:8,fontSize:10,color:C.muted}}>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:C.green}}/>{lang==="ja"?"完了":lang==="ko"?"완료":"Done"}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:coach.color+"80"}}/>{lang==="ja"?"予定":lang==="ko"?"예정":"Scheduled"}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:"#ef4444"}}/>{lang==="ja"?"未完了":lang==="ko"?"미완료":"Missed"}</div>
                 </div>
               </div>
             )}
@@ -4011,11 +4501,17 @@ function App() {
                   </div>
                 </div>
                 {/* Chat history */}
-                <div style={{minHeight:200,marginBottom:12}}>
+                <div
+                  ref={el => { if (el && chatHist.length > 0 && !userScrolledUp.current) el.scrollTop = el.scrollHeight; }}
+                  onScroll={e => {
+                    const el = e.target;
+                    userScrolledUp.current = el.scrollTop < el.scrollHeight - el.clientHeight - 50;
+                  }}
+                  style={{minHeight:120,maxHeight:420,overflowY:"auto",marginBottom:12,scrollBehavior:"smooth"}}>
                   {chatHist.map((msg,i)=>(
                     <div key={i} style={{marginBottom:10,display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start"}}>
                       <div style={{maxWidth:"84%",background:msg.role==="user"?coach.color:C.card,borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",padding:"10px 14px",border:msg.role==="user"?"none":"1px solid "+C.border}}>
-                        <div style={{fontSize:13,color:msg.role==="user"?"#000":C.white,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{msg.text}</div>
+                        <div style={{fontSize:13,color:msg.role==="user"?"#000":C.text,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{msg.text}</div>
                       </div>
                     </div>
                   ))}
@@ -4116,6 +4612,7 @@ function App() {
                 </div>
                 <div style={{fontSize:10,color:C.muted,textAlign:"right",marginTop:4}}>{cl.used}/{cl.limit} {lang==="ja"?"回使用":lang==="ko"?"회 사용":"used"}</div>
               </div>
+            )}
             )}
           </div>
         )}
