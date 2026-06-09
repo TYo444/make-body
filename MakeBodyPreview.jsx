@@ -3833,6 +3833,7 @@ function App() {
     } catch(err) { setAnalyzing(false); }
   }
 
+  useEffect(() => {
     if (nutChatHist.length > 0) lsSet("mb_nut_chat", nutChatHist.slice(-50));
   }, [nutChatHist]);
 
