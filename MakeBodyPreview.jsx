@@ -2800,6 +2800,26 @@ function App() {
 
   // UTC リセットカウントダウン（1分ごとに更新）
   useEffect(() => {
+    if (nutChatHist.length > 0) lsSet("mb_nut_chat", nutChatHist.slice(-50));
+  }, [nutChatHist]);
+
+
+  // 週間プランを生成（毎週月曜or初回）
+  useEffect(() => {
+    if (!profile) return;
+    const d = new Date(); const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(new Date().setDate(diff)).toISOString().slice(0,10);
+    const saved = lsGet("mb_weekly_plan", null);
+    if (saved && saved.weekStart === monday) { setWeeklyPlan(saved); return; }
+    const coachId = profile?.coachId || "bro";
+    const plan = generateWeeklyPlan(profile, coachId, lang);
+    const planData = { weekStart: monday, days: plan };
+    setWeeklyPlan(planData); lsSet("mb_weekly_plan", planData);
+  }, [profile]);
+
+
+  useEffect(() => {
     function calcCountdown() {
       const now = new Date();
       const isPro_ = isPro;
@@ -3832,25 +3852,6 @@ function App() {
       reader.readAsDataURL(file);
     } catch(err) { setAnalyzing(false); }
   }
-
-  useEffect(() => {
-    if (nutChatHist.length > 0) lsSet("mb_nut_chat", nutChatHist.slice(-50));
-  }, [nutChatHist]);
-
-
-  // 週間プランを生成（毎週月曜or初回）
-  useEffect(() => {
-    if (!profile) return;
-    const d = new Date(); const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(new Date().setDate(diff)).toISOString().slice(0,10);
-    const saved = lsGet("mb_weekly_plan", null);
-    if (saved && saved.weekStart === monday) { setWeeklyPlan(saved); return; }
-    const coachId = profile?.coachId || "bro";
-    const plan = generateWeeklyPlan(profile, coachId, lang);
-    const planData = { weekStart: monday, days: plan };
-    setWeeklyPlan(planData); lsSet("mb_weekly_plan", planData);
-  }, [profile]);
 
   return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#e8f8ef 0%,#f0fdf4 50%,#e0f2fe 100%)",fontFamily:"DM Sans, sans-serif",maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column"}}>
