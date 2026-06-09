@@ -1537,7 +1537,7 @@ function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings, sbUser }
   );
 }
 
-function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, onClose, setShowUpgrade, onSave, sbUser, showCancelFeedback, setShowCancelFeedback, cancelReason, setCancelReason }) {
+function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, onClose, setShowUpgrade, onSave, sbUser, showCancelFeedback, setShowCancelFeedback, cancelReason, setCancelReason, showWithdrawDone, setShowWithdrawDone, cancelFeedbackMode, setCancelFeedbackMode }) {
   const [pid, setPid]    = useState(profile?.coachId || "bro");
   const [gid, setGid]    = useState(profile?.bodyGoal?.id || "lean");
   const [wt,  setWt]     = useState(String(profile?.currentWeightKg || ""));
@@ -2794,6 +2794,8 @@ function App() {
 
   const [showCancelFb, setShowCancelFb] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [showWithdrawDone, setShowWithdrawDone] = useState(false);
+  const [cancelFeedbackMode, setCancelFeedbackMode] = useState("cancel");
 
   const chatEndRef = useRef(null);
 
@@ -5220,7 +5222,7 @@ function App() {
       {showUpgrade&&<UpgradeModal lang={lang} onClose={()=>setShowUpgrade(false)} profile={profile} cl={cl} coach={coach} appSettings={appSettings} sbUser={sbUser}/>}
       {showSettings&&<SettingsModal profile={profile} setProfile={setProfile} lang={lang} setLang={setLang} isPro={isPro} onSignOut={handleSignOut} onClose={()=>setShowSettings(false)}
               setShowUpgrade={setShowUpgrade} onSave={saveProfile} sbUser={sbUser}
-              showCancelFeedback={showCancelFb} setShowCancelFeedback={setShowCancelFb} cancelReason={cancelReason} setCancelReason={setCancelReason}/>}
+              showCancelFeedback={showCancelFb} setShowCancelFeedback={setShowCancelFb} cancelReason={cancelReason} setCancelReason={setCancelReason} showWithdrawDone={showWithdrawDone} setShowWithdrawDone={setShowWithdrawDone} cancelFeedbackMode={cancelFeedbackMode} setCancelFeedbackMode={setCancelFeedbackMode}/>}
 
       {/* Legal modal */}
       {legalModal&&legalData&&(
