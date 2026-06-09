@@ -4974,7 +4974,6 @@ function App() {
             )}
 
             {nutView === "chat" && (
-            {/* ── 栄養相談チャット ────────────────────────────── */}
             <div style={{background:C.card,borderRadius:16,padding:"14px 16px",border:"1px solid "+C.border,marginTop:12}}>
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
                 <span style={{fontSize:18}}>🥗</span>
