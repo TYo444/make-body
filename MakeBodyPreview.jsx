@@ -3953,7 +3953,7 @@ function App() {
                   ];
                   msg = rand(memOpts);
                 }
-              } else if (daysSince >= 5) {
+              } else if (daysSince >= 5 && daysSince < 99) {
                 const opts = [
                   {ja:`${daysSince}日ぶりだね。また来てくれた、それだけで十分だよ。`,en:`${daysSince} days away. You came back — that's enough. Just one exercise today.`,ko:`${daysSince}일 만이야. 돌아와 줬어, 그것만으로도 충분해.`},
                   {ja:`${name}、久しぶり。また一緒にやっていこう。焦らずいこう。`,en:`${name}, welcome back. Let's start again together. No rush.`,ko:`${name}, 오랜만이야. 다시 함께 해보자. 서두르지 말자.`},
@@ -3992,6 +3992,11 @@ function App() {
                     {streak>0&&<div style={{marginLeft:"auto",background:"rgba(34,197,94,0.15)",borderRadius:10,padding:"4px 10px",fontSize:11,color:C.greenDark}}>🔥 {streak}{lang==="ja"?"日":lang==="ko"?"일":lang==="zh"?"天":" days"}</div>}
                   </div>
                   <div style={{fontSize:13,color:C.text,lineHeight:1.6,fontWeight:500}}>{dispMsg}</div>
+                  {weeklyPlan?.days?.[0]?.coachMsg && weeklyPlan.days[0].coachMsg !== dispMsg && (
+                    <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+coach.color+"20",fontSize:12,color:C.muted,lineHeight:1.6}}>
+                      💬 「{weeklyPlan.days[0].coachMsg}」
+                    </div>
+                  )}
 
                 </div>
               );
@@ -4054,12 +4059,7 @@ function App() {
 
                   {/* トレーニング */}
                   <div style={{marginBottom:10}}>
-                    {todayPlan.coachMsg && (
-                      <div style={{background:"rgba(34,197,94,0.06)",borderRadius:10,padding:"8px 12px",marginBottom:10,borderLeft:"3px solid "+coach.color}}>
-                        <div style={{fontSize:11,color:coach.color,fontWeight:700,marginBottom:2}}>{coach.emoji} {coach.name}</div>
-                        <div style={{fontSize:12,color:C.text,lineHeight:1.6}}>「{todayPlan.coachMsg}」</div>
-                      </div>
-                    )}
+
                     <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:6}}>
                       💪 {lang==="ja"?"今日のトレーニング":lang==="ko"?"오늘의 트레이닝":"TODAY'S WORKOUT"}
                     </div>
