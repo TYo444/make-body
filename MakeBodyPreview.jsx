@@ -2816,6 +2816,21 @@ function App() {
     const plan = generateWeeklyPlan(profile, coachId, lang);
     const planData = { weekStart: monday, days: plan };
     setWeeklyPlan(planData); lsSet("mb_weekly_plan", planData);
+    // scheduleにも自動追加
+    const manual = lsGet("mb_schedule", []).filter(s => !s.isAutoGen);
+    const auto = [];
+    plan.forEach((day, i) => {
+      if (day.isRest || !day.workout?.length) return;
+      const dt = new Date(); dt.setDate(dt.getDate() + i);
+      const dk = dt.toISOString().slice(0,10);
+      day.workout.forEach(ex => auto.push({
+        id: Date.now() + Math.random(), dateKey: dk,
+        exercise: ex.name, sets: ex.sets, reps: ex.reps,
+        done: false, missed: false, note: "", isAutoGen: true,
+      }));
+    });
+    const ns = [...manual, ...auto];
+    setSchedule(ns); lsSet("mb_schedule", ns);
   }, [profile]);
 
 
@@ -4767,7 +4782,7 @@ function App() {
               {[["calendar",lang==="ja"?"📅 カレンダー":"📅 Cal"],
                 ["chat",lang==="ja"?"💬 相談":"💬 Chat"],
                 ["scan",lang==="ja"?"📷 スキャン":"📷 Scan"]].map(([v,label])=>(
-                <button key={v} onClick={()=>setNutView(v==="scan"?"calendar":v)} style={{flex:1,padding:"8px 0",borderRadius:10,border:"2px solid "+(nutView===v?"#22c55e":C.border),background:nutView===v?"rgba(34,197,94,0.1)":"transparent",color:nutView===v?"#22c55e":C.muted,fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                <button key={v} onClick={()=>setNutView(v)} style={{flex:1,padding:"8px 0",borderRadius:10,border:"2px solid "+(nutView===v?"#22c55e":C.border),background:nutView===v?"rgba(34,197,94,0.1)":"transparent",color:nutView===v?"#22c55e":C.muted,fontSize:11,fontWeight:600,cursor:"pointer"}}>
                   {label}
                 </button>
               ))}
@@ -4920,43 +4935,6 @@ function App() {
                 </div>
               );
             })()}
-
-            {/* Meal scan */}
-            {(mealDate===today||mealDate<today)&&(
-              <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
-                <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text,marginBottom:8}}>{lang==="ja"?"食事スキャン":lang==="ko"?"식사 스캔":"MEAL SCANNER"}</div>
-                {scannedMeal ? (
-                  <div>
-                    <div style={{fontSize:11,color:C.muted,marginBottom:6}}>{lang==="ja"?"※AIによる推定値です。参考としてご利用ください。":lang==="ko"?"※AI 추정값입니다. 참고용으로 활용하세요.":"※ AI estimates — values are approximate for reference only."}</div>
-                    <div style={{background:C.surface,borderRadius:10,padding:"10px 12px",marginBottom:8,border:"1px solid "+C.green+"30"}}>
-                      <div style={{fontFamily:"Bebas Neue",fontSize:13,color:C.green,marginBottom:4}}>✅ {lang==="ja"?"食事を検出":"MEAL DETECTED"}</div>
-                      <div style={{fontSize:13,color:C.text,fontWeight:700}}>{scannedMeal.name}</div>
-                      <div style={{fontSize:11,color:C.muted}}>{scannedMeal.cal}kcal · P:{scannedMeal.protein}g · C:{scannedMeal.carbs}g · F:{scannedMeal.fat}g</div>
-                    </div>
-                    <div style={{display:"flex",gap:8}}>
-                      <button onClick={()=>{
-                        const entry={...scannedMeal,dateKey:today,id:Date.now()};
-                        const updMeals=[...meals,entry];
-                        setMeals(updMeals);
-                        const updHist={...mealHist,[today]:updMeals};
-                        setMealHist(updHist);
-                        syncMealHistory(updHist);
-                        setScannedMeal(null);
-                      }} style={{flex:1,background:C.green,border:"none",borderRadius:10,padding:"10px 0",color:"#000",fontSize:12,fontWeight:700,cursor:"pointer"}}>{lang==="ja"?"記録する":lang==="ko"?"기록하기":"Add to log"}</button>
-                      <button onClick={()=>setScannedMeal(null)} style={{flex:1,background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"10px 0",color:C.muted,fontSize:12,cursor:"pointer"}}>{lang==="ja"?"キャンセル":lang==="ko"?"취소":"Cancel"}</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <input type="file" accept="image/*" capture="environment" id="meal-scan-input" style={{display:"none"}} onChange={handleMealScan}/>
-                    {isPro ? (<button onClick={()=>document.getElementById("meal-scan-input")?.click()} style={{width:"100%",background:C.surface,border:"2px dashed "+C.border,borderRadius:12,padding:"16px 0",color:C.muted,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-                      {analyzing ? (lang==="ja"?"解析中...":lang==="ko"?"분석 중...":"Analyzing...") : ("📸 "+(lang==="ja"?"写真で食事を記録":lang==="ko"?"사진으로 식사 기록":"Scan your meal"))}
-                    </button>) : (<button onClick={()=>setShowUpgrade(true)} style={{width:"100%",background:C.surface,border:"2px dashed "+C.border,borderRadius:12,padding:"16px 0",color:C.pro,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>🔒 {lang==="ja"?"食事スキャン（PRO）":lang==="ko"?"식사 스캔 (PRO)":"Meal Scan (PRO)"}</button>)}
-                    {!isPro&&<div style={{fontSize:10,color:C.muted,textAlign:"center",marginTop:6}}>{lang==="ja"?"AIスキャン機能はPROのみ":lang==="ko"?"AI 스캔은 PRO 전용":"AI scan — PRO only"}</div>}
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Meal list */}
             {(()=>{
@@ -5173,6 +5151,47 @@ function App() {
                 </div>
               )}
             </div>
+            {nutView === "scan" && (
+            <>
+              {/* Meal scan */}
+              {(mealDate===today||mealDate<today)&&(
+                <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
+                  <div style={{fontFamily:"Bebas Neue",fontSize:14,letterSpacing:1,color:C.text,marginBottom:8}}>{lang==="ja"?"食事スキャン":lang==="ko"?"식사 스캔":"MEAL SCANNER"}</div>
+                  {scannedMeal ? (
+                    <div>
+                      <div style={{fontSize:11,color:C.muted,marginBottom:6}}>{lang==="ja"?"※AIによる推定値です。参考としてご利用ください。":lang==="ko"?"※AI 추정값입니다. 참고용으로 활용하세요.":"※ AI estimates — values are approximate for reference only."}</div>
+                      <div style={{background:C.surface,borderRadius:10,padding:"10px 12px",marginBottom:8,border:"1px solid "+C.green+"30"}}>
+                        <div style={{fontFamily:"Bebas Neue",fontSize:13,color:C.green,marginBottom:4}}>✅ {lang==="ja"?"食事を検出":"MEAL DETECTED"}</div>
+                        <div style={{fontSize:13,color:C.text,fontWeight:700}}>{scannedMeal.name}</div>
+                        <div style={{fontSize:11,color:C.muted}}>{scannedMeal.cal}kcal · P:{scannedMeal.protein}g · C:{scannedMeal.carbs}g · F:{scannedMeal.fat}g</div>
+                      </div>
+                      <div style={{display:"flex",gap:8}}>
+                        <button onClick={()=>{
+                          const entry={...scannedMeal,dateKey:today,id:Date.now()};
+                          const updMeals=[...meals,entry];
+                          setMeals(updMeals);
+                          const updHist={...mealHist,[today]:updMeals};
+                          setMealHist(updHist);
+                          syncMealHistory(updHist);
+                          setScannedMeal(null);
+                        }} style={{flex:1,background:C.green,border:"none",borderRadius:10,padding:"10px 0",color:"#000",fontSize:12,fontWeight:700,cursor:"pointer"}}>{lang==="ja"?"記録する":lang==="ko"?"기록하기":"Add to log"}</button>
+                        <button onClick={()=>setScannedMeal(null)} style={{flex:1,background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"10px 0",color:C.muted,fontSize:12,cursor:"pointer"}}>{lang==="ja"?"キャンセル":lang==="ko"?"취소":"Cancel"}</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <input type="file" accept="image/*" capture="environment" id="meal-scan-input" style={{display:"none"}} onChange={handleMealScan}/>
+                      {isPro ? (<button onClick={()=>document.getElementById("meal-scan-input")?.click()} style={{width:"100%",background:C.surface,border:"2px dashed "+C.border,borderRadius:12,padding:"16px 0",color:C.muted,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                        {analyzing ? (lang==="ja"?"解析中...":lang==="ko"?"분석 중...":"Analyzing...") : ("📸 "+(lang==="ja"?"写真で食事を記録":lang==="ko"?"사진으로 식사 기록":"Scan your meal"))}
+                      </button>) : (<button onClick={()=>setShowUpgrade(true)} style={{width:"100%",background:C.surface,border:"2px dashed "+C.border,borderRadius:12,padding:"16px 0",color:C.pro,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>🔒 {lang==="ja"?"食事スキャン（PRO）":lang==="ko"?"식사 스캔 (PRO)":"Meal Scan (PRO)"}</button>)}
+                      {!isPro&&<div style={{fontSize:10,color:C.muted,textAlign:"center",marginTop:6}}>{lang==="ja"?"AIスキャン機能はPROのみ":lang==="ko"?"AI 스캔은 PRO 전용":"AI scan — PRO only"}</div>}
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </>
+            )}
         )}
           </div>
         )}
