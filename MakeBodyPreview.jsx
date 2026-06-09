@@ -5151,6 +5151,7 @@ function App() {
                 </div>
               )}
             </div>
+            )}
             {nutView === "scan" && (
               <div>
               {/* Meal scan */}
