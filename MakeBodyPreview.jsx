@@ -5152,7 +5152,7 @@ function App() {
               )}
             </div>
             {nutView === "scan" && (
-            <>
+              <div>
               {/* Meal scan */}
               {(mealDate===today||mealDate<today)&&(
                 <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
@@ -5190,7 +5190,7 @@ function App() {
                 </div>
               )}
 
-            </>
+              </div>
             )}
         )}
           </div>
