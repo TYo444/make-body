@@ -4053,10 +4053,6 @@ function App() {
                   </div>
 
                   {/* コーチメッセージ */}
-                  <div style={{background:coach.bg,border:"1px solid "+coach.color+"40",borderRadius:10,padding:"10px 12px",marginBottom:10,fontSize:12,color:coach.color,fontWeight:600,lineHeight:1.5}}>
-                    {coach.emoji} {todayPlan.coachMsg}
-                  </div>
-
                   {/* トレーニング */}
                   <div style={{marginBottom:10}}>
 
