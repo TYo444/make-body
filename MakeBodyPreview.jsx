@@ -1537,7 +1537,7 @@ function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings, sbUser }
   );
 }
 
-function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, onClose, setShowUpgrade, onSave, sbUser }) {
+function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, onClose, setShowUpgrade, onSave, sbUser, showCancelFeedback, setShowCancelFeedback, cancelReason, setCancelReason }) {
   const [pid, setPid]    = useState(profile?.coachId || "bro");
   const [gid, setGid]    = useState(profile?.bodyGoal?.id || "lean");
   const [wt,  setWt]     = useState(String(profile?.currentWeightKg || ""));
@@ -5219,7 +5219,8 @@ function App() {
       />}
       {showUpgrade&&<UpgradeModal lang={lang} onClose={()=>setShowUpgrade(false)} profile={profile} cl={cl} coach={coach} appSettings={appSettings} sbUser={sbUser}/>}
       {showSettings&&<SettingsModal profile={profile} setProfile={setProfile} lang={lang} setLang={setLang} isPro={isPro} onSignOut={handleSignOut} onClose={()=>setShowSettings(false)}
-              setShowUpgrade={setShowUpgrade} onSave={saveProfile} sbUser={sbUser}/>}
+              setShowUpgrade={setShowUpgrade} onSave={saveProfile} sbUser={sbUser}
+              showCancelFeedback={showCancelFb} setShowCancelFeedback={setShowCancelFb} cancelReason={cancelReason} setCancelReason={setCancelReason}/>}
 
       {/* Legal modal */}
       {legalModal&&legalData&&(
