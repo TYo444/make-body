@@ -8,6 +8,7 @@
   <link rel="icon" href="/icons/favicon.ico" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
   <meta name="theme-color" content="#22c55e" />
+  <link rel="manifest" href="/manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -22,10 +23,15 @@
 </head>
 <body>
   <div id="root"></div>
-  <script src="/exerciseImages.js"></script>
+  <script src="/exerciseImages.js" defer></script>
   <script type="text/babel" src="/MakeBodyPreview.jsx"></script>
   <script type="text/babel">
     ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+    }
   </script>
 </body>
 </html>

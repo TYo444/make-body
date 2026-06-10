@@ -109,6 +109,17 @@ const LANGS = [
   { code:"es", label:"Español",  flag:"🇪🇸" },
 ];
 
+
+// ── コーチ人格シート（チャット応答の差別化用）──
+const PERSONA_SHEETS = {
+  bro: "CHARACTER SHEET — Rex (体育会系):\n話し方: 短文・断定・命令形多め。「〜だ」「〜しろ」「いくぞ」。語尾を伸ばさない。\n口癖: 「言い訳なし」「あと1回」「お前ならやれる」\n価値観: 限界は思い込み。行動が全て。サボりは責めないが甘やかさない。\n絶対NG: 敬語、長い説明、絵文字の多用、「無理しないで」系の弱気な言葉。\n褒め方: 短く強く。「それだ。」「完璧。」「成長してる、間違いない。」",
+  sister: "CHARACTER SHEET — Mia (優しい姉):\n話し方: 柔らかい口語。「〜だね」「〜しようか」「大丈夫だよ」。共感ファースト。\n口癖: 「えらい！」「無理しないでね」「ちゃんと見てるよ」\n価値観: 続けることが一番えらい。休むのも頑張りのうち。\n絶対NG: 命令口調、詰める言い方、専門用語の羅列。\n褒め方: 具体的に細かく。「昨日より1回多いの気づいた？すごいよ」",
+  science: "CHARACTER SHEET — Kai (理論派):\n話し方: 落ち着いた説明調。必ず理由とセットで提案。「〜なので〜が効率的です」。\n口癖: 「データ的には」「メカニズムとしては」「漸進性過負荷」\n価値観: 感情論より根拠。ただし根拠で安心させるのが目的。\n絶対NG: 根拠のない精神論、感嘆符の連発。\n褒め方: 数字で示す。「先週比+15%の総負荷。確実に適応しています」",
+  yoga: "CHARACTER SHEET — Yuna (マインドフル):\n話し方: ゆったり・余白のある文。「〜してみよう」「感じてみて」。\n口癖: 「呼吸を忘れずに」「今日の自分を受け入れて」\n価値観: 体と心はつながっている。比較しない、急がない。\n絶対NG: 煽り、数字の詰め、競争を促す表現。\n褒め方: 内面に向ける。「続けてる自分を、ちゃんと認めてあげてね」",
+  kpop: "CHARACTER SHEET — Drake (スタイル重視):\n話し方: 軽快でトレンド感。「それアツい」「見た目変わってきてる」。\n口癖: 「フォームが美しさを作る」「鏡見た？」\n価値観: 見せられる体・姿勢・シルエット。美意識がモチベーション。\n絶対NG: ダサい説教、堅い敬語。\n褒め方: 見た目の変化に注目。「肩のライン出てきたね、写真撮っとこ」",
+  doctor: "CHARACTER SHEET — Dr. Lee (安全第一):\n話し方: 丁寧な敬語。慎重で正確。「〜をお勧めします」「痛みがあれば中止を」。\n口癖: 「安全第一です」「回復も処方のうちです」\n価値観: 怪我なく長く続けることが最大の成果。\n絶対NG: 無茶な負荷の推奨、医学的断定（診断はしない）。\n褒め方: 健康指標で。「この継続は血圧・睡眠にも好影響が期待できます」",
+};
+
 const PERSONAS = [
   {
     id:"bro", emoji:"💪", name:"Rex",
@@ -226,6 +237,15 @@ function lsGet(k, fb) {
 function lsSet(k, v) {
   try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {}
 }
+// ── 簡易イベント計測（ローカル蓄積・将来サーバー送信用） ──
+function track(event, props) {
+  try {
+    const evs = JSON.parse(localStorage.getItem("mb_events") || "[]");
+    evs.push({ e: event, p: props || {}, t: Date.now() });
+    localStorage.setItem("mb_events", JSON.stringify(evs.slice(-100)));
+  } catch (e) { /* silent */ }
+}
+
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -607,7 +627,12 @@ function playRepBeep(isLast=false) {
   } catch(e) {}
 }
 
-function generateWeeklyPlan(profile, coachId, lang) {
+function generateWeeklyPlan(profile, coachId, lang, adapt) {
+  // adapt = { completionRate: 0-1 前週完了率, weekIndex: 通算週番号 } 省略可
+  const rate    = adapt?.completionRate;
+  const weekIdx = adapt?.weekIndex || 0;
+  // 適応: 完了率80%以上→reps+2 / 40%未満→reps-2(最低5) / それ以外→維持
+  const repAdj  = rate == null ? 0 : rate >= 0.8 ? 2 : rate < 0.4 ? -2 : 0;
   const gender  = profile?.gender || "male";
   const level   = profile?.fitnessLevel || "beginner";
   const days    = parseInt(profile?.daysPerWeek) || 3;
@@ -661,12 +686,18 @@ function generateWeeklyPlan(profile, coachId, lang) {
   const core  = isMale ? EXERCISES.core_male  : EXERCISES.core_female;
 
   function pickEx(pool, count) {
-    return pool.slice(0, count).map(e => ({
-      name: lang==="ja"?e.ja:lang==="ko"?e.ko:e.en,
-      sets: e.sets,
-      reps: e.reps[level]||e.reps.beginner,
-      unit: e.unit||"reps",
-    }));
+    // 週番号でプールをローテーション（毎週同じ種目にならない）
+    const rotated = pool.map((_, i) => pool[(i + weekIdx) % pool.length]);
+    return rotated.slice(0, count).map(e => {
+      const base = e.reps[level]||e.reps.beginner;
+      const adjusted = e.unit==="sec" ? Math.max(10, base + repAdj*5) : Math.max(5, base + repAdj);
+      return {
+        name: lang==="ja"?e.ja:lang==="ko"?e.ko:e.en,
+        sets: e.sets,
+        reps: adjusted,
+        unit: e.unit||"reps",
+      };
+    });
   }
 
   // コーチ別メッセージ
@@ -746,7 +777,10 @@ function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose })
   const CD_START = 5;
   const guide   = getExGuide(exercise, lang, profile?.gender);
   const genderK = profile?.gender === "female" ? "female" : "male";
-  const imgSrc  = null; // exerciseImages removed for preview compatibility
+  const genderPrefix = (profile?.gender === "female") ? "female" : "male";
+  const exKey = guide?.key || "";
+  const imgKey = genderPrefix + "_" + exKey;
+  const imgSrc = (typeof EXERCISE_IMAGES !== "undefined" && EXERCISE_IMAGES[imgKey]) ? EXERCISE_IMAGES[imgKey] : null;
   const ar      = calcAdaptiveReps(profile, guide?.key);
   const tS      = ar.sets;
   const tR      = ar.reps;
@@ -1240,6 +1274,7 @@ function TrialProgressBanner({ cl, lang, coach, profile, onUpgrade }) {
 
 // ── TrialEndPaywall ──────────────────────────────────────────────
 function TrialEndPaywall({ lang, cl, coach, profile, onUpgrade, onFree, onClose }) {
+  useEffect(() => { track("trial_end_paywall_view", {}); }, []);
   const [showCompare, setShowCompare] = useState(false);
   const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:en;
   const name = profile?.nickname || "";
@@ -1248,6 +1283,14 @@ function TrialEndPaywall({ lang, cl, coach, profile, onUpgrade, onFree, onClose 
   const endReason = cl.trialExpiredBy50
     ? lbl("50回の体験期間が終了しました","50회 체험이 종료되었습니다","Your 50-session trial has ended")
     : lbl("7日間の体験期間が終了しました","7일 체험 기간이 종료되었습니다","Your 7-day trial has ended");
+  // この期間の実績（失うものを可視化）
+  const trialStats = (()=>{
+    const sched = lsGet("mb_schedule", []);
+    const doneCount = sched.filter(s=>s.done).length;
+    const st = lsGet("mb_streak", {count:0});
+    const memLines = lsGet("mb_coach_memory","").split("\n").filter(l=>l.trim()).length;
+    return { doneCount, streak: st.count||0, memLines };
+  })();
 
   if (showCompare) {
     return (
@@ -1324,6 +1367,32 @@ function TrialEndPaywall({ lang, cl, coach, profile, onUpgrade, onFree, onClose 
           <div style={{fontSize:11,color:C.muted}}>{endReason}</div>
         </div>
 
+        {/* この期間の実績＋失うものの可視化 */}
+        {(trialStats.doneCount > 0 || trialStats.streak > 1) && (
+          <div style={{background:C.card,borderRadius:14,padding:"12px 14px",marginBottom:14,border:"1px solid "+C.border}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:8}}>
+              {lbl("この期間、"+(name?name+"は":"あなたは")+"これだけ積み上げました","이 기간의 성과","What you built")}
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:10}}>
+              <div style={{flex:1,textAlign:"center",background:C.surface,borderRadius:10,padding:"8px 4px"}}>
+                <div style={{fontFamily:"Bebas Neue",fontSize:20,color:C.green}}>{trialStats.doneCount}</div>
+                <div style={{fontSize:9,color:C.muted}}>{lbl("完了種目","완료","workouts")}</div>
+              </div>
+              <div style={{flex:1,textAlign:"center",background:C.surface,borderRadius:10,padding:"8px 4px"}}>
+                <div style={{fontFamily:"Bebas Neue",fontSize:20,color:"#f59e0b"}}>{trialStats.streak}</div>
+                <div style={{fontSize:9,color:C.muted}}>{lbl("連続日数","연속일","day streak")}</div>
+              </div>
+              <div style={{flex:1,textAlign:"center",background:C.surface,borderRadius:10,padding:"8px 4px"}}>
+                <div style={{fontFamily:"Bebas Neue",fontSize:20,color:coach.color}}>{trialStats.memLines}</div>
+                <div style={{fontSize:9,color:C.muted}}>{lbl("コーチの記憶","코치 기억","memories")}</div>
+              </div>
+            </div>
+            <div style={{fontSize:11,color:"#ef4444",lineHeight:1.6,background:"rgba(239,68,68,0.06)",borderRadius:8,padding:"8px 10px"}}>
+              {lbl("⚠️ このまま無料に戻ると、"+coach.name+"の長期記憶（あなたの目標・痛みの履歴・会話）は薄れていきます。","⚠️ 무료로 돌아가면 코치의 장기 기억이 사라집니다.","⚠️ Going free means "+coach.name+"'s long-term memory of you fades.")}
+            </div>
+          </div>
+        )}
+
         {/* タイトル */}
         <div style={{textAlign:"center",marginBottom:16}}>
           <div style={{fontFamily:"Bebas Neue",fontSize:26,letterSpacing:1.5,color:C.text,lineHeight:1.2,marginBottom:12}}>
@@ -1380,6 +1449,7 @@ function TrialEndPaywall({ lang, cl, coach, profile, onUpgrade, onFree, onClose 
 }
 
 function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings, sbUser }) {
+  useEffect(() => { track("paywall_view", {}); }, []);
   const [plan, setPlan] = useState("trial");
   const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:(en||ja);
 
@@ -1474,7 +1544,7 @@ function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings, sbUser }
           {[
             {id:"trial",  price:PRICE_TRIAL, label:lbl("7日・50回お試し","7일·50회 체험","7-Day / 50 Sessions"), sub:lbl("自動課金なし","자동 결제 없음","No auto-charge"), badge:lbl("おすすめ","추천","Best")},
             {id:"monthly",price:PRICE_M,     label:lbl("月額","월간","Monthly"),        sub:lbl("いつでも解約","언제든 해지","Cancel anytime")},
-            {id:"annual", price:PRICE_Y,     label:lbl("年額","연간","Annual"),         sub:lbl("26%お得","26% 절약","Save 26%")},
+            {id:"annual", price:PRICE_Y,     label:lbl("年額","연간","Annual"),         sub:lbl("3ヶ月分お得","3개월 무료","3 months free")},
           ].map(p=>(
             <button key={p.id} onClick={()=>setPlan(p.id)} style={{flex:1,padding:"10px 4px",borderRadius:12,border:"2px solid "+(plan===p.id?C.green:C.border),background:plan===p.id?C.greenGlow:"transparent",cursor:"pointer",position:"relative",transition:"all 0.15s"}}>
               {p.badge&&<span style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",background:"#f59e0b",color:"#fff",fontSize:8,padding:"1px 6px",borderRadius:99,whiteSpace:"nowrap",fontWeight:700}}>{p.badge}</span>}
@@ -1483,6 +1553,12 @@ function UpgradeModal({ lang, onClose, profile, cl, coach, appSettings, sbUser }
               <div style={{fontSize:8,color:C.muted,marginTop:1}}>{p.sub}</div>
             </button>
           ))}
+        </div>
+        {/* 価格アンカリング */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:12,fontSize:10,color:C.muted}}>
+          <span>{lbl("パーソナルジム 月¥30,000〜","퍼스널 트레이닝 월 30만원〜","Personal trainer $200+/mo")}</span>
+          <span style={{color:C.dim}}>vs</span>
+          <span style={{color:C.green,fontWeight:700}}>{lbl("MakeBody PRO 月"+PRICE_M,"MakeBody PRO 월 "+PRICE_M,"MakeBody PRO "+PRICE_M+"/mo")}</span>
         </div>
 
         {/* 7日間でできること */}
@@ -2768,6 +2844,9 @@ function App() {
 
   const [schedule, setSchedule] = useState([]);
   const [counterM, setCounterM] = useState(null); // {exercise, sets, reps}
+  const [celebrate, setCelebrate] = useState(null); // {exercise} 完了称賛バナー
+  const [restTick, setRestTick]   = useState(0); // 休息日タスクの再レンダー用
+  const [futurePeek, setFuturePeek] = useState(false); // 未来予測の無料1回お試し表示中
   const [coachView, setCoachView] = useState("calendar"); // calendar|chat
 
   const [weightLog, setWeightLog] = useState({});
@@ -2815,7 +2894,33 @@ function App() {
     const saved = lsGet("mb_weekly_plan", null);
     if (saved && saved.weekStart === monday) { setWeeklyPlan(saved); return; }
     const coachId = profile?.coachId || "bro";
-    const plan = generateWeeklyPlan(profile, coachId, lang);
+    // 前週の完了率を計算（適応プラン用）
+    const prevSched = lsGet("mb_schedule", []).filter(s => s.isAutoGen && s.dateKey < monday && s.dateKey >= new Date(new Date(monday).getTime()-7*86400000).toISOString().slice(0,10));
+    const completionRate = prevSched.length > 0 ? prevSched.filter(s=>s.done).length / prevSched.length : null;
+    const weekIndex = Math.floor((Date.now() - new Date(profile?.startDate || monday).getTime()) / (7*86400000));
+    const plan = generateWeeklyPlan(profile, coachId, lang, { completionRate, weekIndex });
+    // 完了率が低い週は先頭コーチメッセージで軽量化を宣言（覚えてる感）
+    if (completionRate != null && completionRate < 0.4 && plan[0]) {
+      const lightMsg = {
+        bro:"先週はキツかったな。今週は軽めに組んだ。まず取り戻すぞ。",
+        sister:"先週は大変だったね。今週は少し軽くしておいたよ。無理なく再開しよ。",
+        science:"前週の完了率を踏まえ、今週は負荷を一段下げて再適応を図ります。",
+        yoga:"先週の自分も大切な自分。今週はやさしいメニューから始めよう。",
+        kpop:"先週分はリセットでOK。今週は軽めから、またペース作ってこ。",
+        doctor:"前週の実施状況を考慮し、今週は負荷を抑えています。再開が最優先です。",
+      };
+      plan[0].coachMsg = lightMsg[coachId] || lightMsg.bro;
+    } else if (completionRate != null && completionRate >= 0.8 && plan[0]) {
+      const upMsg = {
+        bro:"先週ほぼ全部やり切ったな。今週は回数を上げた。ついてこい。",
+        sister:"先週すごく頑張ったから、今週はちょっとだけレベルアップしてみたよ。",
+        science:"前週の高い完了率に基づき、漸進性過負荷の原則で回数を増やしました。",
+        yoga:"先週の積み重ねが力になってる。今週は少しだけ深く。",
+        kpop:"先週の継続、ガチで効いてる。今週は回数アップでさらに磨こう。",
+        doctor:"前週の良好な実施状況を受け、安全な範囲で負荷を漸増しています。",
+      };
+      plan[0].coachMsg = upMsg[coachId] || upMsg.bro;
+    }
     const planData = { weekStart: monday, days: plan };
     setWeeklyPlan(planData); lsSet("mb_weekly_plan", planData);
     // scheduleにも自動追加
@@ -3047,10 +3152,16 @@ function App() {
   }, [chatHist]);
 
   function updateStreak(saved) {
+    track("app_open", {});
     const { count, lastDate } = saved;
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yKey = toDateKey(yesterday);
+    // ── streakフリーズ: 週1自動付与（無料は1個まで、PROは2個まで保持）──
+    const fz = lsGet("mb_streak_freeze", { count: 1, lastGrant: today });
+    const maxFz = isPro ? 2 : 1;
+    const daysSinceGrant = Math.floor((new Date(today) - new Date(fz.lastGrant)) / 86400000);
+    if (daysSinceGrant >= 7 && fz.count < maxFz) { fz.count += 1; fz.lastGrant = today; lsSet("mb_streak_freeze", fz); }
     if (lastDate === today) {
       setStreak(count);
     } else if (lastDate === yKey) {
@@ -3058,8 +3169,18 @@ function App() {
       setStreak(newCount);
       lsSet("mb_streak", { count: newCount, lastDate: today });
     } else {
-      setStreak(1);
-      lsSet("mb_streak", { count: 1, lastDate: today });
+      // 1日だけの欠損 & フリーズ所持 → streak維持（フリーズ消費）
+      const gap = lastDate ? Math.floor((new Date(today) - new Date(lastDate)) / 86400000) : 99;
+      if (gap === 2 && fz.count > 0 && count > 2) {
+        fz.count -= 1; lsSet("mb_streak_freeze", fz);
+        const newCount = count + 1;
+        setStreak(newCount);
+        lsSet("mb_streak", { count: newCount, lastDate: today });
+        lsSet("mb_freeze_used_at", today); // コーチが言及できるように
+      } else {
+        setStreak(1);
+        lsSet("mb_streak", { count: 1, lastDate: today });
+      }
     }
   }
 
@@ -3329,7 +3450,8 @@ function App() {
            "You're experienced. Let's make sure we're doing this smart.") +
           (p.medicalConditions?.length && !p.medicalConditions.includes("none") ? " I've noted your " + p.medicalConditions.join(", ") + " — I'll never suggest anything that puts you at risk." : "") +
           (p.dislikedExercises?.length ? " " + p.dislikedExercises.join(", ") + " is off the table — I won't push you on that." : "") +
-          (p.hasSoreness && p.hasSoreness !== "none" ? " Tell me about the soreness first." : " What's on your mind today?"),
+          (p.hasSoreness && p.hasSoreness !== "none" ? " Tell me about the soreness first." : " What's on your mind today?") +
+          "\n\n(Today only: you get 10 free chats as a welcome. Ask away.)",
       ja: c.name + "だ。" + p.nickname + "の専属コーチとして始める。" +
           "目標は「" + (lg?.ja || "理想の体") + "」だな。" +
           (p.fitnessLevel === "beginner" ? "初心者スタートで正解。最初は1種目から、無理なく積み上げていこう。" :
@@ -3337,7 +3459,8 @@ function App() {
            "経験者か。じゃあスマートにやっていこう。") +
           (p.medicalConditions?.length && !p.medicalConditions.includes("none") ? p.medicalConditions.join("・") + "があるのは把握した。絶対に無理させない。" : "") +
           (p.dislikedExercises?.length ? p.dislikedExercises.join("・") + "は外す。俺に任せて。" : "") +
-          (p.hasSoreness && p.hasSoreness !== "none" ? "まず今の筋肉痛・怪我の状況を教えてくれ。" : "今日どうしたい？"),
+          (p.hasSoreness && p.hasSoreness !== "none" ? "まず今の筋肉痛・怪我の状況を教えてくれ。" : "今日どうしたい？") +
+          "\n\n（初日の今日は特別に10回まで相談できる。遠慮なく聞いてくれ）",
       ko: c.name + " 여기 있어. " + p.nickname + "의 전속 코치 시작한다." +
           (p.hasSoreness && p.hasSoreness !== "none" ? "먼저 지금 통증 얘기해줘." : "오늘 뭐 하고 싶어?"),
       zh: c.name + "在这里。" + p.nickname + "，我是你的专属教练。" +
@@ -3470,6 +3593,17 @@ function App() {
       ? "You are " + coach.name + ". " + lInst + " Warm helpful coach. Max 3 sentences unless plan requested. " + lgCtx + " User:" + (profile?.nickname||"") + ", goal:" + (profile?.bodyGoal?.title||"") + ". Mood:" + MOODS[mood] + ". Streak:" + streak + "d. EMOJI: Use sparingly — max 1-2 per reply, not at start/end of every sentence."
       : "You are " + coach.name + " " + coach.emoji + " — dedicated personal coach. " + lInst + "\n" +
         coach.style + "\n" +
+        (PERSONA_SHEETS[coach.id] || "") + "\n" +
+        "STAY IN CHARACTER: The sheet above is your identity. Tone, sentence endings, and praise style MUST follow it in every reply.\n" +
+        (()=>{
+          const f = lsGet("mb_coach_facts", null);
+          if (!f) return "";
+          let s = "=== KNOWN FACTS ABOUT USER (reference when relevant) ===\n";
+          if (f.injuries?.length) s += "Injuries/pain history: " + f.injuries.join("; ") + "\n";
+          if (f.dislikes?.length) s += "Dislikes: " + f.dislikes.join(", ") + "\n";
+          if (f.likes?.length)    s += "Likes: " + f.likes.join(", ") + "\n";
+          return s;
+        })() +
         "EMOJI RULES: Use emoji sparingly. Do NOT start and end every sentence with the same emoji (e.g. 💪...💪). Max 1-2 emoji per reply total. Only use them when they add meaning, not as decoration.\n" +
         // トライアル声かけ
         (cl?.isTrial ? (
@@ -3653,7 +3787,7 @@ function App() {
         return;
       }
 
-      const reply = data.content?.[0]?.text || "Sorry, I hit an error. Try again!";
+      const reply = data.content?.[0]?.text || (lang==="ja"?"うまく返事できなかった。もう一度送ってみて。":"Couldn't reply properly. Try again.");
 
       // サーバーから返ってきた_usageでキャッシュを正確に更新（UTC基準）
       if (data.usage_info) {
@@ -3676,23 +3810,29 @@ function App() {
       });
       const updated = [...newHist, { role: "assistant", text: reply }];
       setHist(updated);
+      // ── 記憶保存（無料=直近1200字 / PRO=長期4000字。栄養チャットも対象）──
+      {
+        const mem = lsGet("mb_coach_memory", "");
+        const entry = `[${today}|streak:${streak}|days_since:${daysSinceLogin}${isNutChat?"|nut":""}] U:"${msg.slice(0,80)}" A:"${reply.slice(0,100)}"`;
+        const memCap = isPro ? 4000 : 1200;
+        const newMem = (mem + "\n" + entry).slice(-memCap);
+        lsSet("mb_coach_memory", newMem);
+        if (sbUser?.access_token && sbUser?.user?.id && !sbUser?.isGuest) syncCoachMemory(newMem);
+        // 構造化ファクト抽出（怪我・苦手・好み・目標）
+        const facts = lsGet("mb_coach_facts", { injuries:[], dislikes:[], likes:[], notes:[] });
+        const addFact = (arr, v) => { if (v && !arr.includes(v) && arr.length < 10) arr.push(v); };
+        const inj = msg.match(/(膝|腰|肩|首|手首|足首|肘|背中)(が|を)?(痛|怪我|違和感)/);
+        if (inj) addFact(facts.injuries, `${today}: ${inj[1]}の${inj[3]}`);
+        const dis = msg.match(/(.{1,8})(が|は)(苦手|嫌い|やりたくない|きつい)/);
+        if (dis) addFact(facts.dislikes, dis[1].trim());
+        const lik = msg.match(/(.{1,8})(が|は)(好き|楽しい|得意)/);
+        if (lik) addFact(facts.likes, lik[1].trim());
+        lsSet("mb_coach_facts", facts);
+      }
       if (!isNutChat) {
         lsSet("mb_chat", updated.slice(-50));
-        // Sync to Supabase（chat + profile）
-        if (sbUser?.access_token && sbUser?.user?.id) {
-          if (isPro) {
-            const mem = lsGet("mb_coach_memory", "");
-            // キーワード問わず重要な会話は全部メモ（前回の悩み・状況を覚えるため）
-            const keywords = ["痛","怪我","体重","体脂肪","苦手","アレルギー","目標","達成","頑張","睡眠","ストレス","疲れ","やる気","サボ","久しぶり","できた","無理","pain","injury","tired","motivation","goal","done","achieved","struggled"];
-            const hasKeyword = keywords.some(k => reply.includes(k) || msg.includes(k));
-            const isWorkoutMsg = /メニュー|トレーニング|運動|workout|exercise|train/i.test(msg+reply);
-            if (hasKeyword || isWorkoutMsg) {
-              const entry = `[${today}|streak:${streak}|days_since:${daysSinceLogin}] U:"${msg.slice(0,60)}" A:"${reply.slice(0,80)}"`;
-              const newMem = mem + "\n" + entry;
-              syncCoachMemory(newMem.slice(-4000));
-            }
-          }
-          if(!sbUser?.isGuest) sb.patchProfile(sbUser.user.id, sbUser.access_token, {
+        if (sbUser?.access_token && sbUser?.user?.id && !sbUser?.isGuest) {
+          sb.patchProfile(sbUser.user.id, sbUser.access_token, {
             chat_history:  JSON.stringify(updated.slice(-50)),
             profile_data:  JSON.stringify(profile),
           }).catch(() => {});
@@ -3700,7 +3840,15 @@ function App() {
       }
     } catch (e) {
       console.error("sendChat error:", e);
-      const errMsg = "Oops, something went wrong. Try again!";
+      const ERR_MSGS = {
+        bro:    lang==="ja"?"通信が切れた。もう一回いくぞ。":"Connection dropped. Hit me again.",
+        sister: lang==="ja"?"ごめんね、うまく届かなかったみたい。もう一度送ってみて。":"Sorry, that didn't go through. Try once more?",
+        science:lang==="ja"?"通信エラーが発生しました。再送信で解決する可能性が高いです。":"Network error. A retry usually resolves this.",
+        yoga:   lang==="ja"?"少し電波が乱れたみたい。深呼吸して、もう一度。":"The connection wavered. Breathe, and try again.",
+        kpop:   lang==="ja"?"あれ、届かなかった。もう1回だけ頼む！":"Oops, lost that one. One more time!",
+        doctor: lang==="ja"?"通信に問題が発生しました。お手数ですが再度お試しください。":"A connection issue occurred. Please try again.",
+      };
+      const errMsg = ERR_MSGS[coach.id] || ERR_MSGS.bro;
       setHist(h => [...h, { role: "assistant", text: errMsg }]);
     }
     setAiLoading(false);
@@ -3909,6 +4057,29 @@ function App() {
           <div style={{animation:"fadeIn .3s ease"}}>
             <TrialProgressBanner cl={cl} lang={lang} coach={coach} profile={profile} onUpgrade={()=>setShowUpgrade(true)}/>
 
+            {/* ── 完了称賛バナー ── */}
+            {celebrate && (()=>{
+              const PRAISE = {
+                bro:     (ex)=>`${ex}、完了。それだ。${streak>1?`${streak}日連続、本物になってきたな。`:"この一歩がデカい。"}`,
+                sister:  (ex)=>`${ex}おつかれさま！えらい！${streak>1?`${streak}日も続いてるの、ほんとにすごいよ。`:"今日の自分、ちゃんと褒めてあげてね。"}`,
+                science: (ex)=>`${ex}完了を記録しました。${streak>1?`${streak}日連続——習慣形成の臨界点に近づいています。`:"刺激は与えられました。あとは回復が仕事をします。"}`,
+                yoga:    (ex)=>`${ex}、おつかれさま。${streak>1?`${streak}日、自分と向き合えてるね。`:"動いた体に、ありがとうを。"}`,
+                kpop:    (ex)=>`${ex}クリア！${streak>1?`${streak}日継続とか普通にすごい。シルエット変わってくるよ。`:"今日の積み重ねが見た目を作る。"}`,
+                doctor:  (ex)=>`${ex}の完了を確認しました。${streak>1?`${streak}日間の継続は健康指標の改善が期待できる水準です。`:"良いスタートです。水分補給を忘れずに。"}`,
+              };
+              const msg = (PRAISE[coach.id]||PRAISE.bro)(celebrate.exercise);
+              return (
+                <div style={{background:"linear-gradient(135deg,"+coach.bg+",rgba(34,197,94,0.08))",border:"2px solid "+coach.color,borderRadius:14,padding:"12px 14px",marginBottom:12,display:"flex",alignItems:"flex-start",gap:10,animation:"fadeIn .3s ease"}}>
+                  <div style={{fontSize:24}}>{coach.emoji}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:11,fontWeight:700,color:coach.color,marginBottom:2}}>{coach.name}</div>
+                    <div style={{fontSize:13,color:C.text,lineHeight:1.6,fontWeight:500}}>{msg}</div>
+                  </div>
+                  <button onClick={()=>setCelebrate(null)} style={{background:"none",border:"none",color:C.muted,fontSize:14,cursor:"pointer",padding:0}}>✕</button>
+                </div>
+              );
+            })()}
+
             {/* ── コーチ声掛けカード（ログイン頻度・記憶感） ── */}
             {(()=>{
               const loginHist = lsGet("mb_login_history", []);
@@ -4007,38 +4178,6 @@ function App() {
 
 
             {/* Today's workout */}
-            <div style={{background:C.card,borderRadius:16,padding:"14px 16px",marginBottom:12,border:"1px solid "+C.border}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <div>
-                  <div style={{fontFamily:"Bebas Neue",fontSize:16,letterSpacing:1,color:C.text}}>{lang==="ja"?"今日のトレーニング":lang==="ko"?"오늘의 트레이닝":"TODAY'S TRAINING"}</div>
-                  <div style={{fontSize:11,color:C.muted}}>{todayDone}/{todayTotal} {lang==="ja"?"完了":lang==="ko"?"완료":"done"}</div>
-                </div>
-                {todayTotal > 0 && <Ring val={Math.round(todayDone/todayTotal*100)} size={44}/>}
-              </div>
-              {todaySchedule.length === 0 ? (
-                <div style={{padding:"12px 0",textAlign:"center"}}>
-                  <div style={{fontSize:13,color:C.muted}}>{lang==="ja"?"コーチにメニューを作ってもらおう":lang==="ko"?"코치에게 메뉴를 만들어 달라고 하세요":"Ask your coach to build a workout plan"}</div>
-                  <button onClick={()=>{setTab("coach");setChatIn(lang==="ja"?"今日のトレーニングメニューを作って":lang==="ko"?"오늘 운동 메뉴 만들어줘":"Build me today's workout");}} style={{marginTop:8,background:C.green,border:"none",borderRadius:10,padding:"8px 16px",color:"#000",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-                    {lang==="ja"?"コーチに聞く":lang==="ko"?"코치에게 물어보기":"Ask Coach"}
-                  </button>
-                </div>
-              ) : (
-                todaySchedule.map(item => (
-                  <div key={item.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid "+C.dim}}>
-                    <button onClick={()=>toggleDone(item.id)} style={{width:22,height:22,borderRadius:"50%",border:"2px solid "+item.done?C.green:C.border,background:item.done?C.green:"transparent",color:"#000",fontSize:10,cursor:"pointer",flexShrink:0}}>
-                      {item.done?"✓":""}
-                    </button>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:13,color:item.done?C.muted:C.text,textDecoration:item.done?"line-through":"none"}}>{item.exercise}</div>
-                      <div style={{fontSize:10,color:C.muted}}>{item.sets}×{item.reps}</div>
-                    </div>
-                    {!item.done && (
-                      <button onClick={()=>setCounterM({exercise:item.exercise,sets:item.sets,reps:item.reps})} style={{background:C.green,border:"none",borderRadius:8,padding:"5px 10px",color:"#000",fontSize:11,fontWeight:700,cursor:"pointer"}}>▶ GO</button>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
             {/* ── 今日のプラン（ルールベース・API不使用） ── */}
             {(()=>{
               const todayPlan = weeklyPlan?.days?.[0];
@@ -4062,8 +4201,30 @@ function App() {
                       💪 {lang==="ja"?"今日のトレーニング":lang==="ko"?"오늘의 트레이닝":"TODAY'S WORKOUT"}
                     </div>
                     {todayPlan.isRest ? (
-                      <div style={{fontSize:12,color:C.muted,padding:"8px 10px",background:C.surface,borderRadius:8,border:"1px solid "+C.border}}>
-                        🛌 {lang==="ja"?"今日は休息日。しっかり回復しよう。":lang==="ko"?"오늘은 휴식일. 잘 회복하자.":"Rest day. Recover well."}
+                      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                        <div style={{fontSize:12,color:C.muted,padding:"8px 10px",background:C.surface,borderRadius:8,border:"1px solid "+C.border}}>
+                          🛌 {lang==="ja"?"今日は休息日。回復もトレーニングのうち。":lang==="ko"?"오늘은 휴식일.":"Rest day. Recovery is training too."}
+                        </div>
+                        {(()=>{
+                          const rkey = "mb_rest_tasks_"+today;
+                          const restDone = lsGet(rkey, []);
+                          const TASKS = lang==="ja"
+                            ? [["stretch","🧘 1分ストレッチ"],["water","💧 水を1杯多く飲む"],["weight","⚖️ 体重を記録する"]]
+                            : [["stretch","🧘 1-min stretch"],["water","💧 Extra glass of water"],["weight","⚖️ Log your weight"]];
+                          return TASKS.map(([id,label])=>{
+                            const d = restDone.includes(id);
+                            return (
+                              <div key={id} onClick={()=>{
+                                const next = d ? restDone.filter(x=>x!==id) : [...restDone, id];
+                                lsSet(rkey, next);
+                                setRestTick(t=>t+1);
+                              }} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:d?"rgba(34,197,94,0.08)":C.surface,borderRadius:8,border:"1px solid "+(d?C.green+"50":C.border),cursor:"pointer"}}>
+                                <div style={{width:16,height:16,borderRadius:4,border:"2px solid "+(d?C.green:C.dim),background:d?C.green:"transparent",color:"#fff",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}}>{d?"✓":""}</div>
+                                <div style={{fontSize:12,color:d?C.green:C.text,textDecoration:d?"line-through":"none"}}>{label}</div>
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                     ) : (
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
@@ -4082,7 +4243,7 @@ function App() {
                                   <div style={{fontSize:12,color:isDone?C.muted:coach.color,fontWeight:700}}>
                                     {ex.sets}×{ex.reps}{ex.unit==="sec"?(lang==="ja"?"秒":lang==="ko"?"초":"s"):(lang==="ja"?"回":lang==="ko"?"회":"reps")}
                                   </div>
-                                  {!isDone&&<div style={{fontSize:10,color:C.green,fontWeight:700}}>▶ START</div>}
+                                  {!isDone&&<div onClick={()=>setCounterM({exercise:ex.name,sets:ex.sets,reps:ex.reps})} style={{fontSize:10,color:C.green,fontWeight:700,cursor:"pointer",padding:"4px 8px",background:"rgba(34,197,94,0.1)",borderRadius:6}}>▶ START</div>}
                                   {isDone&&<div style={{fontSize:10,color:C.green,fontWeight:700}}>{lang==="ja"?"完了":lang==="ko"?"완료":"Done"}</div>}
                                 </div>
                               </div>
@@ -4179,8 +4340,8 @@ function App() {
               </div>
             )}
 
-            {/* ── 週次レビュー（PRO・日曜のみ） ── */}
-            {isPro && new Date().getDay() === 0 && (()=>{
+            {/* ── 週次レビュー（数字=全員・分析=PRO・日曜のみ） ── */}
+            {new Date().getDay() === 0 && (()=>{
               const workoutLog  = lsGet("mb_workout_log", {});
               const weightLog2  = lsGet("mb_weight_log",  {});
               const weekDates   = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return d.toISOString().slice(0,10);});
@@ -4209,9 +4370,15 @@ function App() {
                       </div>
                     )}
                   </div>
-                  <div style={{fontSize:11,color:coach.color,fontWeight:600,lineHeight:1.5}}>
-                    {achRate>=70?(lang==="ja"?"今週も素晴らしかった！来週もこの調子で。":lang==="ko"?"이번 주도 훌륭했어! 다음 주도 이대로.":"Great week! Keep it up next week."):achRate>=40?(lang==="ja"?"半分できた。来週はもう少し頑張ろう。":lang==="ko"?"절반 달성. 다음 주엔 조금 더 해보자.":"Halfway there. Push a bit more next week."):(lang==="ja"?"来週はまず1日だけでいい。小さく始めよう。":lang==="ko"?"다음 주엔 하루만 해도 돼. 작게 시작하자.":"Next week, just one day. Start small.")}
-                  </div>
+                  {isPro ? (
+                    <div style={{fontSize:11,color:coach.color,fontWeight:600,lineHeight:1.5}}>
+                      {achRate>=70?(lang==="ja"?"今週も素晴らしかった！来週は回数を少し上げてプランを組んだ。":lang==="ko"?"이번 주도 훌륭했어!":"Great week! Next week's plan is slightly upgraded."):achRate>=40?(lang==="ja"?"半分できた。来週のプランは現状維持で確実に。":lang==="ko"?"절반 달성.":"Halfway there. Next week stays steady."):(lang==="ja"?"来週は軽めに組み直した。まず1日だけ戻ってこよう。":lang==="ko"?"다음 주는 가볍게.":"Next week is lighter. Just come back for one day.")}
+                    </div>
+                  ) : (
+                    <div onClick={()=>setShowUpgrade(true)} style={{fontSize:11,color:C.pro,fontWeight:600,lineHeight:1.5,background:C.proBg,borderRadius:8,padding:"8px 10px",cursor:"pointer"}}>
+                      🔒 {lang==="ja"?coach.name+"の分析と来週のプラン調整はPROで見られます →":"Coach analysis & next-week tuning in PRO →"}
+                    </div>
+                  )}
                 </div>
               );
             })()}
@@ -4670,8 +4837,8 @@ function App() {
               </div>
             )}
 
-            {/* ── 未来体型予測（PRO限定）── */}
-            {isPro ? (()=>{
+            {/* ── 未来体型予測（PRO限定・無料1回お試しあり）── */}
+            {(isPro || futurePeek) ? (()=>{
               const fb = calcFutureBody(profile, schedule, streak);
               if (!fb) return null;
               const tl = fb.timeline;
@@ -4769,6 +4936,17 @@ function App() {
                 <button onClick={()=>setShowUpgrade(true)} style={{background:"linear-gradient(135deg,#7c3aed,#a855f7)",border:"none",borderRadius:10,padding:"9px 24px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
                   {lang==="ja"?"PRO で予測を見る →":lang==="ko"?"PRO로 예측 보기 →":"See My Prediction →"}
                 </button>
+                {!lsGet("mb_future_peek_used", false) && (
+                  <div onClick={()=>{lsSet("mb_future_peek_used", true);setFuturePeek(true);}} style={{marginTop:8,fontSize:11,color:"#7c3aed",textDecoration:"underline",cursor:"pointer"}}>
+                    {lang==="ja"?"1回だけ無料で見てみる":"Try once for free"}
+                  </div>
+                )}
+              </div>
+            )}
+            {futurePeek && !isPro && (
+              <div style={{background:"rgba(124,58,237,0.08)",borderRadius:10,padding:"10px 12px",marginBottom:12,fontSize:11,color:"#7c3aed",textAlign:"center"}}>
+                {lang==="ja"?"🔮 無料お試し表示中（1回限り）。PROなら毎日の進捗に合わせて予測が更新されます。":"🔮 One-time free preview. PRO updates this daily."}
+                <span onClick={()=>setShowUpgrade(true)} style={{textDecoration:"underline",cursor:"pointer",marginLeft:6,fontWeight:700}}>{lang==="ja"?"PROにする":"Go PRO"}</span>
               </div>
             )}
           </div>
@@ -5212,7 +5390,25 @@ function App() {
       </div>
 
       {/* Modals */}
-      {counterM&&<WorkoutCounter exercise={counterM.exercise} sets={counterM.sets} reps={counterM.reps} lang={lang} coach={coach} profile={profile} onClose={()=>setCounterM(null)}/>}
+      {counterM&&<WorkoutCounter exercise={counterM.exercise} sets={counterM.sets} reps={counterM.reps} lang={lang} coach={coach} profile={profile} onClose={(completed)=>{
+        if(completed){
+          const dk = todayKey();
+          const key = "mb_done_"+dk;
+          const done = lsGet(key, []);
+          if(!done.includes(counterM.exercise)) lsSet(key, [...done, counterM.exercise]);
+          // scheduleのdoneも更新
+          const updated = schedule.map(s=>s.dateKey===dk&&s.exercise===counterM.exercise?{...s,done:true}:s);
+          setSchedule(updated); lsSet("mb_schedule", updated);
+          // 記憶に完了を記録
+          const mem = lsGet("mb_coach_memory","");
+          lsSet("mb_coach_memory", (mem+"\n[" + dk + "] completed " + counterM.exercise + " " + counterM.sets + "x" + counterM.reps).slice(isPro?-4000:-1200));
+          track("workout_complete", { ex: counterM.exercise });
+          // コーチ称賛バナー
+          setCelebrate({ exercise: counterM.exercise });
+          setTimeout(()=>setCelebrate(null), 12000);
+        }
+        setCounterM(null);
+      }}/>}
       {showTrialPaywall&&<TrialEndPaywall
         lang={lang} cl={cl} coach={coach} profile={profile}
         onUpgrade={()=>{ setShowTrialPaywall(false); setShowUpgrade(true); }}
