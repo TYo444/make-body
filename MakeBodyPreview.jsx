@@ -2877,6 +2877,7 @@ function App() {
   const [cancelFeedbackMode, setCancelFeedbackMode] = useState("cancel");
 
   const chatEndRef = useRef(null);
+  const nutChatEndRef = useRef(null);
 
 
   // UTC リセットカウントダウン（1分ごとに更新）
@@ -3147,9 +3148,20 @@ function App() {
     })();
   }, []);
 
+  // 新着メッセージ時はスムーズに最下部へ
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHist]);
+  useEffect(() => {
+    nutChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [nutChatHist]);
+  // タブを開いた瞬間は即座に最新（LINE方式: 最新が見えて、過去は上スクロール）
+  useEffect(() => {
+    if (tab === "coach" && coachView === "chat") chatEndRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [tab, coachView]);
+  useEffect(() => {
+    if (nutView === "chat") nutChatEndRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [nutView, tab]);
 
   function updateStreak(saved) {
     track("app_open", {});
@@ -4480,8 +4492,8 @@ function App() {
         {tab === "coach" && (
           <div style={{animation:"fadeIn .3s ease"}}>
             <TrialProgressBanner cl={cl} lang={lang} coach={coach} profile={profile} onUpgrade={()=>setShowUpgrade(true)}/>
-            {/* View toggle */}
-            <div style={{display:"flex",gap:6,marginBottom:12}}>
+            {/* View toggle（スクロールしても上部固定） */}
+            <div style={{display:"flex",gap:6,marginBottom:12,position:"sticky",top:0,zIndex:40,background:C.bg,padding:"6px 0"}}>
               {["calendar","chat"].map(v=>(
                 <button key={v} onClick={()=>setCoachView(v)} style={{flex:1,padding:"8px 0",borderRadius:10,border:"2px solid "+coachView===v?coach.color:C.border,background:coachView===v?coach.bg:"transparent",color:coachView===v?coach.color:C.muted,fontSize:12,fontWeight:600,cursor:"pointer"}}>
                   {v==="calendar"?(lang==="ja"?"📅 カレンダー":lang==="ko"?"📅 캘린더":"📅 Calendar"):(lang==="ja"?"💬 チャット":lang==="ko"?"💬 채팅":"💬 Chat")}
@@ -4957,8 +4969,8 @@ function App() {
           <div style={{animation:"fadeIn .3s ease"}}>
             <TrialProgressBanner cl={cl} lang={lang} coach={coach} profile={profile} onUpgrade={()=>setShowUpgrade(true)}/>
 
-            {/* ── ビュー切り替え ── */}
-            <div style={{display:"flex",gap:6,marginBottom:12}}>
+            {/* ── ビュー切り替え（スクロールしても上部固定） ── */}
+            <div style={{display:"flex",gap:6,marginBottom:12,position:"sticky",top:0,zIndex:40,background:C.bg,padding:"6px 0"}}>
               {[["calendar",lang==="ja"?"📅 カレンダー":"📅 Cal"],
                 ["chat",lang==="ja"?"💬 相談":"💬 Chat"],
                 ["scan",lang==="ja"?"📷 スキャン":"📷 Scan"]].map(([v,label])=>(
@@ -5301,6 +5313,7 @@ function App() {
                       </div>
                     </div>
                   ))}
+                  <div ref={nutChatEndRef}/>
                 </div>
               )}
               {/* 入力欄 */}
