@@ -237,6 +237,16 @@ function lsGet(k, fb) {
 function lsSet(k, v) {
   try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {}
 }
+// ── Push購読用: VAPID公開鍵をUint8Arrayへ変換 ──
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = window.atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
 // ── 簡易イベント計測（ローカル蓄積・将来サーバー送信用） ──
 function track(event, props) {
   try {
@@ -2847,6 +2857,7 @@ function App() {
   const [celebrate, setCelebrate] = useState(null); // {exercise} 完了称賛バナー
   const [restTick, setRestTick]   = useState(0); // 休息日タスクの再レンダー用
   const [futurePeek, setFuturePeek] = useState(false); // 未来予測の無料1回お試し表示中
+  const [pushBusy, setPushBusy]     = useState(false); // push購読処理中＋再レンダー用
   const [coachView, setCoachView] = useState("calendar"); // calendar|chat
 
   const [weightLog, setWeightLog] = useState({});
@@ -3162,6 +3173,36 @@ function App() {
   useEffect(() => {
     if (nutView === "chat") nutChatEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [nutView, tab]);
+
+  async function subscribePush() {
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+        alert(lang==="ja"
+          ? "このブラウザは通知に対応していません。iPhoneの場合は、Safariの共有ボタン→「ホーム画面に追加」をして、そのアイコンから開くと通知が使えます。"
+          : "Notifications not supported in this browser. On iPhone: Share → Add to Home Screen, then open from that icon.");
+        return false;
+      }
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") { lsSet("mb_push_dismissed_at", todayKey()); return false; }
+      const reg = await navigator.serviceWorker.ready;
+      const kr = await fetch("/api/push");
+      const { key } = await kr.json();
+      if (!key) return false;
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key) });
+      const r = await fetch("/api/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-user-id": sbUser?.user?.id || "" },
+        body: JSON.stringify({ subscription: sub.toJSON(), lang, coachId: profile?.coachId || "bro", nickname: profile?.nickname || "" }),
+      });
+      if (!r.ok) return false;
+      lsSet("mb_push_subscribed", true);
+      track("push_subscribed", {});
+      return true;
+    } catch (e) {
+      console.error("push subscribe error:", e);
+      return false;
+    }
+  }
 
   function updateStreak(saved) {
     track("app_open", {});
@@ -4068,6 +4109,42 @@ function App() {
         {tab === "home" && (
           <div style={{animation:"fadeIn .3s ease"}}>
             <TrialProgressBanner cl={cl} lang={lang} coach={coach} profile={profile} onUpgrade={()=>setShowUpgrade(true)}/>
+
+            {/* ── 通知プロモカード（価値を感じた後に提案） ── */}
+            {(()=>{
+              if (typeof Notification === "undefined") return null;
+              if (lsGet("mb_push_subscribed", false)) return null;
+              if (sbUser?.isGuest) return null;
+              const dis = lsGet("mb_push_dismissed_at", null);
+              if (dis && Math.floor((new Date(todayKey()) - new Date(dis)) / 86400000) < 7) return null;
+              const anyDone = lsGet("mb_schedule", []).some(s=>s.done) || streak >= 2;
+              if (!anyDone) return null;
+              return (
+                <div style={{background:C.card,border:"1px solid "+coach.color+"40",borderRadius:14,padding:"12px 14px",marginBottom:12}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                    <span style={{fontSize:18}}>⏰</span>
+                    <div style={{fontSize:13,fontWeight:700,color:C.text}}>
+                      {lang==="ja" ? "明日の朝、"+coach.name+"が声をかけに来ます" : coach.name+" can check in every morning"}
+                    </div>
+                  </div>
+                  <div style={{fontSize:11,color:C.muted,lineHeight:1.6,marginBottom:10}}>
+                    {lang==="ja" ? "毎朝8時、今日のプランと一緒にコーチからひとこと届きます。続けるのが一気にラクになります。" : "A morning nudge from your coach with today's plan, every day at 8am."}
+                  </div>
+                  <div style={{display:"flex",gap:8}}>
+                    <button disabled={pushBusy} onClick={async()=>{
+                      setPushBusy(true);
+                      await subscribePush();
+                      setPushBusy(false);
+                    }} style={{flex:1,background:coach.color,border:"none",borderRadius:10,padding:"9px 0",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",opacity:pushBusy?0.6:1}}>
+                      {pushBusy ? (lang==="ja"?"設定中...":"Setting up...") : (lang==="ja"?"受け取る":"Turn on")}
+                    </button>
+                    <button onClick={()=>{ lsSet("mb_push_dismissed_at", todayKey()); setPushBusy(b=>!b); }} style={{background:"transparent",border:"1px solid "+C.border,borderRadius:10,padding:"9px 14px",color:C.muted,fontSize:12,cursor:"pointer"}}>
+                      {lang==="ja"?"あとで":"Later"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* ── 完了称賛バナー ── */}
             {celebrate && (()=>{
