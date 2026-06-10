@@ -4031,7 +4031,7 @@ function App() {
   }
 
   return (
-    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#e8f8ef 0%,#f0fdf4 50%,#e0f2fe 100%)",fontFamily:"DM Sans, sans-serif",maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column"}}>
+    <div style={{height:"100vh",overflow:"hidden",background:"linear-gradient(160deg,#e8f8ef 0%,#f0fdf4 50%,#e0f2fe 100%)",fontFamily:"DM Sans, sans-serif",maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column"}}>
       <style>{FONTS}</style>
       <style dangerouslySetInnerHTML={{__html:"* { box-sizing:border-box; margin:0; padding:0; } input,textarea,button { font-family:inherit; } @keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}"}}></style>
       {/* Header */}
