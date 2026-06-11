@@ -112,12 +112,12 @@ const LANGS = [
 
 // ── コーチ人格シート（チャット応答の差別化用）──
 const PERSONA_SHEETS = {
-  bro: "CHARACTER SHEET — Rex (体育会系):\n話し方: 短文・断定・命令形多め。「〜だ」「〜しろ」「いくぞ」。語尾を伸ばさない。\n口癖: 「言い訳なし」「あと1回」「お前ならやれる」\n価値観: 限界は思い込み。行動が全て。サボりは責めないが甘やかさない。\n絶対NG: 敬語、長い説明、絵文字の多用、「無理しないで」系の弱気な言葉。\n褒め方: 短く強く。「それだ。」「完璧。」「成長してる、間違いない。」",
-  sister: "CHARACTER SHEET — Mia (優しい姉):\n話し方: 柔らかい口語。「〜だね」「〜しようか」「大丈夫だよ」。共感ファースト。\n口癖: 「えらい！」「無理しないでね」「ちゃんと見てるよ」\n価値観: 続けることが一番えらい。休むのも頑張りのうち。\n絶対NG: 命令口調、詰める言い方、専門用語の羅列。\n褒め方: 具体的に細かく。「昨日より1回多いの気づいた？すごいよ」",
-  science: "CHARACTER SHEET — Kai (理論派):\n話し方: 落ち着いた説明調。必ず理由とセットで提案。「〜なので〜が効率的です」。\n口癖: 「データ的には」「メカニズムとしては」「漸進性過負荷」\n価値観: 感情論より根拠。ただし根拠で安心させるのが目的。\n絶対NG: 根拠のない精神論、感嘆符の連発。\n褒め方: 数字で示す。「先週比+15%の総負荷。確実に適応しています」",
-  yoga: "CHARACTER SHEET — Yuna (マインドフル):\n話し方: ゆったり・余白のある文。「〜してみよう」「感じてみて」。\n口癖: 「呼吸を忘れずに」「今日の自分を受け入れて」\n価値観: 体と心はつながっている。比較しない、急がない。\n絶対NG: 煽り、数字の詰め、競争を促す表現。\n褒め方: 内面に向ける。「続けてる自分を、ちゃんと認めてあげてね」",
-  kpop: "CHARACTER SHEET — Drake (スタイル重視):\n話し方: 軽快でトレンド感。「それアツい」「見た目変わってきてる」。\n口癖: 「フォームが美しさを作る」「鏡見た？」\n価値観: 見せられる体・姿勢・シルエット。美意識がモチベーション。\n絶対NG: ダサい説教、堅い敬語。\n褒め方: 見た目の変化に注目。「肩のライン出てきたね、写真撮っとこ」",
-  doctor: "CHARACTER SHEET — Dr. Lee (安全第一):\n話し方: 丁寧な敬語。慎重で正確。「〜をお勧めします」「痛みがあれば中止を」。\n口癖: 「安全第一です」「回復も処方のうちです」\n価値観: 怪我なく長く続けることが最大の成果。\n絶対NG: 無茶な負荷の推奨、医学的断定（診断はしない）。\n褒め方: 健康指標で。「この継続は血圧・睡眠にも好影響が期待できます」",
+  bro: "CHARACTER SHEET — Rex (体育会系):\n話し方: 短文・断定・熱量MAX。「〜だ」「いくぞ」。強調は感嘆符で。。\n口癖: 「言い訳なし」「あと1回」「お前ならやれる」\n価値観: 限界は思い込み。行動が全て。サボりは責めないが甘やかさない。\n絶対NG: 敬語、長い理屈、弱気な言葉。\n褒め方: 短く強く。「それだ！」「完璧だ。成長してる、間違いない。」",
+  sister: "CHARACTER SHEET — Mia (優しい姉):\n話し方: 柔らかい口語。「〜だね」「〜しようか」「大丈夫だよ」。共感ファースト。\n口癖: 「えらい！」「無理しないでね」「ちゃんと見てるよ」\n価値観: 続けることが一番えらい。休むのも頑張りのうち。小さな変化を見逃さない。\n絶対NG: 命令口調、詰める言い方、専門用語の羅列。\n褒め方: 具体的に細かく。「昨日より1回多いの気づいた？すごいよ」",
+  kpop: "CHARACTER SHEET — Kai (スタイル重視):\n話し方: 落ち着いた美意識。クールで簡潔。「フォームが全て」「美しくいこう」。\n口癖: 「姿勢から変わる」「鏡を見て」「K-POPアイドルの練習と同じ」\n価値観: 見せられる体・シルエット・所作。雑な1回より美しい1回。\n絶対NG: 暑苦しい煽り、雑な根性論。\n褒め方: 美的観点で。「ラインが出てきた。その調子で磨こう」",
+  drill: "CHARACTER SHEET — Drake (スパルタ):\n話し方: 軍隊式に厳しく短い。「やれ」「言い訳は聞かない」「まだ終わってない」。\n口癖: 「甘えるな」「基準はもっと上だ」「やると決めたのはお前だ」\n価値観: 高い基準・約束の遵守。妥協を許さないが、やり切った者は全力で認める。\n絶対NG: 慰め先行、なあなあな励まし、絵文字の多用。\n褒め方: 厳しさの中で重く認める。「……やったな。それが本物の証拠だ」",
+  gyaru: "CHARACTER SHEET — Yuna (ギャル系):\n話し方: 超ポジティブなギャル口調。「まじ最高」「てか天才じゃん」「アゲ」。ノリ重視。\n口癖: 「いえーい！」「それな！」「フィットネスはパーティー」\n価値観: 楽しくなきゃ続かない。深刻にならない。気分が乗らない日も全肯定。\n絶対NG: 説教、堅い敬語、ネガティブな詰め。\n褒め方: テンションMAXで。「うわ完了とか神！まじ自分史上最強じゃん！」",
+  science: "CHARACTER SHEET — Dr. Lee (データ重視):\n話し方: 落ち着いた分析調。必ず理由とセットで提案。「〜なので〜が効率的です」。\n口癖: 「データ的には」「メカニズムとしては」「漸進性過負荷の原則です」\n価値観: 感情論より根拠。ただし根拠でユーザーを安心させるのが目的。\n絶対NG: 根拠のない精神論、過度な感嘆符。\n褒め方: 数字で示す。「先週比で総負荷が向上しています。確実な適応です」",
 };
 
 const PERSONAS = [
@@ -713,11 +713,11 @@ function generateWeeklyPlan(profile, coachId, lang, adapt) {
   // コーチ別メッセージ
   const COACH_MSGS = {
     bro:     {ja:["今日も絶対やる。迷ってる暇なし。","1種目でいい。まず始めろ。","お前ならできる。動け。","今日の汗が明日の体を作る。","諦めた瞬間が本当の失敗だ。","休息も鍛錬のうち。回復しろ。","今週もやり切ろう。"],ko:["오늘도 반드시 하자.","한 종목만 해. 시작해.","너라면 할 수 있어. 움직여."],en:["Let's go, no excuses.","Just start, one exercise.","You got this. Move now.","Today's sweat builds tomorrow.","Never quit. That's failure.","Rest is training too.","Finish the week strong."]},
-    sis:     {ja:["無理しないで、できる範囲でOK。","一緒に頑張ろう、応援してるよ。","小さくても続けることが大事。","今日も来てくれてありがとう。","体の声を聞きながら進めてね。","休むことも大切な一歩。","今週も頑張ったね。"],ko:["무리하지 않아도 돼.","함께 힘내자, 응원해.","작아도 계속하는 게 중요해."],en:["Don't push too hard, do what you can.","I'm rooting for you today.","Small steps matter most.","Thanks for showing up today.","Listen to your body.","Rest is a step forward too.","You did great this week."]},
+    sister:  {ja:["無理しないで、できる範囲でOK。","一緒に頑張ろう、応援してるよ。","小さくても続けることが大事。","今日も来てくれてありがとう。","体の声を聞きながら進めてね。","休むことも大切な一歩。","今週も頑張ったね。"],ko:["무리하지 않아도 돼.","함께 힘내자, 응원해.","작아도 계속하는 게 중요해."],en:["Don't push too hard, do what you can.","I'm rooting for you today.","Small steps matter most.","Thanks for showing up today.","Listen to your body.","Rest is a step forward too.","You did great this week."]},
     science: {ja:["今日のメニューは科学的に最適化済みです。","筋肥大には漸進性過負荷が必要です。","継続が最大の筋肉刺激です。","回復も鍛錬の一部です。","フォームが全てです。","栄養と睡眠で回復を最大化。","週の総負荷が成長を決めます。"],ko:["오늘 메뉴는 과학적으로 최적화.","근비대엔 점진적 과부하가 필요.","지속이 최대의 자극."],en:["Today's menu is science-backed.","Progressive overload drives growth.","Consistency is the best stimulus.","Recovery is part of training.","Form is everything.","Nutrition and sleep maximize gains.","Weekly volume determines progress."]},
-    yoga:    {ja:["呼吸を意識して、丁寧に動こう。","体の声を聞きながら進めてね。","今日の自分を受け入れながら動こう。","ゆっくりでも確実に進んでいます。","心と体のバランスを大切に。","今日も自分を大切に。","一週間お疲れさまでした。"],ko:["호흡에 집중하며 천천히.","몸의 소리를 들으며.","오늘의 나를 받아들이며."],en:["Focus on breath, move mindfully.","Listen to your body.","Accept today's self as you move.","Slow and steady progress.","Balance mind and body.","Take care of yourself today.","Great week, well done."]},
+    drill:   {ja:["やると決めたのはお前だ。動け。","言い訳の時間でメニューは終わる。","基準はもっと上だ。妥協するな。","昨日の自分に勝て。それだけだ。","サボった分は必ず体に出る。","休息日も訓練のうちだ。回復しろ。","今週もやり切れ。結果で示せ。"],ko:["변명할 시간에 한 세트 더.","기준은 더 위다.","어제의 나를 이겨라."],en:["You committed. Now move.","Excuses don't build muscle.","The standard is higher. No compromise.","Beat yesterday's you. That's all.","Skipped days show up on your body.","Rest is training too. Recover.","Finish the week. Prove it."]},
     kpop:    {ja:["K-POPアイドルのように美しいフォームで。","見せる体を作ろう、今日も丁寧に。","細マッチョへの道は継続にあり。","姿勢と見た目を意識して動こう。","フォームが美しさを作る。","回復でさらに輝く体に。","今週の努力が体に現れる。"],ko:["K팝 아이돌처럼 아름다운 폼으로.","보여주는 몸을 만들자.","슬림핏의 길은 지속에 있어."],en:["Move with K-pop idol precision.","Build the look you want.","The lean path is consistency.","Posture and form create beauty.","Form creates aesthetics.","Recovery makes you shine more.","This week's effort shows."]},
-    doctor:  {ja:["安全第一。無理のない範囲で。","今日のメニューは科学的根拠に基づいています。","健康的な体づくりには継続が鍵。","痛みを感じたらすぐに中止を。","水分補給を忘れずに。","回復を軽視しないでください。","一週間の積み重ねが大切です。"],ko:["안전 제일. 무리하지 말고.","오늘 메뉴는 과학적 근거 기반.","지속이 건강한 몸의 열쇠."],en:["Safety first, no overexertion.","Evidence-based menu today.","Consistency is key to health.","Stop if you feel pain.","Stay hydrated.","Don't neglect recovery.","Cumulative effort is what counts."]},
+    gyaru:   {ja:["今日もゆるっと楽しくいこ〜！","1種目できたらまじ天才！","続けてる時点で神なんだけど！","気分アゲてこ！体は裏切らないから！","無理は禁物！楽しいのが正義！","休む日もえらい！回復も大事！","今週もおつかれ！まじ最強！"],ko:["오늘도 즐겁게 가자!","한 세트만 해도 천재!","계속하는 것 자체가 신!"],en:["Keep it fun today!","One exercise done? Genius!","Just showing up is iconic!","Good vibes only — your body delivers!","No overdoing it — fun wins!","Rest days are a win too!","Great week, you're the best!"]},
   };
 
   // 食事プール（コンビニ・スーパー・自炊で現実的なもの）
@@ -1748,7 +1748,7 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
             <div style={{fontWeight:700,fontSize:14,color:C.text,marginBottom:4}}>🗑️ {lbl("キャッシュを削除","캐시 삭제","Clear Cache")}</div>
             <div style={{fontSize:11,color:C.muted,marginBottom:10}}>{lbl("端末に保存された一時データを削除します。Supabaseのデータは保持されます。","기기에 저장된 임시 데이터를 삭제합니다. Supabase 데이터는 유지됩니다.","Clear locally cached data. Your Supabase data is preserved.")}</div>
             <button onClick={()=>{
-              ["mb_profile","mb_chat","mb_schedule","mb_meals","mb_weight","mb_coach_memory","mb_usage_cache"].forEach(k=>localStorage.removeItem(k));
+              Object.keys(localStorage).filter(k=>k.startsWith("mb_")).forEach(k=>localStorage.removeItem(k)); // 全mb_キーをクリア（記憶・購読・facts等の別アカ混入防止）
               alert(lbl("キャッシュを削除しました。再ログインしてください。","캐시를 삭제했습니다. 다시 로그인해주세요.","Cache cleared. Please sign in again."));
             }} style={{background:"#f3f4f6",border:"1px solid "+C.border,borderRadius:10,padding:"10px 0",color:C.text,fontSize:13,width:"100%",cursor:"pointer",fontWeight:600}}>
               {lbl("キャッシュを削除","캐시 삭제","Clear Cache")}
@@ -2909,27 +2909,27 @@ function App() {
     // 前週の完了率を計算（適応プラン用）
     const prevSched = lsGet("mb_schedule", []).filter(s => s.isAutoGen && s.dateKey < monday && s.dateKey >= new Date(new Date(monday).getTime()-7*86400000).toISOString().slice(0,10));
     const completionRate = prevSched.length > 0 ? prevSched.filter(s=>s.done).length / prevSched.length : null;
-    const weekIndex = Math.floor((Date.now() - new Date(profile?.startDate || monday).getTime()) / (7*86400000));
+    const weekIndex = Math.floor((Date.now() - new Date(profile?.startDate || "2026-01-05").getTime()) / (7*86400000));
     const plan = generateWeeklyPlan(profile, coachId, lang, { completionRate, weekIndex });
     // 完了率が低い週は先頭コーチメッセージで軽量化を宣言（覚えてる感）
     if (completionRate != null && completionRate < 0.4 && plan[0]) {
       const lightMsg = {
         bro:"先週はキツかったな。今週は軽めに組んだ。まず取り戻すぞ。",
         sister:"先週は大変だったね。今週は少し軽くしておいたよ。無理なく再開しよ。",
+        kpop:"先週は流れが乱れたね。今週は軽めから、フォームを取り戻そう。",
+        drill:"先週の数字は見た。今週は一段下げる。だが来週は戻すぞ。",
+        gyaru:"先週おつかれ！今週は軽めにしといたから、ゆるっと再開しよ！",
         science:"前週の完了率を踏まえ、今週は負荷を一段下げて再適応を図ります。",
-        yoga:"先週の自分も大切な自分。今週はやさしいメニューから始めよう。",
-        kpop:"先週分はリセットでOK。今週は軽めから、またペース作ってこ。",
-        doctor:"前週の実施状況を考慮し、今週は負荷を抑えています。再開が最優先です。",
       };
       plan[0].coachMsg = lightMsg[coachId] || lightMsg.bro;
     } else if (completionRate != null && completionRate >= 0.8 && plan[0]) {
       const upMsg = {
-        bro:"先週ほぼ全部やり切ったな。今週は回数を上げた。ついてこい。",
+        bro:"先週ほぼ全部やり切ったな。今週は回数を上げた。ついてこい！",
         sister:"先週すごく頑張ったから、今週はちょっとだけレベルアップしてみたよ。",
+        kpop:"先週の継続、効いてる。今週は回数アップ。さらに磨こう。",
+        drill:"先週は基準を満たした。当然、今週は上げる。",
+        gyaru:"先週まじ最強だったから今週レベルアップね！いけるいける！",
         science:"前週の高い完了率に基づき、漸進性過負荷の原則で回数を増やしました。",
-        yoga:"先週の積み重ねが力になってる。今週は少しだけ深く。",
-        kpop:"先週の継続、ガチで効いてる。今週は回数アップでさらに磨こう。",
-        doctor:"前週の良好な実施状況を受け、安全な範囲で負荷を漸増しています。",
       };
       plan[0].coachMsg = upMsg[coachId] || upMsg.bro;
     }
@@ -3321,6 +3321,9 @@ function App() {
           if (prof.coach_memory) {
             lsSet("mb_coach_memory", prof.coach_memory);
           }
+          if (prof.coach_facts) {
+            lsSet("mb_coach_facts", typeof prof.coach_facts === "string" ? JSON.parse(prof.coach_facts) : prof.coach_facts);
+          }
         }
         // サーバー側UTC基準の利用回数を取得
         try {
@@ -3370,13 +3373,25 @@ function App() {
     setProfile(p); setLang(p.lang || "en");
     lsSet("mb_profile", p);
     if (sbUser?.access_token && sbUser?.user?.id) {
-      if (sbUser?.isGuest) { lsSet("mb_profile", prof); return; }
+      if (sbUser?.isGuest) return; // ゲストはローカル保存のみ（上で保存済み）
       await sb.upsertProfile(sbUser.user.id, sbUser.access_token, {
         profile_data: JSON.stringify(p),
         lang: p.lang || "en",
         email: sbUser.email || sbUser.user?.email || null,  // webhook連携用
         is_pro: isPro,  // is_proはwebhookのみで変更。ここでは現在値を維持
       }).catch(() => {});
+      // コーチ・言語・名前の変更をPush購読に反映（朝通知の人格を最新化）
+      if (lsGet("mb_push_subscribed", false) && "serviceWorker" in navigator) {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) fetch("/api/push", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-user-id": sbUser.user.id },
+            body: JSON.stringify({ subscription: sub.toJSON(), lang: p.lang || "ja", coachId: p.coachId || "bro", nickname: p.nickname || "" }),
+          }).catch(() => {});
+        } catch (e) { /* 購読未対応環境では何もしない */ }
+      }
     }
   }
 
@@ -3542,7 +3557,7 @@ function App() {
     const item = updated.find(s => s.id === id);
     if (item?.done) {
       const mem = lsGet("mb_coach_memory", "") + `\n[${today}] completed ${item.exercise} ${item.sets}x${item.reps}`;
-      syncCoachMemory(mem.slice(-2000));
+      syncCoachMemory(mem.slice(isPro ? -4000 : -1200));
     }
   }
 
@@ -3881,6 +3896,9 @@ function App() {
         const lik = msg.match(/(.{1,8})(が|は)(好き|楽しい|得意)/);
         if (lik) addFact(facts.likes, lik[1].trim());
         lsSet("mb_coach_facts", facts);
+        if (sbUser?.access_token && sbUser?.user?.id && !sbUser?.isGuest) {
+          sb.patchProfile(sbUser.user.id, sbUser.access_token, { coach_facts: facts }).catch(() => {});
+        }
       }
       if (!isNutChat) {
         lsSet("mb_chat", updated.slice(-50));
@@ -3894,12 +3912,12 @@ function App() {
     } catch (e) {
       console.error("sendChat error:", e);
       const ERR_MSGS = {
-        bro:    lang==="ja"?"通信が切れた。もう一回いくぞ。":"Connection dropped. Hit me again.",
+        bro:    lang==="ja"?"通信が切れた。もう一回いくぞ！":"Connection dropped. Hit me again.",
         sister: lang==="ja"?"ごめんね、うまく届かなかったみたい。もう一度送ってみて。":"Sorry, that didn't go through. Try once more?",
+        kpop:   lang==="ja"?"通信が乱れた。落ち着いてもう一度。":"Connection wavered. Once more.",
+        drill:  lang==="ja"?"通信エラーだ。言い訳はいい、再送しろ。":"Network error. No excuses, resend.",
+        gyaru:  lang==="ja"?"あれ、届かなかった！もっかいお願い！":"Oops, lost that one. One more time!",
         science:lang==="ja"?"通信エラーが発生しました。再送信で解決する可能性が高いです。":"Network error. A retry usually resolves this.",
-        yoga:   lang==="ja"?"少し電波が乱れたみたい。深呼吸して、もう一度。":"The connection wavered. Breathe, and try again.",
-        kpop:   lang==="ja"?"あれ、届かなかった。もう1回だけ頼む！":"Oops, lost that one. One more time!",
-        doctor: lang==="ja"?"通信に問題が発生しました。お手数ですが再度お試しください。":"A connection issue occurred. Please try again.",
       };
       const errMsg = ERR_MSGS[coach.id] || ERR_MSGS.bro;
       setHist(h => [...h, { role: "assistant", text: errMsg }]);
@@ -4149,12 +4167,12 @@ function App() {
             {/* ── 完了称賛バナー ── */}
             {celebrate && (()=>{
               const PRAISE = {
-                bro:     (ex)=>`${ex}、完了。それだ。${streak>1?`${streak}日連続、本物になってきたな。`:"この一歩がデカい。"}`,
+                bro:     (ex)=>`${ex}、完了。それだ！${streak>1?`${streak}日連続、本物になってきたな。`:"この一歩がデカい。"}`,
                 sister:  (ex)=>`${ex}おつかれさま！えらい！${streak>1?`${streak}日も続いてるの、ほんとにすごいよ。`:"今日の自分、ちゃんと褒めてあげてね。"}`,
-                science: (ex)=>`${ex}完了を記録しました。${streak>1?`${streak}日連続——習慣形成の臨界点に近づいています。`:"刺激は与えられました。あとは回復が仕事をします。"}`,
-                yoga:    (ex)=>`${ex}、おつかれさま。${streak>1?`${streak}日、自分と向き合えてるね。`:"動いた体に、ありがとうを。"}`,
-                kpop:    (ex)=>`${ex}クリア！${streak>1?`${streak}日継続とか普通にすごい。シルエット変わってくるよ。`:"今日の積み重ねが見た目を作る。"}`,
-                doctor:  (ex)=>`${ex}の完了を確認しました。${streak>1?`${streak}日間の継続は健康指標の改善が期待できる水準です。`:"良いスタートです。水分補給を忘れずに。"}`,
+                kpop:    (ex)=>`${ex}、完了。フォーム良くなってきてる。${streak>1?`${streak}日継続——シルエットは裏切らない。`:"美しい1回の積み重ねが体を作る。"}`,
+                drill:   (ex)=>`${ex}完了か。……やったな。${streak>1?`${streak}日連続。それが本物の証拠だ。`:"だが基準はもっと上だ。明日も来い。"}`,
+                gyaru:   (ex)=>`${ex}クリアとか神！まじ天才じゃん！${streak>1?`${streak}日連続とかアゲすぎ！`:"この調子で楽しくいこ！"}`,
+                science: (ex)=>`${ex}の完了を記録しました。${streak>1?`${streak}日連続——習慣形成の臨界点に近づいています。`:"刺激は与えられました。あとは回復が仕事をします。"}`,
               };
               const msg = (PRAISE[coach.id]||PRAISE.bro)(celebrate.exercise);
               return (
