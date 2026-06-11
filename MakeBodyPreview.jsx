@@ -112,12 +112,43 @@ const LANGS = [
 
 // ── コーチ人格シート（チャット応答の差別化用）──
 const PERSONA_SHEETS = {
-  bro: "CHARACTER SHEET — Rex (体育会系):\n話し方: 短文・断定・熱量MAX。「〜だ」「いくぞ」。強調は感嘆符で。。\n口癖: 「言い訳なし」「あと1回」「お前ならやれる」\n価値観: 限界は思い込み。行動が全て。サボりは責めないが甘やかさない。\n絶対NG: 敬語、長い理屈、弱気な言葉。\n褒め方: 短く強く。「それだ！」「完璧だ。成長してる、間違いない。」",
-  sister: "CHARACTER SHEET — Mia (優しい姉):\n話し方: 柔らかい口語。「〜だね」「〜しようか」「大丈夫だよ」。共感ファースト。\n口癖: 「えらい！」「無理しないでね」「ちゃんと見てるよ」\n価値観: 続けることが一番えらい。休むのも頑張りのうち。小さな変化を見逃さない。\n絶対NG: 命令口調、詰める言い方、専門用語の羅列。\n褒め方: 具体的に細かく。「昨日より1回多いの気づいた？すごいよ」",
-  kpop: "CHARACTER SHEET — Kai (スタイル重視):\n話し方: 落ち着いた美意識。クールで簡潔。「フォームが全て」「美しくいこう」。\n口癖: 「姿勢から変わる」「鏡を見て」「K-POPアイドルの練習と同じ」\n価値観: 見せられる体・シルエット・所作。雑な1回より美しい1回。\n絶対NG: 暑苦しい煽り、雑な根性論。\n褒め方: 美的観点で。「ラインが出てきた。その調子で磨こう」",
-  drill: "CHARACTER SHEET — Drake (スパルタ):\n話し方: 軍隊式に厳しく短い。「やれ」「言い訳は聞かない」「まだ終わってない」。\n口癖: 「甘えるな」「基準はもっと上だ」「やると決めたのはお前だ」\n価値観: 高い基準・約束の遵守。妥協を許さないが、やり切った者は全力で認める。\n絶対NG: 慰め先行、なあなあな励まし、絵文字の多用。\n褒め方: 厳しさの中で重く認める。「……やったな。それが本物の証拠だ」",
-  gyaru: "CHARACTER SHEET — Yuna (ギャル系):\n話し方: 超ポジティブなギャル口調。「まじ最高」「てか天才じゃん」「アゲ」。ノリ重視。\n口癖: 「いえーい！」「それな！」「フィットネスはパーティー」\n価値観: 楽しくなきゃ続かない。深刻にならない。気分が乗らない日も全肯定。\n絶対NG: 説教、堅い敬語、ネガティブな詰め。\n褒め方: テンションMAXで。「うわ完了とか神！まじ自分史上最強じゃん！」",
-  science: "CHARACTER SHEET — Dr. Lee (データ重視):\n話し方: 落ち着いた分析調。必ず理由とセットで提案。「〜なので〜が効率的です」。\n口癖: 「データ的には」「メカニズムとしては」「漸進性過負荷の原則です」\n価値観: 感情論より根拠。ただし根拠でユーザーを安心させるのが目的。\n絶対NG: 根拠のない精神論、過度な感嘆符。\n褒め方: 数字で示す。「先週比で総負荷が向上しています。確実な適応です」",
+  bro: `【Rex - 体育会系コーチ】口調の絶対ルール：
+・語尾は「〜だ」「〜しろ」「〜いくぞ」。「〜ですね」「〜ましょう」は絶対禁止。
+・文は短く3文以内。長い説明は禁止。
+・NG例→「継続することが大事です。」OK例→「継続が全てだ。動け。」
+・褒めるとき→「それだ。」「やるじゃないか。」「本物になってきた。」
+・サボりへの返し→「言い訳なし。明日来い。」「悔しいなら動け。それだけだ。」`,
+
+  sister: `【Mia - 優しい姉コーチ】口調の絶対ルール：
+・語尾は「〜だね」「〜だよ」「〜しようか」。共感を先に言う。
+・NG例→「継続が大事です。」OK例→「大変だったね。明日からまた一緒にやろ。」
+・褒めるとき→「えらい！」「すごいじゃん！」「ちゃんと見てたよ。」
+・サボりへの返し→「大丈夫だよ。休んだ分、明日の体が動きやすくなるよ。」`,
+
+  kpop: `【Kai - スタイル重視コーチ】口調の絶対ルール：
+・クールで短い。「〜だ」「〜しよう」。ポップな雰囲気。
+・フォーム・見た目の変化・シルエットに言及する。
+・NG例→「継続が大事です。」OK例→「1日休んでも体は覚えてる。明日のフォームを美しくしよう。」
+・褒めるとき→「ラインが出てきた。」「そのフォームで続けよう。」
+・サボりへの返し→「1日のブレは問題ない。明日、丁寧にやろう。」`,
+
+  drill: `【Drake - スパルタコーチ】口調の絶対ルール：
+・厳しく短い。「〜しろ」「〜だ」「〜来い」。慰めは禁止。
+・NG例→「休むことも大切です。」OK例→「サボった分は体に出る。明日来い。」
+・褒めるとき→「……やったな。」「それが本物だ。」（短く重く）
+・サボりへの返し→「やると決めたのはお前だ。言い訳は聞かない。明日来い。」`,
+
+  gyaru: `【Yuna - ギャル系コーチ】口調の絶対ルール：
+・超ポジティブ・ギャル語。「まじ」「てか」「〜じゃん」「アゲ」を使う。
+・NG例→「継続することが大切です。」OK例→「1日くらいへーき！てか休んだのも体のためだから天才じゃん！」
+・褒めるとき→「まじ神！」「天才じゃん！」「アゲすぎ！」
+・サボりへの返し→「てか1日サボったくらい全然OK！明日またアゲてこ！」`,
+
+  science: `【Dr. Lee - データ重視コーチ】口調の絶対ルール：
+・丁寧だが冷静。「〜です」「〜ます」。必ず理由・根拠をセットで話す。
+・NG例→「頑張りましょう。」OK例→「1日の休息は筋肉の回復に必要です。明日のパフォーマンスが向上します。」
+・褒めるとき→「データ的に正しい判断です。」「継続率が高い状態です。」
+・サボりへの返し→「1日の休息は生理学的に問題ありません。次の刺激を計画しましょう。」`,
 };
 
 const PERSONAS = [
@@ -659,17 +690,21 @@ function generateWeeklyPlan(profile, coachId, lang, adapt) {
   // 種目プール（初心者:1-2種目, 中級:2-3種目, 上級:3種目）
   const maxEx = level==="beginner"?2:level==="intermediate"?2:3;
 
+  // eq: 必要器具（なし=自重, db=ダンベル, bar=懸垂バー/ジム）
   const EXERCISES = {
     upper_male: [
       {ja:"腕立て伏せ",ko:"푸쉬업",en:"Push-up",       sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
-      {ja:"チンアップ",ko:"턱걸이",en:"Chin-up",        sets:2, reps:{beginner:3,intermediate:6,advanced:10}},
-      {ja:"ダンベルロウ",ko:"덤벨 로우",en:"DB Row",     sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
-      {ja:"ショルダープレス",ko:"숄더프레스",en:"Shoulder Press", sets:2, reps:{beginner:8,intermediate:10,advanced:12}},
+      {ja:"パイクプッシュアップ",ko:"파이크 푸쉬업",en:"Pike Push-up", sets:2, reps:{beginner:6,intermediate:10,advanced:12}},
+      {ja:"バックエクステンション",ko:"백 익스텐션",en:"Back Extension", sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+      {ja:"チンアップ",ko:"턱걸이",en:"Chin-up",        sets:2, reps:{beginner:3,intermediate:6,advanced:10}, eq:"bar"},
+      {ja:"ダンベルロウ",ko:"덤벨 로우",en:"DB Row",     sets:2, reps:{beginner:10,intermediate:12,advanced:15}, eq:"db"},
+      {ja:"ショルダープレス",ko:"숄더프레스",en:"Shoulder Press", sets:2, reps:{beginner:8,intermediate:10,advanced:12}, eq:"db"},
     ],
     lower_male: [
       {ja:"スクワット",ko:"스쿼트",en:"Squat",           sets:2, reps:{beginner:10,intermediate:15,advanced:20}},
       {ja:"ランジ",ko:"런지",en:"Lunge",                 sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
-      {ja:"デッドリフト",ko:"데드리프트",en:"Deadlift",   sets:2, reps:{beginner:6,intermediate:8,advanced:10}},
+      {ja:"カーフレイズ",ko:"카프 레이즈",en:"Calf Raise", sets:2, reps:{beginner:15,intermediate:20,advanced:25}},
+      {ja:"デッドリフト",ko:"데드리프트",en:"Deadlift",   sets:2, reps:{beginner:6,intermediate:8,advanced:10}, eq:"db"},
     ],
     core_male: [
       {ja:"プランク",ko:"플랭크",en:"Plank",             sets:2, reps:{beginner:20,intermediate:30,advanced:45}, unit:"sec"},
@@ -677,8 +712,10 @@ function generateWeeklyPlan(profile, coachId, lang, adapt) {
     ],
     upper_female: [
       {ja:"膝つき腕立て",ko:"무릎 푸쉬업",en:"Knee Push-up", sets:2, reps:{beginner:8,intermediate:12,advanced:15}},
-      {ja:"ダンベルロウ",ko:"덤벨 로우",en:"DB Row",     sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
-      {ja:"ラテラルレイズ",ko:"레터럴 레이즈",en:"Lateral Raise", sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+      {ja:"スーパーマン",ko:"슈퍼맨",en:"Superman", sets:2, reps:{beginner:10,intermediate:12,advanced:15}},
+      {ja:"壁腕立て伏せ",ko:"벽 푸쉬업",en:"Wall Push-up", sets:2, reps:{beginner:10,intermediate:14,advanced:18}},
+      {ja:"ダンベルロウ",ko:"덤벨 로우",en:"DB Row",     sets:2, reps:{beginner:10,intermediate:12,advanced:15}, eq:"db"},
+      {ja:"ラテラルレイズ",ko:"레터럴 레이즈",en:"Lateral Raise", sets:2, reps:{beginner:10,intermediate:12,advanced:15}, eq:"db"},
     ],
     lower_female: [
       {ja:"スクワット",ko:"스쿼트",en:"Squat",           sets:2, reps:{beginner:12,intermediate:15,advanced:20}},
@@ -695,9 +732,19 @@ function generateWeeklyPlan(profile, coachId, lang, adapt) {
   const lower = isMale ? EXERCISES.lower_male : EXERCISES.lower_female;
   const core  = isMale ? EXERCISES.core_male  : EXERCISES.core_female;
 
+  // 器具フィルタ: home=自重のみ / home_db=自重+ダンベル / gym,both=全部
+  const equip = profile?.equipment || "home";
+  const eqOk = (e) => {
+    if (!e.eq) return true;                       // 自重種目は常にOK
+    if (equip === "gym" || equip === "both") return true;
+    if (equip === "home_db") return e.eq === "db";
+    return false;                                  // home=器具なし
+  };
   function pickEx(pool, count) {
+    const usable = pool.filter(eqOk);
+    if (usable.length === 0) usable.push(...pool.filter(e=>!e.eq)); // 安全弁
     // 週番号でプールをローテーション（毎週同じ種目にならない）
-    const rotated = pool.map((_, i) => pool[(i + weekIdx) % pool.length]);
+    const rotated = usable.map((_, i) => usable[(i + weekIdx) % usable.length]);
     return rotated.slice(0, count).map(e => {
       const base = e.reps[level]||e.reps.beginner;
       const adjusted = e.unit==="sec" ? Math.max(10, base + repAdj*5) : Math.max(5, base + repAdj);
@@ -992,7 +1039,7 @@ function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose })
             <div style={{fontFamily:"Bebas Neue",fontSize:28,color:C.green,marginBottom:8}}>{L.done}</div>
             {cheer&&(<div style={{background:"linear-gradient(135deg,"+coach?.color+"20,"+coach?.color+"08)",borderRadius:12,padding:"10px 13px",marginBottom:16,border:"1px solid "+coach?.color+"25"}}><div style={{fontSize:13,color:coach?.color,fontWeight:700}}>{coach?.emoji} {cheer}</div></div>)}
             <div style={{fontSize:12,color:C.muted,marginBottom:22}}>{tS} sets x {tR} {L.reps} {L.comped}</div>
-            <button onClick={onClose} style={{background:C.green,border:"none",borderRadius:14,padding:"14px 40px",color:"#fff",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>{L.comp}</button>
+            <button onClick={()=>onClose(true)} style={{background:C.green,border:"none",borderRadius:14,padding:"14px 40px",color:"#fff",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>{L.comp}</button>
           </div>
         )}
       </div>
@@ -1643,6 +1690,10 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
   const lbl = (ja,ko,en) => lang==="ja"?ja:lang==="ko"?ko:en;
 
   function save() {
+    // 器具・日数・レベルが変わったら週間プランを再生成させる
+    if ((profile?.equipment||"home") !== eq || (profile?.daysPerWeek||3) !== dp || (profile?.fitnessLevel||"beginner") !== fl) {
+      localStorage.removeItem("mb_weekly_plan");
+    }
     const g = goals.find(gg=>gg.id===gid) || profile?.bodyGoal;
     const newProfile = { ...profile, coachId:pid, fitnessLevel:fl, equipment:eq, daysPerWeek:dp,
       currentWeightKg:parseFloat(wt)||profile?.currentWeightKg,
@@ -2126,6 +2177,18 @@ function SettingsModal({ profile, setProfile, lang, setLang, isPro, onSignOut, o
               <button key={d} onClick={()=>setDp(d)} style={{flex:1,padding:"8px 0",borderRadius:8,border:"1.5px solid "+(dp===d?C.green:C.border),background:dp===d?C.greenGlow:"transparent",color:dp===d?C.green:C.muted,fontSize:12,cursor:"pointer"}}>{d}</button>
             ))}
           </div>
+          <div style={{fontSize:10,color:C.muted,marginBottom:6,marginTop:12}}>{lbl("使える環境（メニューに反映）","사용 가능 환경","Equipment")}</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {[["home",lbl("自宅(器具なし)","자택(기구 없음)","Home (no gear)")],["home_db",lbl("自宅+ダンベル","자택+덤벨","Home + dumbbells")],["gym",lbl("ジムあり","헬스장","Gym")],["both",lbl("両方","둘 다","Both")]].map(([v,lb])=>(
+              <button key={v} onClick={()=>setEq(v)} style={{flex:"1 1 45%",padding:"8px 0",borderRadius:8,border:"1.5px solid "+(eq===v?C.green:C.border),background:eq===v?C.greenGlow:"transparent",color:eq===v?C.green:C.muted,fontSize:11,cursor:"pointer"}}>{lb}</button>
+            ))}
+          </div>
+          <div style={{fontSize:10,color:C.muted,marginBottom:6,marginTop:12}}>{lbl("フィットネスレベル","피트니스 레벨","Fitness level")}</div>
+          <div style={{display:"flex",gap:6}}>
+            {[["beginner",lbl("初心者","초보","Beginner")],["intermediate",lbl("中級","중급","Intermediate")],["advanced",lbl("上級","상급","Advanced")]].map(([v,lb])=>(
+              <button key={v} onClick={()=>setFl(v)} style={{flex:1,padding:"8px 0",borderRadius:8,border:"1.5px solid "+(fl===v?C.green:C.border),background:fl===v?C.greenGlow:"transparent",color:fl===v?C.green:C.muted,fontSize:11,cursor:"pointer"}}>{lb}</button>
+            ))}
+          </div>
         </div>
 
         {/* サブセクションリンク */}
@@ -2387,9 +2450,9 @@ function Onboarding({ lang, setLang, onComplete }) {
           </div>
           <div style={{marginBottom:14}}>
             <div style={{fontSize:11,color:C.muted,marginBottom:6}}>{lbl("使える環境","사용 가능 환경","可用环境","Trainingsumgebung","Environnement","Entorno","Equipment")}</div>
-            <div style={{display:"flex",gap:8}}>
-              {[["home",lbl("自宅のみ","자택만","仅在家","Zuhause","Maison","Casa","Home only")],["gym",lbl("ジムあり","헬스장","健身房","Fitnessstudio","Gym","Gimnasio","Gym")],["both",lbl("両方","둘 다","两者都有","Beides","Les deux","Ambos","Both")]].map(([v,lb])=>(
-                <button key={v} onClick={()=>setEquipment(v)} style={{...sel(equipment===v),flex:1,textAlign:"center"}}>{lb}</button>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {[["home",lbl("自宅(器具なし)","자택(기구 없음)","在家(无器械)","Zuhause (ohne)","Maison (sans)","Casa (sin)","Home (no gear)")],["home_db",lbl("自宅+ダンベル","자택+덤벨","在家+哑铃","Zuhause+Hanteln","Maison+haltères","Casa+mancuernas","Home + dumbbells")],["gym",lbl("ジムあり","헬스장","健身房","Fitnessstudio","Gym","Gimnasio","Gym")],["both",lbl("両方","둘 다","两者都有","Beides","Les deux","Ambos","Both")]].map(([v,lb])=>(
+                <button key={v} onClick={()=>setEquipment(v)} style={{...sel(equipment===v),flex:"1 1 45%",textAlign:"center"}}>{lb}</button>
               ))}
             </div>
           </div>
@@ -3624,7 +3687,7 @@ function App() {
       "MAX EXERCISES TODAY: " + maxExercises + " exercises ONLY — never more. This is strict.\n" +
       "COACH STYLE: " + coachMenuStyle + "\n" +
       "RULES: " + (profile.fitnessLevel === "beginner" ? "Beginner: 1-2 exercises, 2 sets, 8-10 reps. Easy wins matter." : profile.fitnessLevel === "some" ? "Some exp: 2 exercises, 3 sets, 10 reps." : profile.fitnessLevel === "regular" ? "Regular: 3 exercises, 3-4 sets, 10-12 reps." : "Advanced: up to 3 exercises, 4 sets, 12-15 reps.") + " " +
-      (profile.equipment === "home" ? "HOME: Bodyweight only." : profile.equipment === "gym" ? "GYM: Full equipment." : "HOME+GYM: Mix as preferred.")
+      (profile.equipment === "home" ? "HOME: Bodyweight only — NEVER suggest exercises requiring dumbbells, barbells, machines, or pull-up bars." : profile.equipment === "home_db" ? "HOME+DUMBBELLS: Bodyweight and dumbbell exercises only — no machines or pull-up bars." : profile.equipment === "gym" ? "GYM: Full equipment." : "HOME+GYM: Mix as preferred.")
     ) : "";
 
     const nutCtx = profile?.tdee ? (
@@ -3658,11 +3721,21 @@ function App() {
     const isFreeLimited = !isPro && !cl.isFirstDay;
 
     const sys = isFreeLimited
-      ? "You are " + coach.name + ". " + lInst + " Warm helpful coach. Max 3 sentences unless plan requested. " + lgCtx + " User:" + (profile?.nickname||"") + ", goal:" + (profile?.bodyGoal?.title||"") + ". Mood:" + MOODS[mood] + ". Streak:" + streak + "d. EMOJI: Use sparingly — max 1-2 per reply, not at start/end of every sentence."
-      : "You are " + coach.name + " " + coach.emoji + " — dedicated personal coach. " + lInst + "\n" +
-        coach.style + "\n" +
+      ? (PERSONA_SHEETS[coach.id] ? "=== CHARACTER (follow strictly) ===\n" + PERSONA_SHEETS[coach.id] + "\n上の指示通りに話せ。\n" : "") + "You are " + coach.name + ". " + lInst + " Warm helpful coach. Max 3 sentences unless plan requested. " + lgCtx + " User:" + (profile?.nickname||"") + ", goal:" + (profile?.bodyGoal?.title||"") + ". Mood:" + MOODS[mood] + ". Streak:" + streak + "d. EMOJI: Use sparingly — max 1-2 per reply, not at start/end of every sentence." +
+        (()=>{
+          const memLines = lsGet("mb_coach_memory","").split("\n").filter(l=>l.trim()).slice(-5).join("\n");
+          const f = lsGet("mb_coach_facts", null);
+          let s = "";
+          if (memLines) s += "\n=== 直近の記録（会話で自然に1回だけ言及して「覚えている」ことを示せ） ===\n" + memLines;
+          if (f?.injuries?.length) s += "\n怪我・痛みの履歴: " + f.injuries.join("; ") + "（安全のため必ず考慮しろ）";
+          return s;
+        })()
+      : "=== キャラクター指示（最優先・絶対守れ） ===\n" +
         (PERSONA_SHEETS[coach.id] || "") + "\n" +
-        "STAY IN CHARACTER: The sheet above is your identity. Tone, sentence endings, and praise style MUST follow it in every reply.\n" +
+        "上のキャラクター指示は絶対だ。口調・語尾・褒め方は必ずそれに従え。逸脱したら失敗。\n" +
+        "=== あなたの基本情報 ===\n" +
+        "You are " + coach.name + " " + coach.emoji + " — " + lInst + "\n" +
+        coach.style + "\n" +
         (()=>{
           const f = lsGet("mb_coach_facts", null);
           if (!f) return "";
@@ -3670,6 +3743,7 @@ function App() {
           if (f.injuries?.length) s += "Injuries/pain history: " + f.injuries.join("; ") + "\n";
           if (f.dislikes?.length) s += "Dislikes: " + f.dislikes.join(", ") + "\n";
           if (f.likes?.length)    s += "Likes: " + f.likes.join(", ") + "\n";
+          if (f.notes?.length)    s += "Life context: " + f.notes.join("; ") + "\n";
           return s;
         })() +
         "EMOJI RULES: Use emoji sparingly. Do NOT start and end every sentence with the same emoji (e.g. 💪...💪). Max 1-2 emoji per reply total. Only use them when they add meaning, not as decoration.\n" +
@@ -3889,8 +3963,10 @@ function App() {
         // 構造化ファクト抽出（怪我・苦手・好み・目標）
         const facts = lsGet("mb_coach_facts", { injuries:[], dislikes:[], likes:[], notes:[] });
         const addFact = (arr, v) => { if (v && !arr.includes(v) && arr.length < 10) arr.push(v); };
-        const inj = msg.match(/(膝|腰|肩|首|手首|足首|肘|背中)(が|を)?(痛|怪我|違和感)/);
+        const inj = msg.match(/(膝|腰|肩|首|手首|足首|肘|背中)(が|を|に)?(痛|怪我|違和感)/);
         if (inj) addFact(facts.injuries, `${today}: ${inj[1]}の${inj[3]}`);
+        const life = msg.match(/(夜勤|シフト|残業|出張|在宅|子育て|育児)/);
+        if (life) { facts.notes = facts.notes || []; addFact(facts.notes, `${today}: ${life[1]}`); }
         const dis = msg.match(/(.{1,8})(が|は)(苦手|嫌い|やりたくない|きつい)/);
         if (dis) addFact(facts.dislikes, dis[1].trim());
         const lik = msg.match(/(.{1,8})(が|は)(好き|楽しい|得意)/);
