@@ -745,9 +745,15 @@ function generateWeeklyPlan(profile, coachId, lang, adapt) {
     if (usable.length === 0) usable.push(...pool.filter(e=>!e.eq)); // 安全弁
     // 週番号でプールをローテーション（毎週同じ種目にならない）
     const rotated = usable.map((_, i) => usable[(i + weekIdx) % usable.length]);
+    const exHist = lsGet("mb_ex_history", {});
     return rotated.slice(0, count).map(e => {
       const base = e.reps[level]||e.reps.beginner;
-      const adjusted = e.unit==="sec" ? Math.max(10, base + repAdj*5) : Math.max(5, base + repAdj);
+      // 種目別の主観強度フィードバックで微調整（きつい=増やさない / 余裕=さらに+）
+      const nm = lang==="ja"?e.ja:lang==="ko"?e.ko:e.en;
+      const lastFb = (exHist[nm]||[]).slice(-1)[0]?.rpe;
+      // きつい→増加だけキャンセル（減少は維持）/ 余裕→+1上乗せ
+      const totalAdj = lastFb === "hard" ? Math.min(repAdj, 0) : lastFb === "easy" ? repAdj + 1 : repAdj;
+      const adjusted = e.unit==="sec" ? Math.max(10, base + totalAdj*5) : Math.max(5, base + totalAdj);
       return {
         name: lang==="ja"?e.ja:lang==="ko"?e.ko:e.en,
         sets: e.sets,
@@ -849,6 +855,7 @@ function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose })
   const [repCount, setRepCount] = useState(0);
   const [repPhase, setRepPhase] = useState("down");
   const [cheer, setCheer]       = useState("");
+  const [rpe, setRpe]           = useState(null); // セッション強度フィードバック
 
   const repIr  = useRef(null);
   const restIr = useRef(null);
@@ -977,7 +984,11 @@ function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose })
           <div style={{fontFamily:"Bebas Neue",fontSize:18,letterSpacing:1,color:C.text}}>{exercise}</div>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
             <span style={{fontSize:18}}>{coach?.emoji}</span>
-            <span style={{fontSize:10,color:C.muted}}>{coach?.name}</span>
+            <span style={{fontSize:10,color:C.muted}}>{coach?.name}{(()=>{
+              const h = lsGet("mb_ex_history", {})[exercise];
+              const last = h && h.length ? h[h.length-1] : null;
+              return last ? " ・ " + (lang==="ja"?"前回":"Last") + " " + last.s + "×" + last.r : "";
+            })()}</span>
             <button onClick={()=>onClose(false)} style={{width:28,height:28,background:C.dim,border:"none",borderRadius:"50%",color:C.muted,fontSize:12,cursor:"pointer"}}>X</button>
           </div>
         </div>
@@ -1039,7 +1050,21 @@ function WorkoutCounter({ exercise, sets, reps, lang, coach, profile, onClose })
             <div style={{fontFamily:"Bebas Neue",fontSize:28,color:C.green,marginBottom:8}}>{L.done}</div>
             {cheer&&(<div style={{background:"linear-gradient(135deg,"+coach?.color+"20,"+coach?.color+"08)",borderRadius:12,padding:"10px 13px",marginBottom:16,border:"1px solid "+coach?.color+"25"}}><div style={{fontSize:13,color:coach?.color,fontWeight:700}}>{coach?.emoji} {cheer}</div></div>)}
             <div style={{fontSize:12,color:C.muted,marginBottom:22}}>{tS} sets x {tR} {L.reps} {L.comped}</div>
-            <button onClick={()=>onClose(true)} style={{background:C.green,border:"none",borderRadius:14,padding:"14px 40px",color:"#fff",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>{L.comp}</button>
+            <div style={{fontSize:11,color:C.muted,marginBottom:8}}>{lang==="ja"?"今日のきつさは？（次のプランに反映）":"How hard was it?"}</div>
+<div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:16}}>
+  {[["hard",lang==="ja"?"😮‍💨 きつい":"😮‍💨 Hard"],["ok",lang==="ja"?"👍 ちょうどいい":"👍 Right"],["easy",lang==="ja"?"😎 余裕":"😎 Easy"]].map(([v,lb])=>(
+    <button key={v} onClick={()=>setRpe(v)} style={{padding:"8px 12px",borderRadius:10,border:"1.5px solid "+(rpe===v?C.green:C.border),background:rpe===v?"rgba(34,197,94,0.12)":"transparent",color:rpe===v?C.green:C.muted,fontSize:12,cursor:"pointer"}}>{lb}</button>
+  ))}
+</div>
+<button onClick={()=>{
+  // 種目別履歴に保存（前回実績表示＋翌週適応に使用）
+  const hist = lsGet("mb_ex_history", {});
+  const arr = hist[exercise] || [];
+  arr.push({ d: todayKey(), s: tS, r: tR, rpe });
+  hist[exercise] = arr.slice(-10);
+  lsSet("mb_ex_history", hist);
+  onClose(true);
+}} style={{background:C.green,border:"none",borderRadius:14,padding:"14px 40px",color:"#fff",fontFamily:"Bebas Neue",fontSize:18,letterSpacing:2,cursor:"pointer"}}>{L.comp}</button>
           </div>
         )}
       </div>
@@ -2921,6 +2946,7 @@ function App() {
   const [restTick, setRestTick]   = useState(0); // 休息日タスクの再レンダー用
   const [futurePeek, setFuturePeek] = useState(false); // 未来予測の無料1回お試し表示中
   const [pushBusy, setPushBusy]     = useState(false); // push購読処理中＋再レンダー用
+  const [factsTick, setFactsTick]   = useState(0); // コーチノート削除の再レンダー用
   const [coachView, setCoachView] = useState("calendar"); // calendar|chat
 
   const [weightLog, setWeightLog] = useState({});
@@ -4204,6 +4230,27 @@ function App() {
           <div style={{animation:"fadeIn .3s ease"}}>
             <TrialProgressBanner cl={cl} lang={lang} coach={coach} profile={profile} onUpgrade={()=>setShowUpgrade(true)}/>
 
+            {/* ── 初回1種目CTA（D0のaha体験） ── */}
+            {(()=>{
+              if (Object.keys(lsGet("mb_ex_history", {})).length > 0) return null;
+              if (lsGet("mb_schedule", []).some(s=>s.done)) return null;
+              const first = weeklyPlan?.days?.[0]?.workout?.[0];
+              if (!first || weeklyPlan?.days?.[0]?.isRest) return null;
+              return (
+                <div style={{background:"linear-gradient(135deg,"+coach.bg+",rgba(34,197,94,0.1))",border:"2px solid "+coach.color,borderRadius:14,padding:"14px",marginBottom:12,textAlign:"center"}}>
+                  <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>
+                    {lang==="ja"?"🎯 まず1種目だけやってみよう":"🎯 Try just one exercise"}
+                  </div>
+                  <div style={{fontSize:11,color:C.muted,marginBottom:10}}>
+                    {lang==="ja"?`${first.name} ${first.sets}×${first.reps} — 約2分で終わる。${coach.name}が見てる。`:`${first.name} ${first.sets}×${first.reps} — about 2 min.`}
+                  </div>
+                  <button onClick={()=>setCounterM({exercise:first.name,sets:first.sets,reps:first.reps})} style={{background:coach.color,border:"none",borderRadius:10,padding:"10px 28px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                    {lang==="ja"?"▶ 今すぐ始める":"▶ Start now"}
+                  </button>
+                </div>
+              );
+            })()}
+
             {/* ── 通知プロモカード（価値を感じた後に提案） ── */}
             {(()=>{
               if (typeof Notification === "undefined") return null;
@@ -4381,7 +4428,11 @@ function App() {
                   <div style={{marginBottom:10}}>
 
                     <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:6}}>
-                      💪 {lang==="ja"?"今日のトレーニング":lang==="ko"?"오늘의 트레이닝":"TODAY'S WORKOUT"}
+                      💪 {lang==="ja"?"今日のトレーニング":lang==="ko"?"오늘의 트레이닝":"TODAY'S WORKOUT"}{(()=>{
+                        if (todayPlan.isRest || !todayPlan.workout?.length) return "";
+                        const sec = todayPlan.workout.reduce((t,ex)=>t + ex.sets*(ex.unit==="sec"?ex.reps:ex.reps*3) + (ex.sets-1)*45 + 30, 0);
+                        return " ・ " + (lang==="ja"?"約"+Math.max(1,Math.ceil(sec/60))+"分":"~"+Math.max(1,Math.ceil(sec/60))+"min");
+                      })()}
                     </div>
                     {todayPlan.isRest ? (
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
@@ -5135,6 +5186,90 @@ function App() {
           </div>
         )}
 
+        {tab === "progress" && (()=>{
+          const totalDone = Object.values(lsGet("mb_ex_history", {})).reduce((t,a)=>t+a.length,0) + lsGet("mb_schedule",[]).filter(s=>s.done).length;
+          const memN = lsGet("mb_coach_memory","").split("\n").filter(l=>l.trim()).length;
+          const BADGES = [
+            ["🏃", lang==="ja"?"はじめの一歩":"First step",   totalDone >= 1],
+            ["🔥", lang==="ja"?"7日継続":"7-day streak",      streak >= 7],
+            ["💪", lang==="ja"?"累計10種目":"10 workouts",    totalDone >= 10],
+            ["🛡️", lang==="ja"?"30日継続":"30-day streak",    streak >= 30],
+            ["🏆", lang==="ja"?"累計50種目":"50 workouts",    totalDone >= 50],
+            ["🧠", lang==="ja"?"コーチと仲良し":"Coach bond",  memN >= 20],
+          ];
+          return (
+            <div style={{background:C.card,borderRadius:16,padding:"14px 16px",margin:"0 0 14px",border:"1px solid "+C.border}}>
+              <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:10}}>🎖️ {lang==="ja"?"マイルストーン":"Milestones"}</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+                {BADGES.map(([emoji,label,got],i)=>(
+                  <div key={i} style={{textAlign:"center",padding:"10px 4px",background:got?"rgba(34,197,94,0.08)":C.surface,borderRadius:10,border:"1px solid "+(got?C.green+"50":C.border),opacity:got?1:0.45}}>
+                    <div style={{fontSize:22,filter:got?"none":"grayscale(1)"}}>{emoji}</div>
+                    <div style={{fontSize:9,color:got?C.green:C.muted,fontWeight:got?700:400,marginTop:2}}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {tab === "progress" && (()=>{
+          const f = lsGet("mb_coach_facts", null);
+          const memLines = lsGet("mb_coach_memory","").split("\n").filter(l=>l.trim()).length;
+          const cats = [
+            ["injuries", lang==="ja"?"🩹 怪我・痛み":"🩹 Injuries"],
+            ["likes",    lang==="ja"?"💚 好き・得意":"💚 Likes"],
+            ["dislikes", lang==="ja"?"😣 苦手・嫌い":"😣 Dislikes"],
+            ["notes",    lang==="ja"?"📝 生活メモ":"📝 Life notes"],
+          ];
+          const removeFact = (cat, idx) => {
+            const cur = lsGet("mb_coach_facts", null);
+            if (!cur?.[cat]) return;
+            cur[cat] = cur[cat].filter((_,i)=>i!==idx);
+            lsSet("mb_coach_facts", cur);
+            if (sbUser?.access_token && sbUser?.user?.id && !sbUser?.isGuest) {
+              sb.patchProfile(sbUser.user.id, sbUser.access_token, { coach_facts: cur }).catch(()=>{});
+            }
+            setFactsTick(t=>t+1);
+          };
+          const hasAny = f && cats.some(([k])=>f[k]?.length);
+          return (
+            <div style={{background:C.card,borderRadius:16,padding:"14px 16px",margin:"0 0 14px",border:"1px solid "+C.border}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                <div style={{fontSize:13,fontWeight:700,color:C.text}}>🧠 {lang==="ja"?coach.name+"のノート":"Coach's notes"}</div>
+                <div style={{fontSize:10,color:C.muted}}>{lang==="ja"?"記憶 "+memLines+"行":memLines+" memories"}</div>
+              </div>
+              <div style={{fontSize:10,color:C.muted,marginBottom:10}}>
+                {lang==="ja"?"コーチが会話から覚えたこと。タップで削除できます（コーチは忘れます）。":"What your coach remembers. Tap × to make the coach forget."}
+              </div>
+              {!hasAny && (
+                <div style={{fontSize:11,color:C.dim,textAlign:"center",padding:"8px 0"}}>
+                  {lang==="ja"?"まだメモはありません。チャットで怪我や好き嫌いを話すと、コーチが覚えていきます。":"Nothing yet. Chat with your coach about injuries or preferences."}
+                </div>
+              )}
+              {hasAny && cats.map(([k, label])=>(
+                (f[k]?.length > 0) && (
+                  <div key={k} style={{marginBottom:8}}>
+                    <div style={{fontSize:10,color:C.muted,fontWeight:700,marginBottom:4}}>{label}</div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                      {f[k].map((item,i)=>(
+                        <div key={i} style={{display:"flex",alignItems:"center",gap:5,background:C.surface,border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",fontSize:11,color:C.text}}>
+                          <span>{item}</span>
+                          <span onClick={()=>removeFact(k,i)} style={{color:C.muted,cursor:"pointer",fontSize:12,lineHeight:1}}>×</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              ))}
+              {!isPro && (
+                <div onClick={()=>setShowUpgrade(true)} style={{fontSize:10,color:C.pro,marginTop:6,cursor:"pointer"}}>
+                  {lang==="ja"?"🔒 PROなら長期記憶（3倍以上）でもっと深く覚えます →":"🔒 PRO unlocks long-term memory →"}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* ════ NUTRITION TAB ════ */}
         {tab === "nutrition" && (
           <div style={{animation:"fadeIn .3s ease"}}>
@@ -5295,6 +5430,25 @@ function App() {
                       </div>
                     ))}
                   </div>
+                  {mealDate===today && (()=>{
+                    const proRate = calGoal>0 && pro>0 ? pro/( profile?.targetProtein || 100) : 0;
+                    const state = cal===0 ? "none" : cal>calGoal*1.15 ? "over" : proRate>=0.8 ? "good" : "low_p";
+                    const MEAL_MSG = {
+                      bro:    {none:"まだ何も食ってないのか。体は食事で作られるぞ。",   good:"タンパク質、ちゃんと摂れてる。いい食事だ。",       low_p:"カロリーはいいがタンパク質が足りない。肉か卵を足せ。", over:"今日は食い過ぎだ。明日で調整すればいい。"},
+                      sister: {none:"今日はまだ記録がないね。食べたら教えてね。",       good:"タンパク質しっかり摂れてて、えらい！",             low_p:"あと少しタンパク質を足せたら完璧だよ。",               over:"ちょっとオーバーだけど大丈夫、明日整えよ。"},
+                      kpop:   {none:"食事の記録がまだだ。体は食事から磨かれる。",       good:"いいバランス。シルエットは食事で決まる。",         low_p:"タンパク質をあと一品。仕上がりが変わる。",             over:"少しオーバー。明日リセットしよう。"},
+                      drill:  {none:"記録なしか。食事も訓練のうちだ。",                 good:"いい補給だ。それでこそ動ける。",                   low_p:"タンパク質不足。すぐ補え。",                           over:"食い過ぎだ。明日は管理しろ。"},
+                      gyaru:  {none:"まだ食べてないの？ごはんも大事だよ〜！",           good:"タンパク質ばっちりとかまじ優秀！",                 low_p:"あとちょっとタンパク質たすと完璧じゃん！",             over:"今日は食べちゃった日！明日調整でOK！"},
+                      science:{none:"本日の摂取記録がありません。記録が最適化の前提です。", good:"タンパク質摂取は目標水準です。良好な栄養状態です。", low_p:"熱量は適正ですがタンパク質が不足しています。",         over:"目標を15%超過。明日の調整で問題ありません。"},
+                    };
+                    const msg = (MEAL_MSG[coach.id]||MEAL_MSG.bro)[state];
+                    return (
+                      <div style={{marginTop:10,display:"flex",gap:8,alignItems:"flex-start",background:coach.bg,borderRadius:10,padding:"8px 10px"}}>
+                        <span style={{fontSize:14}}>{coach.emoji}</span>
+                        <div style={{fontSize:11,color:C.text,lineHeight:1.5}}>{msg}</div>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })()}
